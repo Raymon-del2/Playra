@@ -191,7 +191,7 @@ export default function WatchPage({ params }: { params: { id: string } }) {
             <span>2 days ago</span>
           </div>
           <p className="text-gray-300">
-            In this comprehensive tutorial, we'll build a full-stack application using Next.js 14, TypeScript, and modern web development best practices. 
+            In this comprehensive tutorial, we&apos;ll build a full-stack application using Next.js 14, TypeScript, and modern web development best practices.
             Learn how to set up your project, implement authentication, create API routes, and deploy your app to production.
           </p>
         </div>

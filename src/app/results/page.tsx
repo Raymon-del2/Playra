@@ -430,7 +430,7 @@ export default function ResultsPage() {
               className="w-full md:w-72 rounded-xl"
             />
             <div>
-              <p className="text-lg font-semibold mb-2">No results for "{queryLabel}"</p>
+              <p className="text-lg font-semibold mb-2">No results for &quot;{queryLabel}&quot;</p>
               <p className="text-gray-400">
                 Try different keywords or check your spelling.
               </p>
