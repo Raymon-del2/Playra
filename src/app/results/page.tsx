@@ -107,6 +107,74 @@ const results: ResultItem[] = [
     format: 'styles',
   },
   {
+    id: 's1',
+    title: 'CSS Grid in 60 Seconds 🔥',
+    thumbnail: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=360&h=640&fit=crop',
+    previewVideo: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+    channel: 'CSS Wizards',
+    channelAvatar: 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39?w=64&h=64&fit=crop',
+    views: '890K views',
+    timestamp: '3 days ago',
+    type: 'video',
+    uploadedDays: 3,
+    watched: false,
+    duration: '0:59',
+    description: 'Master CSS Grid layout in under a minute with this quick visual guide.',
+    badges: ['Short'],
+    format: 'styles',
+  },
+  {
+    id: 's2',
+    title: 'TypeScript Tips You Need #dev',
+    thumbnail: 'https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=360&h=640&fit=crop',
+    previewVideo: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+    channel: 'TS Pro',
+    channelAvatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=64&h=64&fit=crop',
+    views: '1.5M views',
+    timestamp: '1 week ago',
+    type: 'video',
+    uploadedDays: 7,
+    watched: false,
+    duration: '0:52',
+    description: 'Quick TypeScript tips that will level up your code quality instantly.',
+    badges: ['Short'],
+    format: 'styles',
+  },
+  {
+    id: 's3',
+    title: 'useState vs useRef 💡',
+    thumbnail: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=360&h=640&fit=crop',
+    previewVideo: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+    channel: 'React Daily',
+    channelAvatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=64&h=64&fit=crop',
+    views: '2.1M views',
+    timestamp: '5 days ago',
+    type: 'video',
+    uploadedDays: 5,
+    watched: true,
+    duration: '0:48',
+    description: 'Know when to use useState and when useRef is the better choice.',
+    badges: ['Short'],
+    format: 'styles',
+  },
+  {
+    id: 's4',
+    title: 'Tailwind Dark Mode Trick ✨',
+    thumbnail: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=360&h=640&fit=crop',
+    previewVideo: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+    channel: 'Design Code',
+    channelAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=64&h=64&fit=crop',
+    views: '650K views',
+    timestamp: '2 weeks ago',
+    type: 'video',
+    uploadedDays: 14,
+    watched: false,
+    duration: '0:38',
+    description: 'Add beautiful dark mode to your site with this simple Tailwind trick.',
+    badges: ['Short'],
+    format: 'styles',
+  },
+  {
     id: 'r10',
     title: 'React Hooks Masterclass (Playlist)',
     thumbnail: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=640&h=360&fit=crop',
@@ -229,9 +297,52 @@ function ResultCard({ item }: { item: ResultItem }) {
   const isStyles = item.format === 'styles';
   const previewSrc = item.previewVideo;
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [seekerHover, setSeekerHover] = useState<{ x: number; time: string } | null>(null);
+  const tooltipVideoRef = useRef<HTMLVideoElement>(null);
+
+  const handleTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+    const v = e.currentTarget;
+    if (v.duration) {
+      setProgress((v.currentTime / v.duration) * 100);
+    }
+  };
+
+  const handleSeekerMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const bounds = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - bounds.left;
+    const ratio = Math.max(0, Math.min(1, x / bounds.width));
+
+    // Simulate time calculation based on format/duration
+    const totalSeconds = item.duration === '' ? 60 : 120; // Default estimate
+    const currentSeconds = ratio * totalSeconds;
+    const mins = Math.floor(currentSeconds / 60);
+    const secs = Math.floor(currentSeconds % 60);
+    const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
+
+    if (tooltipVideoRef.current) {
+      tooltipVideoRef.current.currentTime = currentSeconds;
+    }
+
+    setSeekerHover({ x: ratio * 100, time: timeStr });
+  };
+
+  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!videoRef.current || !videoRef.current.duration) return;
+
+    const bounds = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - bounds.left;
+    const ratio = Math.max(0, Math.min(1, x / bounds.width));
+    videoRef.current.currentTime = ratio * videoRef.current.duration;
+    setProgress(ratio * 100);
+  };
 
   const handleMouseEnter = () => {
     if (!videoRef.current) return;
+    setIsPlaying(true);
     videoRef.current.currentTime = 0;
     const playPromise = videoRef.current.play();
     if (playPromise) {
@@ -240,97 +351,127 @@ function ResultCard({ item }: { item: ResultItem }) {
   };
 
   const handleMouseLeave = () => {
+    setIsPlaying(false);
+    setProgress(0);
+    setSeekerHover(null);
     if (!videoRef.current) return;
     videoRef.current.pause();
     videoRef.current.currentTime = 0;
   };
 
+  // Don't render styles items as regular cards - they go in the carousel
+  if (isStyles) return null;
+
   return (
     <Link
       key={item.id}
-      href={isStyles ? `/styles/${item.id}` : `/watch/${item.id}`}
-      className="flex flex-col lg:flex-row gap-4 group"
+      href={`/watch/${item.id}`}
+      className="flex flex-col lg:flex-row gap-4 group p-2 rounded-2xl transition-all duration-300 hover:bg-[#2d1a1a] hover:shadow-2xl"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <div
-        className={`relative flex-shrink-0 ${
-          isStyles ? 'bg-[#5a4a2f] rounded-2xl p-3' : ''
-        }`}
-      >
-        <div className="relative">
+      <div className="relative flex-shrink-0">
+        <div className="relative aspect-video w-full lg:w-96 overflow-hidden rounded-xl bg-zinc-900 shadow-lg">
           {previewSrc && (
             <video
               ref={videoRef}
               src={previewSrc}
-              loop
+              onTimeUpdate={handleTimeUpdate}
               muted
               playsInline
               preload="metadata"
-              className={
-                isStyles
-                  ? 'absolute inset-0 w-full h-full object-cover rounded-xl opacity-0 group-hover:opacity-100 transition-opacity'
-                  : 'absolute inset-0 w-full h-full object-cover rounded-xl opacity-0 group-hover:opacity-100 transition-opacity'
-              }
+              className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity"
             />
           )}
           <img
             src={item.thumbnail}
             alt={item.title}
-            className={
-              isStyles
-                ? 'w-full sm:w-56 aspect-[9/16] object-cover rounded-xl transition-opacity group-hover:opacity-0'
-                : 'w-full lg:w-96 aspect-video object-cover rounded-xl group-hover:rounded-lg transition-all duration-200 group-hover:opacity-0'
-            }
+            className="w-full h-full object-cover transition-all duration-300 group-hover:opacity-0 group-hover:scale-105"
           />
+
+          {/* Playra-style Progress Seeker Bar */}
+          {isPlaying && (
+            <div
+              className="absolute bottom-0 left-0 right-0 h-1.5 bg-white/20 cursor-pointer group/seeker z-10"
+              onClick={handleSeek}
+              onMouseMove={handleSeekerMouseMove}
+              onMouseLeave={() => setSeekerHover(null)}
+            >
+              {/* Timeline View Popup */}
+              {seekerHover && (
+                <div
+                  className="absolute bottom-4 -translate-x-1/2 pointer-events-none"
+                  style={{ left: `${seekerHover.x}%` }}
+                >
+                  <div className="flex flex-col items-center">
+                    <div className="w-32 aspect-video bg-zinc-800 rounded border border-white/20 overflow-hidden shadow-2xl mb-1 relative">
+                      <video
+                        ref={tooltipVideoRef}
+                        src={item.previewVideo}
+                        className="absolute inset-0 w-full h-full object-cover"
+                        muted
+                        playsInline
+                        preload="auto"
+                      />
+                    </div>
+                    <span className="bg-black/80 text-white text-[10px] px-1.5 py-0.5 rounded font-bold">{seekerHover.time}</span>
+                  </div>
+                </div>
+              )}
+
+              <div
+                className="h-full bg-red-600 relative transition-all duration-100"
+                style={{ width: `${progress}%` }}
+              >
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-red-600 rounded-full scale-0 group-hover/seeker:scale-100 transition-transform shadow-xl" />
+              </div>
+            </div>
+          )}
+
+          {item.duration && (
+            <div className="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] px-1.5 py-0.5 rounded font-bold tracking-wider z-0">
+              {item.duration}
+            </div>
+          )}
         </div>
-        {isStyles ? (
-          <span className="absolute bottom-4 right-4 bg-[#2f2516]/80 text-white text-[10px] px-2 py-1 rounded-full tracking-wide">
-            STYLES
-          </span>
-        ) : item.duration ? (
-          <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded">
-            {item.duration}
-          </div>
-        ) : null}
       </div>
 
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 py-1">
         <div className="flex items-start gap-2">
-          <h3 className="text-lg font-semibold text-white group-hover:text-blue-400 transition-colors">
+          <h3 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors leading-tight">
             {item.title}
           </h3>
-          <button className="ml-auto text-gray-400 hover:text-white">
+          <button className="ml-auto text-gray-400 hover:text-white p-1 hover:bg-white/10 rounded-full transition-colors flex-shrink-0">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v.01M12 12v.01M12 18v.01" />
             </svg>
           </button>
         </div>
 
-        <div className="flex items-center gap-2 text-sm text-gray-400 mt-1">
+        <div className="flex items-center gap-2 text-sm text-gray-400 mt-1 font-medium">
           <span>{item.views}</span>
           <span>•</span>
           <span>{item.timestamp}</span>
         </div>
 
-        <div className="flex items-center gap-3 mt-3">
+        <div className="flex items-center gap-2.5 mt-3 group/channel w-fit px-0.5">
           <img
             src={item.channelAvatar}
             alt={item.channel}
-            className="w-9 h-9 rounded-full object-cover"
+            className="w-8 h-8 rounded-full object-cover border border-white/5"
           />
-          <span className="text-sm text-gray-300">{item.channel}</span>
+          <span className="text-sm text-gray-300 font-bold group-hover/channel:text-white transition-colors">{item.channel}</span>
         </div>
 
-        <p className="text-sm text-gray-400 mt-3 line-clamp-2">
+        <p className="text-sm text-gray-400 mt-3 line-clamp-2 leading-relaxed">
           {item.description}
         </p>
 
-        <div className="flex items-center gap-2 mt-3">
+        <div className="flex items-center gap-2 mt-4">
           {item.badges.map((badge) => (
             <span
               key={badge}
-              className="text-xs px-2 py-1 rounded-full bg-gray-800 text-gray-200"
+              className="text-[10px] px-2 py-0.5 rounded font-bold bg-zinc-800 text-gray-300 uppercase tracking-widest"
             >
               {badge}
             </span>
@@ -338,6 +479,253 @@ function ResultCard({ item }: { item: ResultItem }) {
         </div>
       </div>
     </Link>
+  );
+}
+
+function StylesCarouselItem({
+  item,
+  onMouseEnter,
+  onMouseLeave,
+  videoRef
+}: {
+  item: ResultItem;
+  onMouseEnter: (id: string) => void;
+  onMouseLeave: (id: string) => void;
+  videoRef: (el: HTMLVideoElement | null) => void;
+}) {
+  const [progress, setProgress] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+  const [seekerHover, setSeekerHover] = useState<{ x: number; time: string } | null>(null);
+  const tooltipVideoRef = useRef<HTMLVideoElement>(null);
+
+  const handleTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+    const v = e.currentTarget;
+    if (v.duration) {
+      setProgress((v.currentTime / v.duration) * 100);
+    }
+  };
+
+  const handleSeekerMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const bounds = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - bounds.left;
+    const ratio = Math.max(0, Math.min(1, x / bounds.width));
+
+    // Simulate time calculation
+    const totalSeconds = 59; // Styles are usually ~60s
+    const currentSeconds = ratio * totalSeconds;
+    const secs = Math.floor(currentSeconds % 60);
+    const timeStr = `0:${secs.toString().padStart(2, '0')}`;
+
+    if (tooltipVideoRef.current) {
+      tooltipVideoRef.current.currentTime = currentSeconds;
+    }
+
+    setSeekerHover({ x: ratio * 100, time: timeStr });
+  };
+
+  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const v = e.currentTarget.parentElement?.querySelector('video');
+    if (!v || !v.duration) return;
+
+    const bounds = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - bounds.left;
+    const ratio = Math.max(0, Math.min(1, x / bounds.width));
+    v.currentTime = ratio * v.duration;
+    setProgress(ratio * 100);
+  };
+
+  return (
+    <Link
+      href={`/styles/${item.id}`}
+      className="group flex-shrink-0 w-40 sm:w-44 lg:w-48 relative"
+      onMouseEnter={() => {
+        setIsHovered(true);
+        onMouseEnter(item.id);
+      }}
+      onMouseLeave={() => {
+        setIsHovered(false);
+        setProgress(0);
+        setSeekerHover(null);
+        onMouseLeave(item.id);
+      }}
+    >
+      <div className="relative overflow-hidden rounded-xl transition-all duration-300 group-hover:p-1 group-hover:bg-[#2d1a1a] shadow-lg group-hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+        <div className="relative aspect-[9/16] overflow-hidden rounded-lg">
+          {item.previewVideo && (
+            <video
+              ref={videoRef}
+              src={item.previewVideo}
+              onTimeUpdate={handleTimeUpdate}
+              muted
+              playsInline
+              preload="metadata"
+              className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            />
+          )}
+          <img
+            src={item.thumbnail}
+            alt={item.title}
+            className="w-full h-full object-cover transition-opacity duration-300 group-hover:opacity-0"
+          />
+
+          {/* Seeker */}
+          {isHovered && (
+            <div
+              className="absolute bottom-0 left-0 right-0 h-1.5 bg-white/20 cursor-pointer z-10"
+              onClick={handleSeek}
+              onMouseMove={handleSeekerMouseMove}
+              onMouseLeave={() => setSeekerHover(null)}
+            >
+              {/* Timeline View Popup */}
+              {seekerHover && (
+                <div
+                  className="absolute bottom-4 -translate-x-1/2 pointer-events-none z-20"
+                  style={{ left: `${seekerHover.x}%` }}
+                >
+                  <div className="flex flex-col items-center">
+                    <div className="w-24 aspect-[9/16] bg-zinc-800 rounded border border-white/20 overflow-hidden shadow-2xl mb-1 relative">
+                      <video
+                        ref={tooltipVideoRef}
+                        src={item.previewVideo}
+                        className="absolute inset-0 w-full h-full object-cover"
+                        muted
+                        playsInline
+                        preload="auto"
+                      />
+                    </div>
+                    <span className="bg-black/80 text-white text-[9px] px-1.5 py-0.5 rounded font-bold">{seekerHover.time}</span>
+                  </div>
+                </div>
+              )}
+
+              <div
+                className="h-full bg-red-600 transition-all duration-100"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          )}
+
+          {/* Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+
+          {/* Duration Badge */}
+          <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-sm text-white text-[10px] px-1.5 py-0.5 rounded font-bold">
+            {item.duration}
+          </div>
+
+          <div className="absolute top-2 right-2">
+            <span className="text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full tracking-tighter flex items-center gap-1 bg-black/40 backdrop-blur-md">
+              <img src="/styles-icon.svg?v=blue" alt="" className="w-3 h-3 object-contain" />
+              STYLES
+            </span>
+          </div>
+        </div>
+
+        {/* Title & Channel */}
+        <div className="mt-2.5 px-1 pb-2">
+          <h3 className="text-[13px] font-bold text-white line-clamp-2 leading-tight group-hover:text-blue-400 transition-colors">
+            {item.title}
+          </h3>
+          <p className="text-[11px] text-gray-400 mt-1">
+            {item.views}
+          </p>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+function StylesCarousel({ items }: { items: ResultItem[] }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (!scrollRef.current) return;
+    const scrollAmount = 300;
+    scrollRef.current.scrollBy({
+      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      behavior: 'smooth',
+    });
+  };
+
+  const handleMouseEnter = (id: string) => {
+    setHoveredId(id);
+    const video = videoRefs.current[id];
+    if (video) {
+      video.currentTime = 0;
+      video.play().catch(() => undefined);
+    }
+  };
+
+  const handleMouseLeave = (id: string) => {
+    setHoveredId(null);
+    const video = videoRefs.current[id];
+    if (video) {
+      video.pause();
+      video.currentTime = 0;
+    }
+  };
+
+  if (items.length === 0) return null;
+
+  return (
+    <div className="mb-10">
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-5">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 flex items-center justify-center">
+            <img src="/styles-icon.svg?v=blue" alt="STYLES" className="w-full h-full object-contain" />
+          </div>
+          <h2 className="text-xl font-bold text-white tracking-tight">STYLES</h2>
+        </div>
+        <div className="flex-1" />
+        <div className="flex gap-2">
+          <button
+            onClick={() => scroll('left')}
+            className="w-10 h-10 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-white transition-all shadow-lg active:scale-90"
+            aria-label="Scroll left"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <button
+            onClick={() => scroll('right')}
+            className="w-10 h-10 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-white transition-all shadow-lg active:scale-90"
+            aria-label="Scroll right"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Carousel */}
+      <div
+        ref={scrollRef}
+        className="flex gap-4 overflow-x-auto pb-6 scrollbar-hide scroll-smooth"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        {items.map((item) => (
+          <StylesCarouselItem
+            key={item.id}
+            item={item}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            videoRef={(el) => {
+              videoRefs.current[item.id] = el;
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Divider */}
+      <div className="mt-4 h-px bg-zinc-800/50" />
+    </div>
   );
 }
 
@@ -401,6 +789,20 @@ export default function ResultsPage() {
     return items;
   }, [query, activeFilter]);
 
+  // Get styles items for the carousel (only shown when filter is 'All')
+  const stylesItems = useMemo(() => {
+    let items = results.filter((item) => item.format === 'styles');
+    if (query.trim()) {
+      const lower = query.toLowerCase();
+      items = items.filter((item) =>
+        [item.title, item.channel, item.description].some((field) =>
+          field.toLowerCase().includes(lower),
+        ),
+      );
+    }
+    return items;
+  }, [query]);
+
   return (
     <div className="px-6 py-6">
       <div className="flex items-center gap-3 overflow-x-auto pb-4 scrollbar-hide">
@@ -408,18 +810,23 @@ export default function ResultsPage() {
           <button
             key={filter}
             onClick={() => setActiveFilter(filter)}
-            className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ${
-              filter === activeFilter
-                ? 'bg-white text-gray-900'
-                : 'bg-gray-800 text-gray-200 hover:bg-gray-700'
-            }`}
+            className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ${filter === activeFilter
+              ? 'bg-white text-gray-900'
+              : 'bg-gray-800 text-gray-200 hover:bg-gray-700'
+              }`}
           >
             {filter}
           </button>
         ))}
       </div>
+
+      {/* STYLES Carousel - Show on "All" or "Styles" filter */}
+      {(activeFilter === 'All' || activeFilter === 'Styles') && stylesItems.length > 0 && (
+        <StylesCarousel items={stylesItems} />
+      )}
+
       <div className="space-y-8">
-        {filteredResults.length === 0 ? (
+        {filteredResults.length === 0 && (activeFilter !== 'All' && activeFilter !== 'Styles' || stylesItems.length === 0) ? (
           <div className="bg-gray-800 rounded-2xl p-6 flex flex-col md:flex-row items-center gap-6">
             <video
               src="/No-results.mp4"
@@ -438,7 +845,7 @@ export default function ResultsPage() {
           </div>
         ) : (
           filteredResults.map((item) => <ResultCard key={item.id} item={item} />)
-      )}
+        )}
       </div>
     </div>
   );

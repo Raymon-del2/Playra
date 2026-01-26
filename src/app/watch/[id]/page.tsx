@@ -102,9 +102,9 @@ export default function WatchPage({ params }: { params: { id: string } }) {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 p-6">
+    <div className="flex flex-col lg:flex-row gap-6 p-0 sm:p-6 bg-gray-900 min-h-screen">
       <div className="flex-1">
-        <div className="aspect-video bg-black rounded-lg overflow-hidden mb-4">
+        <div className="aspect-video bg-black sm:rounded-lg overflow-hidden mb-4">
           <video
             className="w-full h-full"
             controls
@@ -115,72 +115,85 @@ export default function WatchPage({ params }: { params: { id: string } }) {
           </video>
         </div>
 
-        <h1 className="text-xl font-semibold mb-2">
-          Building a Full Stack App with Next.js and TypeScript
-        </h1>
-
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-4 pb-4 border-b border-gray-800">
-          <div className="flex items-center gap-4">
-            <img
-              src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop"
-              alt="Tech Master"
-              className="w-10 h-10 rounded-full"
-            />
-            <div>
-              <h3 className="font-medium">Tech Master</h3>
-              <p className="text-sm text-gray-400">1.2M subscribers</p>
+        <div className="flex flex-col gap-4 mb-6 px-4 sm:px-0">
+          <div className="flex flex-col gap-2">
+            <h1 className="text-[19px] font-black leading-tight tracking-tight">
+              Building a Full Stack App with Next.js and TypeScript
+            </h1>
+            <div className="flex items-center gap-2 text-[13px] text-gray-400 font-bold mb-1">
+              <span>125K views</span>
+              <span className="opacity-30">•</span>
+              <span>2 days ago</span>
+              <span className="text-gray-200 ml-1">...more</span>
             </div>
-            <button
-              onClick={() => setIsSubscribed(!isSubscribed)}
-              className={`px-4 py-2 rounded-full font-medium ${
-                isSubscribed
-                  ? 'bg-gray-700 text-white hover:bg-gray-600'
-                  : 'bg-white text-black hover:bg-gray-200'
-              }`}
-            >
-              {isSubscribed ? 'Subscribed' : 'Subscribe'}
-            </button>
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="flex items-center bg-gray-800 rounded-full">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Link href="/channel/techmaster" className="flex-shrink-0">
+                  <img
+                    src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop"
+                    alt="Tech Master"
+                    className="w-10 h-10 rounded-full border border-white/5 shadow-md"
+                  />
+                </Link>
+                <div className="flex flex-col">
+                  <h3 className="font-black text-[15px] leading-tight flex items-center gap-1">
+                    Tech Master
+                    <svg className="w-3.5 h-3.5 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                  </h3>
+                  <p className="text-[12.5px] text-gray-400 font-bold">1.2M sub</p>
+                </div>
+              </div>
               <button
-                onClick={handleLike}
-                className={`flex items-center gap-2 px-4 py-2 rounded-l-full hover:bg-gray-700 ${
-                  isLiked ? 'text-blue-400' : ''
-                }`}
+                onClick={() => setIsSubscribed(!isSubscribed)}
+                className={`px-5 py-2 rounded-full font-black text-[13.5px] transition-all active:scale-95 shadow-xl ${isSubscribed
+                  ? 'bg-white/10 text-white border border-white/5'
+                  : 'bg-white text-black'
+                  }`}
               >
-                <svg className="w-5 h-5" fill={isLiked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
-                </svg>
-                <span>{likes.toLocaleString()}</span>
-              </button>
-              <div className="w-px h-6 bg-gray-600"></div>
-              <button
-                onClick={handleDislike}
-                className={`flex items-center gap-2 px-4 py-2 rounded-r-full hover:bg-gray-700 ${
-                  isDisliked ? 'text-blue-400' : ''
-                }`}
-              >
-                <svg className="w-5 h-5" fill={isDisliked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
-                </svg>
+                {isSubscribed ? 'Subscribed' : 'Subscribe'}
               </button>
             </div>
 
-            <button className="flex items-center gap-2 px-4 py-2 bg-gray-800 rounded-full hover:bg-gray-700">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-              </svg>
-              <span>Share</span>
-            </button>
+            {/* Engagement Pill (Mobile 2026 MD3) */}
+            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
+              <div className="flex items-center bg-white/10 backdrop-blur-xl rounded-full border border-white/5 shadow-2xl h-10 px-1">
+                <button
+                  onClick={handleLike}
+                  className={`flex items-center gap-2 px-4 py-1.5 rounded-full hover:bg-white/5 transition-all active:scale-90 ${isLiked ? 'text-blue-400' : 'text-white'
+                    }`}
+                >
+                  <svg className="w-5 h-5" fill={isLiked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.633 10.25c.806 0 1.533-.446 2.031-1.08a9.041 9.041 0 0 1 2.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 0 0 .322-1.672V2.75a.75.75 0 0 1 .75-.75 2.25 2.25 0 0 1 2.25 2.25c0 1.152-.26 2.243-.723 3.218-.266.558.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 0 1-2.649 7.521c-.388.482-.987.729-1.605.729H13.48c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 0 0-1.423-.23H5.904m10.598-9.75H14.25M5.904 18.5c.083.205.173.405.27.602.197.4-.078.898-.523.898h-.527c-1.325 0-2.4-1.075-2.4-2.4V10.6c0-1.325 1.075-2.4 2.4-2.4h.527c.445 0 .72.498.523.898a4.512 4.512 0 0 0-.27.602" /></svg>
+                  <span className="font-bold text-[13.5px]">{likes.toLocaleString()}</span>
+                </button>
+                <div className="w-px h-6 bg-white/10 mx-0.5" />
+                <button
+                  onClick={handleDislike}
+                  className={`flex items-center px-4 py-1.5 rounded-full hover:bg-white/5 transition-all active:scale-90 ${isDisliked ? 'text-blue-400' : 'text-white'
+                    }`}
+                >
+                  <svg className="w-5 h-5" fill={isDisliked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M7.5 13.5l3 3m0 0l3-3m-3 3v-10m10 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" /></svg>
+                </button>
+              </div>
 
-            <button className="flex items-center gap-2 px-4 py-2 bg-gray-800 rounded-full hover:bg-gray-700">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-              </svg>
-              <span>Save</span>
-            </button>
+              <div className="flex items-center gap-2">
+                <button className="flex items-center gap-2 h-10 px-5 bg-white/10 backdrop-blur-xl rounded-full hover:bg-white/15 transition-all active:scale-95 border border-white/5 shadow-xl text-white font-bold text-[13.5px]">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 003.933 2.185 2.25 2.25 0 00-3.933 2.185z" /></svg>
+                  <span>Share</span>
+                </button>
+
+                <button className="flex items-center gap-2 h-10 px-5 bg-white/10 backdrop-blur-xl rounded-full hover:bg-white/15 transition-all active:scale-95 border border-white/5 shadow-xl text-white font-bold text-[13.5px]">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                  <span>Remix</span>
+                </button>
+
+                <button className="flex items-center justify-center w-10 h-10 bg-white/10 backdrop-blur-xl rounded-full hover:bg-white/15 transition-all active:scale-95 border border-white/5 shadow-xl text-white">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" /></svg>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -197,28 +210,28 @@ export default function WatchPage({ params }: { params: { id: string } }) {
         </div>
       </div>
 
-      <div className="lg:w-96">
-        <h2 className="text-lg font-semibold mb-4">Related Videos</h2>
-        <div className="space-y-3">
+      <div className="lg:w-96 px-4 sm:px-0">
+        <h2 className="text-lg font-black mb-4 tracking-tight px-1 sm:px-0">Related Videos</h2>
+        <div className="space-y-4">
           {relatedVideos.map((video) => (
             <Link key={video.id} href={`/watch/${video.id}`} className="flex gap-3 group">
               <div className="relative flex-shrink-0">
                 <img
                   src={video.thumbnail}
                   alt={video.title}
-                  className="w-40 aspect-video object-cover rounded-lg"
+                  className="w-40 aspect-video object-cover rounded-xl border border-white/5"
                 />
-                <div className="absolute bottom-1 right-1 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded">
+                <div className="absolute bottom-1 right-1 bg-black/80 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
                   {video.duration}
                 </div>
               </div>
-              
-              <div className="flex-1 min-w-0">
-                <h3 className="font-medium text-sm text-white line-clamp-2 group-hover:text-blue-400 transition-colors">
+
+              <div className="flex-1 min-w-0 py-0.5">
+                <h3 className="font-bold text-[13.5px] leading-snug line-clamp-2 text-white group-hover:text-blue-400 transition-colors">
                   {video.title}
                 </h3>
-                <p className="text-xs text-gray-400 mt-1">{video.channel}</p>
-                <p className="text-xs text-gray-400">
+                <p className="text-[12px] text-gray-400 font-bold mt-1.5 leading-none">{video.channel}</p>
+                <p className="text-[11px] text-gray-500 font-bold mt-1">
                   {video.views} views • {video.timestamp}
                 </p>
               </div>

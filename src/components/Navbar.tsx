@@ -4,18 +4,33 @@ import Link from 'next/link';
 import { useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocation } from '@/hooks/useLocation';
+import ProfileMenu from './ProfileMenu';
 
 type NavbarProps = {
   isSidebarCollapsed: boolean;
   onToggleSidebar: () => void;
+  isSignedIn?: boolean;
+  onToggleSignIn?: () => void;
+  onToggleMobileDrawer?: () => void;
+  activeProfile?: any;
 };
 
-export default function Navbar({ isSidebarCollapsed, onToggleSidebar }: NavbarProps) {
+export default function Navbar({
+  isSidebarCollapsed,
+  onToggleSidebar,
+  isSignedIn = false,
+  onToggleSignIn,
+  onToggleMobileDrawer,
+  activeProfile
+}: NavbarProps) {
   const router = useRouter();
   const countryCode = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const profileContainerRef = useRef<HTMLDivElement>(null);
   const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const suggestions = [
     'Next.js tutorial',
     'React hooks',
@@ -25,6 +40,7 @@ export default function Navbar({ isSidebarCollapsed, onToggleSidebar }: NavbarPr
     'Machine learning basics',
     'Web performance',
   ];
+
   const filteredSuggestions = useMemo(
     () =>
       suggestions.filter((suggestion) =>
@@ -39,140 +55,109 @@ export default function Navbar({ isSidebarCollapsed, onToggleSidebar }: NavbarPr
     router.push(`/results?search_query=${encodeURIComponent(trimmed)}`);
     setIsDropdownOpen(false);
   };
+
   return (
-    <nav className="bg-gray-900 border-b border-gray-800 sticky top-0 z-50">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center space-x-4">
+    <nav className="bg-gray-900/95 backdrop-blur-xl fixed top-0 left-0 right-0 z-50 border-b border-white/5 h-14 sm:h-16">
+      <div className="container-fluid mx-auto px-4">
+        <div className="flex items-center justify-between h-14 sm:h-16">
+          <div className="flex items-center gap-4">
             <button
               onClick={onToggleSidebar}
-              aria-label={isSidebarCollapsed ? 'Expand menu' : 'Collapse menu'}
-              className="p-2 rounded-full hover:bg-gray-800 text-white"
+              className="hidden lg:flex p-2 rounded-full hover:bg-white/10 text-white transition-all active:scale-90"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
             </button>
 
-            <Link href="/" className="flex items-start space-x-1">
-              <img src="/Playra.png" alt="Playra" className="h-8 w-auto" />
-              <span className="text-[10px] text-gray-400 leading-none mt-1">{countryCode}</span>
+            <Link href="/" className="flex items-center gap-1">
+              <div className="relative flex items-center">
+                <img src="/Playra.png" alt="Playra" className="h-[20px] sm:h-[22px] w-auto brightness-200" />
+                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tighter ml-1.5 hidden xs:block">{countryCode}</span>
+              </div>
             </Link>
           </div>
 
-          <div className="flex-1 max-w-2xl mx-8">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search"
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                onFocus={() => {
-                  if (blurTimeoutRef.current) {
-                    clearTimeout(blurTimeoutRef.current);
-                  }
-                  setIsDropdownOpen(true);
-                }}
-                onBlur={() => {
-                  blurTimeoutRef.current = setTimeout(() => {
-                    setIsDropdownOpen(false);
-                  }, 150);
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') {
-                    event.preventDefault();
-                    handleSearch();
-                  }
-                }}
-                className="w-full bg-gray-800 text-white pl-4 pr-16 py-2 rounded-full border border-gray-700 focus:outline-none focus:border-blue-500"
-              />
-              {searchQuery.length > 0 && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  aria-label="Clear search"
-                  className="absolute right-10 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              )}
-              <button
-                onClick={() => handleSearch()}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
-                aria-label="Search"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+          <div className="hidden md:flex flex-1 max-w-2xl mx-8">
+            <div className="flex w-full items-center">
+              <div className="relative flex-1 group">
+                <input
+                  type="text"
+                  placeholder="Search"
+                  value={searchQuery}
+                  className="w-full bg-zinc-900 text-white pl-5 pr-5 py-2 rounded-l-full border border-zinc-800 focus:outline-none focus:border-blue-500/50 transition-all font-medium"
+                />
+              </div>
+              <button className="bg-zinc-800 hover:bg-zinc-700 px-6 py-[9.5px] rounded-r-full border-y border-r border-zinc-800 transition-colors">
+                <svg className="w-5 h-5 text-gray-200" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
               </button>
-
-              {isDropdownOpen && searchQuery.length > 0 && (
-                <div className="absolute left-0 right-0 mt-2 bg-gray-900 border border-gray-700 rounded-2xl shadow-lg overflow-hidden">
-                  {filteredSuggestions.length > 0 ? (
-                    <ul className="py-2">
-                      {filteredSuggestions.map((suggestion) => (
-                        <li key={suggestion}>
-                          <button
-                            onClick={() => {
-                              setSearchQuery(suggestion);
-                              setIsDropdownOpen(false);
-                              handleSearch(suggestion);
-                            }}
-                            className="w-full px-4 py-2 text-left text-sm text-gray-200 hover:bg-gray-800"
-                          >
-                            {suggestion}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        setIsDropdownOpen(false);
-                        handleSearch(searchQuery);
-                      }}
-                      className="flex items-center gap-2 w-full px-4 py-3 text-sm text-gray-200 hover:bg-gray-800"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                      </svg>
-                      Search for “{searchQuery}”
-                    </button>
-                  )}
-                </div>
-              )}
+              <button className="ml-4 p-2.5 rounded-full bg-zinc-800 text-white hover:bg-zinc-700 active:scale-95 transition-all">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" /><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" /></svg>
+              </button>
             </div>
           </div>
 
-          <div className="flex items-center space-x-4">
-            <Link href="/upload" className="text-white hover:text-gray-300 flex items-center space-x-1">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              <span className="hidden sm:inline">Upload</span>
-            </Link>
-            <Link href="/studio" className="text-white hover:text-gray-300 flex items-center space-x-1">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-              <span className="hidden sm:inline">Studio</span>
-            </Link>
-            <button
-              className={`flex items-center gap-2 rounded-full text-sm transition-colors ${
-                isSidebarCollapsed
-                  ? 'p-2 text-gray-300 hover:bg-gray-800 hover:text-white'
-                  : 'px-4 py-2 bg-blue-600 text-white hover:bg-blue-500'
-              }`}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              {!isSidebarCollapsed && <span>Sign in</span>}
+          <div className="flex items-center space-x-1 sm:space-x-4">
+            <button className="hidden xs:flex p-2 rounded-full hover:bg-white/10 text-white active:scale-90 transition-all">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 13.5v3.375C3 17.439 3.561 18 4.125 18h3.375m-4.5-9a4.5 4.5 0 014.5-4.5h11.25a4.5 4.5 0 014.5 4.5v11.25a4.5 4.5 0 01-4.5 4.5H10.5" /><path d="M3 13.5c3.314 0 6 2.686 6 6M3 9c5.523 0 10 4.477 10 10" /></svg>
             </button>
+
+            {activeProfile && (
+              <button className="hidden sm:flex items-center gap-2 px-4 py-1.5 rounded-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-sm transition-all active:scale-95 border border-white/5">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                <span>Create</span>
+              </button>
+            )}
+
+            <button className="hidden xs:flex p-2 rounded-full hover:bg-white/10 text-white active:scale-90 transition-all">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
+              <span className="absolute top-1 right-1 bg-red-600 text-[10px] font-bold text-white px-1.5 rounded-full min-w-[16px] text-center border-2 border-gray-900 leading-tight">9+</span>
+            </button>
+
+
+            {activeProfile ? (
+              <div
+                className="relative ml-1"
+                ref={profileContainerRef}
+              >
+                <div
+                  onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden border border-white/10 cursor-pointer active:scale-95 transition-transform"
+                  title={activeProfile.name}
+                >
+                  {activeProfile.avatar ? (
+                    <img src={activeProfile.avatar} alt={activeProfile.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-xs font-bold text-zinc-400">
+                      {activeProfile.name[0]?.toUpperCase()}
+                    </div>
+                  )}
+                </div>
+
+                <ProfileMenu
+                  isOpen={isProfileMenuOpen}
+                  onClose={() => setIsProfileMenuOpen(false)}
+                  activeProfile={activeProfile}
+                />
+              </div>
+            ) : isSignedIn ? (
+              <div
+                onClick={onToggleSignIn}
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 border border-white/10 cursor-pointer active:scale-95 transition-transform ml-1"
+              />
+            ) : (
+              <button
+                onClick={onToggleSignIn}
+                className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 rounded-full border border-blue-500/50 text-blue-400 hover:bg-blue-400/10 transition-all font-bold text-[14px]"
+              >
+                <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
+                <span className="hidden xs:inline">Sign in</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
     </nav>
   );
 }
+
