@@ -212,57 +212,62 @@ export default function SelectProfilePage() {
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/20 blur-[120px] rounded-full animate-pulse" />
             <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/10 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
 
-            <div className="max-w-5xl w-full flex flex-col items-center animate-slide-in-up z-10">
-                <h1 className="text-3xl font-black text-white mb-2 tracking-tight">Who is watching?</h1>
-                <p className="text-zinc-500 font-bold mb-12 uppercase tracking-widest text-sm">You can have up to 4 profiles</p>
+            <div className="w-full max-w-7xl flex flex-col items-center animate-slide-in-up z-10 px-4">
+                <h1 className="text-3xl sm:text-4xl font-black text-white mb-2 tracking-tight text-center">Who is watching?</h1>
+                <p className="text-zinc-500 font-bold mb-12 sm:mb-16 uppercase tracking-widest text-xs sm:text-sm text-center">Select your identity</p>
 
                 <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleEditFileChange} />
 
-                <div className="flex flex-wrap justify-center gap-6 sm:gap-8 mb-12 sm:mb-16">
+                <div className="flex flex-wrap justify-center gap-6 sm:gap-12 w-full max-w-fit mx-auto mb-16 sm:mb-20">
+                    {/* Existing Profiles */}
                     {profiles.map((profile) => (
                         <div key={profile.id} className="group relative flex flex-col items-center gap-4 cursor-pointer">
                             <div
-                                className="w-28 h-28 sm:w-32 sm:h-32 rounded-full p-[3px] bg-gradient-to-tr from-transparent to-transparent group-hover:from-blue-500 group-hover:to-purple-500 transition-all duration-300 relative"
+                                className="w-24 h-24 sm:w-32 sm:h-32 rounded-full p-[3px] bg-gradient-to-tr from-transparent to-transparent group-hover:from-blue-500 group-hover:to-purple-500 transition-all duration-300 relative"
                                 onClick={() => handleSelect(profile.id)}
                             >
-                                <div className="w-full h-full rounded-full overflow-hidden border-4 border-zinc-800 group-hover:border-black transition-all relative">
+                                <div className="w-full h-full rounded-full overflow-hidden border-[3px] sm:border-4 border-zinc-800 group-hover:border-black transition-all relative">
                                     {profile.avatar ? (
                                         <img src={profile.avatar} alt={profile.name} className="w-full h-full object-cover" />
                                     ) : (
-                                        <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-3xl font-black text-zinc-600">
-                                            {profile.name[0].toUpperCase()}
+                                        <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-2xl sm:text-3xl font-black text-zinc-600 uppercase">
+                                            {profile.name[0]}
                                         </div>
                                     )}
                                 </div>
                                 <button
-                                    className="absolute bottom-0 right-0 p-1.5 bg-zinc-800 rounded-full border border-white/10 opacity-0 group-hover:opacity-100 transition-all hover:bg-white/10 hover:scale-110 z-10"
+                                    className="absolute bottom-0 right-0 p-1.5 bg-zinc-800 rounded-full border border-white/10 opacity-0 group-hover:opacity-100 transition-all hover:bg-white/10 hover:scale-110 z-10 shadow-lg"
                                     title="Edit Profile Picture"
                                     onClick={(e) => handleEdit(e, profile.id)}
                                 >
                                     <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                                 </button>
                             </div>
-                            <div className="flex flex-col items-center">
-                                <span className="text-zinc-400 font-bold text-lg group-hover:text-white transition-colors capitalize">{profile.name}</span>
-                                <span className={`text-[10px] font-black uppercase tracking-tighter mt-0.5 px-2 py-0.5 rounded ${profile.account_type === 'kids' ? 'text-green-400 bg-green-400/10' :
-                                        profile.account_type === 'family' ? 'text-yellow-400 bg-yellow-400/10' :
-                                            profile.account_type === 'adult' ? 'text-red-400 bg-red-400/10' :
-                                                'text-blue-400 bg-blue-400/10'
+                            <div className="flex flex-col items-center text-center">
+                                <span className="text-zinc-400 font-bold text-base sm:text-lg group-hover:text-white transition-colors capitalize truncate w-full max-w-[120px]">{profile.name}</span>
+                                <span className={`text-[9px] sm:text-[10px] font-black uppercase tracking-tighter mt-1 px-2 py-0.5 rounded ${profile.account_type === 'kids' ? 'text-green-400 bg-green-400/10' :
+                                    profile.account_type === 'family' ? 'text-yellow-400 bg-yellow-400/10' :
+                                        profile.account_type === 'adult' ? 'text-red-400 bg-red-400/10' :
+                                            'text-blue-400 bg-blue-400/10'
                                     }`}>
-                                    {profile.account_type || 'general'} Account
+                                    {profile.account_type || 'general'}
                                 </span>
                             </div>
                         </div>
                     ))}
 
+                    {/* Add Profile Button */}
                     {profiles.length < 4 && (
                         <div className="group flex flex-col items-center gap-4 cursor-pointer" onClick={() => setShowCreate(true)}>
-                            <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center group-hover:bg-zinc-800 group-hover:scale-105 transition-all duration-300 shadow-xl">
-                                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
-                                    <svg className="w-8 h-8 text-white/50 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-zinc-900 border border-white/5 flex items-center justify-center group-hover:bg-zinc-800 group-hover:scale-105 transition-all duration-300 shadow-xl overflow-hidden">
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/5 flex items-center justify-center">
+                                    <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white/40 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.5v15m7.5-7.5h-15" /></svg>
                                 </div>
                             </div>
-                            <span className="text-zinc-500 font-bold text-sm tracking-widest uppercase group-hover:text-zinc-300 transition-colors">Add Profile</span>
+                            <div className="flex flex-col items-center">
+                                <span className="text-zinc-500 font-bold text-xs sm:text-sm tracking-widest uppercase group-hover:text-zinc-300 transition-colors">Add Profile</span>
+                                <div className="h-4 sm:h-5" />
+                            </div>
                         </div>
                     )}
                 </div>
@@ -302,7 +307,6 @@ export default function SelectProfilePage() {
                                         required
                                     />
 
-                                    {/* Handle Recommendations */}
                                     {nameStatus.suggestions && nameStatus.suggestions.length > 0 && (
                                         <div className="pt-2 flex flex-wrap gap-2">
                                             <p className="w-full text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Try these:</p>
