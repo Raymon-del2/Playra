@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getVideos, Video } from '@/lib/supabase';
 import { formatDistanceToNow } from 'date-fns';
+import { getActiveProfile } from '@/app/actions/profile';
 
 const SKELETON_BATCH = Array.from({ length: 8 });
 
@@ -140,6 +141,8 @@ export default function Home() {
   const [videos, setVideos] = useState<Video[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [activeProfile, setActiveProfile] = useState<any>(null);
+
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [previewingId, setPreviewingId] = useState<string | null>(null);
   const [isMuted, setIsMuted] = useState(true);
@@ -150,7 +153,12 @@ export default function Home() {
   useEffect(() => {
     const fetchVideos = async () => {
       try {
-        const data = await getVideos(50, 0);
+        const profile = await getActiveProfile();
+        setActiveProfile(profile);
+
+        // Pass the account type as a filter (optional, if profile exists)
+        const filterType = profile?.account_type || 'general';
+        const data = await getVideos(50, 0, filterType);
         setVideos(data || []);
       } catch (e) {
         console.error(e);

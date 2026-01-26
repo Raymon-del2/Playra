@@ -17,6 +17,7 @@ export async function getUserProfiles(userId: string) {
             description: row.description as string | null,
             avatar: row.avatar as string | null,
             verified: Boolean(row.verified),
+            account_type: row.account_type as string || 'general',
             created_at: String(row.created_at)
         }));
     } catch (error) {
@@ -25,7 +26,7 @@ export async function getUserProfiles(userId: string) {
     }
 }
 
-export async function createProfile(userId: string, name: string, avatarBase64: string) {
+export async function createProfile(userId: string, name: string, avatarBase64: string, accountType: 'adult' | 'kids' | 'family') {
     try {
         // Check profile count limit (3) via fast count query
         const countResult = await turso.execute({
@@ -43,10 +44,10 @@ export async function createProfile(userId: string, name: string, avatarBase64: 
 
         await turso.execute({
             sql: `
-                INSERT INTO channels (id, user_id, name, avatar)
-                VALUES (?, ?, ?, ?)
+                INSERT INTO channels (id, user_id, name, avatar, account_type)
+                VALUES (?, ?, ?, ?, ?)
             `,
-            args: [channelId, userId, name, avatarBase64]
+            args: [channelId, userId, name, avatarBase64, accountType]
         });
 
         revalidatePath('/select-profile');
@@ -131,6 +132,7 @@ export async function getActiveProfile() {
             description: row.description as string | null,
             avatar: row.avatar as string | null,
             verified: Boolean(row.verified),
+            account_type: row.account_type as string || 'general',
             created_at: String(row.created_at)
         };
     } catch (error) {

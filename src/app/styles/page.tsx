@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { getVideos } from '@/lib/supabase';
 import Link from 'next/link';
 
+import { getActiveProfile } from '@/app/actions/profile';
+
 export default function StylesPage() {
     const router = useRouter();
     const [noStyles, setNoStyles] = useState(false);
@@ -12,7 +14,9 @@ export default function StylesPage() {
     useEffect(() => {
         const fetchFirstStyle = async () => {
             try {
-                const data = await getVideos(50, 0);
+                const profile = await getActiveProfile();
+                const filterType = profile?.account_type || 'general';
+                const data = await getVideos(50, 0, filterType);
                 const firstStyle = (data || []).find(v => v.is_short);
                 if (firstStyle) {
                     router.replace(`/styles/${firstStyle.id}`);

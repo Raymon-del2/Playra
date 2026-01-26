@@ -34,8 +34,8 @@ export async function syncUserToDb(userData: {
 
         await turso.execute({
             sql: `
-                INSERT OR REPLACE INTO channels (id, user_id, name)
-                VALUES (?, ?, ?)
+                INSERT OR REPLACE INTO channels (id, user_id, name, account_type)
+                VALUES (?, ?, ?, 'general')
             `,
             args: [channelId, id, channelName]
         });

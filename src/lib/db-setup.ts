@@ -26,6 +26,7 @@ export async function initDatabase() {
                 description TEXT,
                 avatar TEXT, -- Base64 storage
                 verified BOOLEAN DEFAULT 0,
+                account_type TEXT DEFAULT 'general', -- adult | family | kids | general
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(id)
             );

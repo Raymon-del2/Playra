@@ -16,12 +16,12 @@ export default function SelectProfilePage() {
     // Create Profile Form State
     const [newName, setNewName] = useState('');
     const [newAvatar, setNewAvatar] = useState<string | null>(null);
+    const [newAccountType, setNewAccountType] = useState<'adult' | 'kids' | 'family'>('adult');
     const [creating, setCreating] = useState(false);
 
     // Edit Profile State
     const [editingProfileId, setEditingProfileId] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
-
 
     const compressImage = (file: File): Promise<string> => {
         return new Promise((resolve, reject) => {
@@ -53,7 +53,6 @@ export default function SelectProfilePage() {
                     canvas.height = height;
                     const ctx = canvas.getContext('2d');
                     ctx?.drawImage(img, 0, 0, width, height);
-                    // Compress to JPEG at 0.7 quality
                     resolve(canvas.toDataURL('image/jpeg', 0.7));
                 };
                 img.onerror = (err) => reject(err);
@@ -80,7 +79,6 @@ export default function SelectProfilePage() {
             try {
                 const compressed = await compressImage(file);
                 await updateProfileAvatar(editingProfileId, compressed);
-                // Refresh profiles
                 if (user) {
                     const pros = await getUserProfiles(user.uid);
                     setProfiles(pros);
@@ -95,8 +93,14 @@ export default function SelectProfilePage() {
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!user || !newName || !newAvatar) return;
+
+        if (!newName.startsWith('@')) {
+            alert("Profile name must start with @");
+            return;
+        }
+
         setCreating(true);
-        const res = await createProfile(user.uid, newName, newAvatar);
+        const res = await createProfile(user.uid, newName, newAvatar, newAccountType);
         if (res.success) {
             const pros = await getUserProfiles(user.uid);
             setProfiles(pros);
@@ -119,14 +123,12 @@ export default function SelectProfilePage() {
     const handleEdit = (e: React.MouseEvent, profileId: string) => {
         e.stopPropagation();
         setEditingProfileId(profileId);
-        // Trigger the hidden edit file input
         setTimeout(() => {
             fileInputRef.current?.click();
         }, 0);
     };
 
     useEffect(() => {
-        // Safety timeout to prevent infinite loading
         const safetyTimer = setTimeout(() => {
             if (loading) {
                 console.warn("Profile fetching timed out");
@@ -154,15 +156,11 @@ export default function SelectProfilePage() {
         };
     }, [router]);
 
-    // ... (rest of functions)
-
     if (loading) {
         return (
             <div className="min-h-screen bg-black flex items-center justify-center p-4 relative overflow-hidden">
-                {/* Ambient Background Glow */}
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/20 blur-[120px] rounded-full animate-pulse" />
                 <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/10 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
-
                 <div className="flex flex-col items-center gap-8 z-10">
                     <div className="flex gap-8">
                         {[1, 2].map(i => (
@@ -172,7 +170,6 @@ export default function SelectProfilePage() {
                             </div>
                         ))}
                     </div>
-                    <div className="w-48 h-12 bg-zinc-900 rounded-full animate-pulse mt-8" />
                 </div>
             </div>
         );
@@ -180,7 +177,6 @@ export default function SelectProfilePage() {
 
     return (
         <div className="min-h-screen bg-black flex items-center justify-center p-4 relative overflow-hidden">
-            {/* Ambient Background Glow */}
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/20 blur-[120px] rounded-full animate-pulse" />
             <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/10 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
 
@@ -188,17 +184,9 @@ export default function SelectProfilePage() {
                 <h1 className="text-3xl font-black text-white mb-2 tracking-tight">Who is watching?</h1>
                 <p className="text-zinc-500 font-bold mb-12 uppercase tracking-widest text-sm">Select your identity</p>
 
-                {/* Hidden Input for Editing */}
-                <input
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    accept="image/*"
-                    onChange={handleEditFileChange}
-                />
+                <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleEditFileChange} />
 
                 <div className="flex flex-wrap justify-center gap-8 mb-12 sm:mb-16">
-                    {/* Existing Profiles */}
                     {profiles.map((profile) => (
                         <div key={profile.id} className="group relative flex flex-col items-center gap-4 cursor-pointer">
                             <div
@@ -222,16 +210,21 @@ export default function SelectProfilePage() {
                                     <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                                 </button>
                             </div>
-                            <span className="text-zinc-400 font-bold text-lg group-hover:text-white transition-colors capitalize">{profile.name}</span>
+                            <div className="flex flex-col items-center">
+                                <span className="text-zinc-400 font-bold text-lg group-hover:text-white transition-colors capitalize">{profile.name}</span>
+                                <span className={`text-[10px] font-black uppercase tracking-tighter mt-0.5 px-2 py-0.5 rounded ${profile.account_type === 'kids' ? 'text-green-400 bg-green-400/10' :
+                                        profile.account_type === 'family' ? 'text-yellow-400 bg-yellow-400/10' :
+                                            profile.account_type === 'adult' ? 'text-red-400 bg-red-400/10' :
+                                                'text-blue-400 bg-blue-400/10'
+                                    }`}>
+                                    {profile.account_type || 'general'} Account
+                                </span>
+                            </div>
                         </div>
                     ))}
 
-                    {/* Add Profile Button */}
                     {profiles.length < 3 && (
-                        <div
-                            className="group flex flex-col items-center gap-4 cursor-pointer"
-                            onClick={() => setShowCreate(true)}
-                        >
+                        <div className="group flex flex-col items-center gap-4 cursor-pointer" onClick={() => setShowCreate(true)}>
                             <div className="w-32 h-32 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center group-hover:bg-zinc-800 group-hover:scale-105 transition-all duration-300 shadow-xl">
                                 <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
                                     <svg className="w-8 h-8 text-white/50 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.5v15m7.5-7.5h-15" /></svg>
@@ -242,29 +235,15 @@ export default function SelectProfilePage() {
                     )}
                 </div>
 
-                <div className="flex flex-col items-center gap-4 mt-8 pb-12">
-                    <button
-                        onClick={() => router.push('/')}
-                        className="px-8 py-3 bg-white/5 hover:bg-white/10 text-white rounded-full font-bold text-sm uppercase tracking-widest border border-white/5 transition-all"
-                    >
-                        Continue without Channel
-                    </button>
-                </div>
-
-                {/* Create Modal */}
                 {showCreate && (
                     <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-                        <div className="bg-zinc-900 border border-white/10 p-8 rounded-[40px] max-w-md w-full relative">
+                        <div className="bg-zinc-900 border border-white/10 p-8 rounded-[40px] max-w-sm w-full relative overflow-y-auto max-h-[90vh]">
                             <h2 className="text-2xl font-black text-white mb-6">Create Profile</h2>
                             <form onSubmit={handleCreate} className="space-y-6">
                                 <div className="flex justify-center">
                                     <label className="relative cursor-pointer group">
                                         <div className="w-24 h-24 rounded-full bg-zinc-800 overflow-hidden border border-white/10 flex items-center justify-center">
-                                            {newAvatar ? (
-                                                <img src={newAvatar} alt="Preview" className="w-full h-full object-cover" />
-                                            ) : (
-                                                <svg className="w-8 h-8 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                                            )}
+                                            {newAvatar ? <img src={newAvatar} alt="Preview" className="w-full h-full object-cover" /> : <svg className="w-8 h-8 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}
                                         </div>
                                         <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} required />
                                         <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 rounded-full transition-opacity">
@@ -274,32 +253,37 @@ export default function SelectProfilePage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest px-1">Profile Name</label>
-                                    <input
-                                        type="text"
-                                        value={newName}
-                                        onChange={(e) => setNewName(e.target.value)}
-                                        placeholder="Name"
-                                        className="w-full h-12 bg-black border border-white/10 rounded-2xl px-4 text-white text-sm font-bold focus:border-white/30 transition-colors outline-none"
-                                        required
-                                    />
+                                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest px-1 flex justify-between">
+                                        <span>Profile Name</span>
+                                        <span className="text-blue-400">Must start with @</span>
+                                    </label>
+                                    <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="@username" className="w-full h-12 bg-black border border-white/10 rounded-2xl px-4 text-white text-sm font-bold focus:border-white/30 transition-colors outline-none" required />
+                                </div>
+
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest px-1">Subscription Type</label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {(['adult', 'kids', 'family'] as const).map((type) => (
+                                            <button
+                                                key={type}
+                                                type="button"
+                                                onClick={() => setNewAccountType(type)}
+                                                className={`py-2 rounded-xl text-[10px] font-black uppercase transition-all border ${newAccountType === type ? 'bg-white text-black border-white' : 'bg-white/5 text-zinc-500 border-white/5 hover:border-white/20'}`}
+                                            >
+                                                {type}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <p className="text-[10px] text-zinc-500 px-1 leading-relaxed">
+                                        {newAccountType === 'kids' ? 'Safe content for children under 13.' :
+                                            newAccountType === 'family' ? 'Mixed content for all age groups.' :
+                                                'Full access to all high-fidelity entertainment.'}
+                                    </p>
                                 </div>
 
                                 <div className="flex gap-3 pt-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowCreate(false)}
-                                        className="flex-1 h-12 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-bold text-sm transition-colors"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={creating}
-                                        className="flex-1 h-12 bg-white text-black hover:bg-zinc-200 rounded-2xl font-black text-sm transition-colors disabled:opacity-50"
-                                    >
-                                        {creating ? 'Creating...' : 'Create'}
-                                    </button>
+                                    <button type="button" onClick={() => setShowCreate(false)} className="flex-1 h-12 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-bold text-sm transition-colors">Cancel</button>
+                                    <button type="submit" disabled={creating} className="flex-1 h-12 bg-white text-black hover:bg-zinc-200 rounded-2xl font-black text-sm transition-colors disabled:opacity-50">{creating ? 'Creating...' : 'Create'}</button>
                                 </div>
                             </form>
                         </div>

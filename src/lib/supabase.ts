@@ -53,25 +53,37 @@ export async function uploadVideo(videoData: Omit<Video, 'id' | 'created_at' | '
 }
 
 // Get all videos
-export async function getVideos(limit = 20, offset = 0) {
-    const { data, error } = await ensureSupabase()
+export async function getVideos(limit = 20, offset = 0, category?: string) {
+    let query = ensureSupabase()
         .from('videos')
         .select('*')
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
+
+    if (category && category !== 'general' && category !== 'All') {
+        query = query.eq('category', category);
+    }
+
+    const { data, error } = await query;
 
     if (error) throw error;
     return data as Video[];
 }
 
 // Get only styles (shorts)
-export async function getStyles(limit = 20, offset = 0) {
-    const { data, error } = await ensureSupabase()
+export async function getStyles(limit = 20, offset = 0, category?: string) {
+    let query = ensureSupabase()
         .from('videos')
         .select('*')
         .eq('is_short', true)
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
+
+    if (category && category !== 'general' && category !== 'All') {
+        query = query.eq('category', category);
+    }
+
+    const { data, error } = await query;
 
     if (error) throw error;
     return data as Video[];
