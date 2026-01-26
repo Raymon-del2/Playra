@@ -64,7 +64,11 @@ export default function ProfileMenu({ isOpen, onClose, activeProfile, userEmail 
                 </div>
                 <div className="flex flex-col min-w-0">
                     <span className="font-semibold truncate">{activeProfile.name}</span>
-                    <span className="text-gray-400 text-sm truncate">@{activeProfile.name.replace(/\s+/g, '').toLowerCase()}</span>
+                    <span className="text-gray-400 text-sm truncate">
+                        {activeProfile.name.startsWith('@')
+                            ? activeProfile.name.toLowerCase()
+                            : `@${activeProfile.name.replace(/\s+/g, '').toLowerCase()}`}
+                    </span>
                     <Link href="/channel" className="text-blue-400 text-sm mt-1 hover:text-blue-300">
                         View your channel
                     </Link>
