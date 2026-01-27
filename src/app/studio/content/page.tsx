@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { getActiveProfile } from '@/app/actions/profile';
 import Link from 'next/link';
-import { supabase, uploadVideoFile, uploadVideo } from '@/lib/supabase';
+import { supabase, uploadVideoFile, uploadVideo, uploadThumbnail, deleteVideoWithAssets } from '@/lib/supabase';
 
 type UploadStep = 'idle' | 'details' | 'success';
 
@@ -19,20 +19,25 @@ export default function ChannelContent() {
     const [uploadProgress, setUploadProgress] = useState(0);
     const [videoTitle, setVideoTitle] = useState('');
     const [videoDescription, setVideoDescription] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState<'adults' | 'family' | 'kids' | 'advert' | 'general'>('general');
+    const [selectedCategory, setSelectedCategory] = useState<'adults' | 'family' | 'kids' | 'advert' | 'general' | 'music'>('general');
+    const [thumbnailData, setThumbnailData] = useState<string>('');
+    const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
     const [isSaving, setIsSaving] = useState(false);
 
     // List State
     const [videos, setVideos] = useState<any[]>([]);
     const [isLoadingList, setIsLoadingList] = useState(true);
+    const [deleteTarget, setDeleteTarget] = useState<any>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
-    const tabs = ['Videos', 'Styles', 'Live', 'Posts', 'Playlists', 'Podcasts', 'Promotions', 'Collaborations'];
+    const tabs = ['Videos', 'Styles', 'Live', 'Posts', 'Playlists', 'Podcasts', 'Promotions', 'Collaborations', 'Music'];
 
     const filteredVideos = videos.filter(v => {
-        if (activeTab === 'Videos') return !v.is_short && !v.is_live && !v.is_post;
+        if (activeTab === 'Videos') return !v.is_short && !v.is_live && !v.is_post && v.category !== 'music';
         if (activeTab === 'Styles') return v.is_short;
         if (activeTab === 'Live') return v.is_live;
         if (activeTab === 'Posts') return v.is_post;
+        if (activeTab === 'Music') return v.category === 'music';
         return false; // Other tabs show no content for now
     });
 
@@ -109,13 +114,22 @@ export default function ChannelContent() {
             setUploadProgress(40);
             const videoUrl = await uploadVideoFile(selectedFile, filePath);
 
-            setUploadProgress(80);
+            setUploadProgress(65);
+
+            // 1b. Upload thumbnail if provided
+            let thumbnailUrl = '';
+            if (thumbnailFile) {
+                const thumbPath = `${activeProfile.id}/${timestamp}-thumb-${thumbnailFile.name}`;
+                thumbnailUrl = await uploadThumbnail(thumbnailFile, thumbPath);
+                setUploadProgress(80);
+            }
+
             // 2. Save to Database
             await uploadVideo({
                 title: videoTitle,
                 description: videoDescription,
                 video_url: videoUrl,
-                thumbnail_url: 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=400&h=225&fit=crop', // Placeholder
+                thumbnail_url: thumbnailUrl || 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=400&h=225&fit=crop', // Placeholder fallback
                 channel_id: activeProfile.id,
                 channel_name: activeProfile.name,
                 channel_avatar: activeProfile.avatar || '',
@@ -123,7 +137,7 @@ export default function ChannelContent() {
                 is_live: activeTab === 'Live',
                 is_short: activeTab === 'Styles',
                 is_post: activeTab === 'Posts',
-                category: selectedCategory
+                category: activeTab === 'Music' ? 'music' : selectedCategory
             });
 
             setUploadProgress(100);
@@ -147,6 +161,19 @@ export default function ChannelContent() {
         setUploadProgress(0);
         setVideoTitle('');
         setVideoDescription('');
+        setThumbnailData('');
+    };
+
+    const handleThumbnailSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setThumbnailFile(file);
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const result = reader.result?.toString() || '';
+            setThumbnailData(result);
+        };
+        reader.readAsDataURL(file);
     };
 
     return (
@@ -187,7 +214,15 @@ export default function ChannelContent() {
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                         </svg>
-                        {activeTab === 'Live' ? 'Coming Soon' : activeTab === 'Styles' ? 'Upload Style' : activeTab === 'Posts' ? 'Create Post' : 'Create'}
+                        {activeTab === 'Live'
+                            ? 'Coming Soon'
+                            : activeTab === 'Styles'
+                                ? 'Upload Style'
+                                : activeTab === 'Posts'
+                                    ? 'Create Post'
+                                    : activeTab === 'Music'
+                                        ? 'Upload Music'
+                                        : 'Create'}
                     </button>
                     <div className="w-8 h-8 rounded-full overflow-hidden bg-zinc-700">
                         {activeProfile?.avatar ? (
@@ -197,6 +232,49 @@ export default function ChannelContent() {
                                 {activeProfile?.name?.[0]?.toUpperCase() || 'U'}
                             </div>
                         )}
+
+            {/* Delete confirmation modal */}
+            {deleteTarget && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm">
+                    <div className="bg-[#111] rounded-2xl border border-white/10 shadow-2xl w-full max-w-md p-6 space-y-4">
+                        <h3 className="text-xl font-bold text-white">Delete this video?</h3>
+                        <p className="text-sm text-zinc-400">
+                            This will permanently remove “{deleteTarget.title}”. You cannot undo this action.
+                        </p>
+                        <div className="flex items-center justify-end gap-3">
+                            <button
+                                onClick={() => setDeleteTarget(null)}
+                                className="px-4 py-2 rounded-full text-sm font-semibold bg-white/10 text-white hover:bg-white/20 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                disabled={isDeleting}
+                                onClick={async () => {
+                                    if (!deleteTarget) return;
+                                    setIsDeleting(true);
+                                    try {
+                                        await deleteVideoWithAssets({
+                                            id: deleteTarget.id,
+                                            videoUrl: deleteTarget.video_url,
+                                            thumbnailUrl: deleteTarget.thumbnail_url
+                                        });
+                                        setVideos((prev) => prev.filter((v) => v.id !== deleteTarget.id));
+                                    } catch (error) {
+                                        console.error('Error deleting video:', error);
+                                    } finally {
+                                        setIsDeleting(false);
+                                        setDeleteTarget(null);
+                                    }
+                                }}
+                                className="px-4 py-2 rounded-full text-sm font-semibold bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-60"
+                            >
+                                {isDeleting ? 'Deleting...' : 'Delete'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
                     </div>
                 </div>
             </div>
@@ -232,7 +310,7 @@ export default function ChannelContent() {
                 </div>
 
                 {/* Table Header */}
-                <div className="grid grid-cols-[1fr_repeat(5,120px)] gap-4 px-4 py-2 border-b border-white/5 text-[12px] font-bold text-zinc-400 uppercase tracking-wider">
+                <div className="grid grid-cols-[1fr_repeat(5,120px)_110px] gap-4 px-4 py-2 border-b border-white/5 text-[12px] font-bold text-zinc-400 uppercase tracking-wider">
                     <div className="flex items-center gap-4">
                         <input type="checkbox" className="rounded border-zinc-600 bg-transparent" />
                         <span>Video</span>
@@ -245,6 +323,7 @@ export default function ChannelContent() {
                     </span>
                     <span>Views</span>
                     <span>Comments</span>
+                    <span>Actions</span>
                 </div>
 
                 {/* Content List / Empty State */}
@@ -255,7 +334,7 @@ export default function ChannelContent() {
                 ) : filteredVideos.length > 0 ? (
                     <div className="space-y-0">
                         {filteredVideos.map((video) => (
-                            <div key={video.id} className="grid grid-cols-[1fr_repeat(5,120px)] gap-4 px-4 py-4 border-b border-white/5 hover:bg-white/5 transition-colors group items-center">
+                            <div key={video.id} className="grid grid-cols-[1fr_repeat(5,120px)_110px] gap-4 px-4 py-4 border-b border-white/5 hover:bg-white/5 transition-colors group items-center">
                                 <div className="flex items-center gap-4 min-w-0">
                                     <input type="checkbox" className="rounded border-zinc-600 bg-transparent flex-shrink-0" />
                                     <Link href={`/watch/${video.id}`} className="flex gap-4 items-center min-w-0 flex-1">
@@ -280,6 +359,14 @@ export default function ChannelContent() {
                                 </div>
                                 <div className="text-sm text-zinc-400">{video.views || 0}</div>
                                 <div className="text-sm text-zinc-400">0</div>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => setDeleteTarget(video)}
+                                        className="px-3 py-1.5 text-sm font-semibold rounded-full bg-red-500/10 text-red-200 hover:bg-red-500/20 border border-red-500/30 transition-colors"
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
                             </div>
                         ))}
                     </div>
@@ -433,12 +520,19 @@ export default function ChannelContent() {
                                         <div className="space-y-2">
                                             <h3 className="text-sm font-bold text-white">Thumbnail</h3>
                                             <p className="text-[12px] text-zinc-400">Select or upload a picture that shows what's in your video. A good thumbnail stands out and draws viewers' attention.</p>
-                                            <div className="w-32 aspect-video bg-zinc-800 border-2 border-dashed border-zinc-700 rounded flex flex-col items-center justify-center cursor-pointer hover:border-zinc-500 transition-colors">
-                                                <svg className="w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                </svg>
-                                                <span className="text-[10px] text-zinc-500 mt-2">Upload thumbnail</span>
-                                            </div>
+                                            <label className="w-36 aspect-video bg-zinc-800 border-2 border-dashed border-zinc-700 rounded flex flex-col items-center justify-center cursor-pointer hover:border-zinc-500 transition-colors overflow-hidden">
+                                                {thumbnailData ? (
+                                                    <img src={thumbnailData} alt="Thumbnail preview" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <>
+                                                        <svg className="w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                        </svg>
+                                                        <span className="text-[10px] text-zinc-500 mt-2">Upload thumbnail</span>
+                                                    </>
+                                                )}
+                                                <input type="file" accept="image/*" className="hidden" onChange={handleThumbnailSelect} />
+                                            </label>
                                         </div>
                                     </div>
 

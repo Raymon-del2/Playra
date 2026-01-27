@@ -34,7 +34,7 @@ export default function CreateMenu({ isOpen, onClose }: CreateMenuProps) {
             className="absolute top-full mt-2 right-0 w-[180px] bg-[#282828] rounded-xl shadow-2xl z-[100] text-white border border-white/10 py-2 overflow-hidden"
         >
             <Link
-                href="/upload"
+                href="/studio/content"
                 onClick={onClose}
                 className="flex items-center gap-4 px-4 py-2.5 hover:bg-white/10 transition-colors group"
             >
@@ -46,7 +46,8 @@ export default function CreateMenu({ isOpen, onClose }: CreateMenuProps) {
                 <span className="text-[14px] font-medium">Upload video</span>
             </Link>
 
-            <button
+            <Link
+                href="/studio/content"
                 onClick={onClose}
                 className="flex items-center gap-4 px-4 py-2.5 hover:bg-white/10 transition-colors group w-full text-left"
             >
@@ -56,9 +57,10 @@ export default function CreateMenu({ isOpen, onClose }: CreateMenuProps) {
                     </svg>
                 </div>
                 <span className="text-[14px] font-medium">Go live</span>
-            </button>
+            </Link>
 
-            <button
+            <Link
+                href="/studio/content"
                 onClick={onClose}
                 className="flex items-center gap-4 px-4 py-2.5 hover:bg-white/10 transition-colors group w-full text-left"
             >
@@ -68,7 +70,7 @@ export default function CreateMenu({ isOpen, onClose }: CreateMenuProps) {
                     </svg>
                 </div>
                 <span className="text-[14px] font-medium">Create post</span>
-            </button>
+            </Link>
         </div>
     );
 }

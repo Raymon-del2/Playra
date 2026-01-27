@@ -1,8 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import { formatDistanceToNow } from 'date-fns';
 import { getActiveProfile } from '@/app/actions/profile';
+import { clearWatchHistory, getWatchHistory, isHistoryPaused, setHistoryPause } from '@/lib/supabase';
+import { useRouter } from 'next/navigation';
 
 interface HistoryItem {
     id: string;
@@ -16,71 +19,101 @@ interface HistoryItem {
     duration?: string;
 }
 
-const mockHistory: HistoryItem[] = [
-    {
-        id: '1',
-        title: 'the way iñaki nailed luffy in his self-tape',
-        thumbnail: 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=400&h=225&fit=crop',
-        views: '2M views',
-        timestamp: '1 hour ago',
-        date: new Date(), // Today
-        type: 'short',
-    },
-    {
-        id: '2',
-        title: 'The Flash | He possesses the power ...',
-        thumbnail: 'https://images.unsplash.com/photo-1614728263952-84ea206f99b6?w=400&h=225&fit=crop',
-        views: '4.6M views',
-        timestamp: '2 hours ago',
-        date: new Date(), // Today
-        type: 'short',
-    },
-    {
-        id: '3',
-        title: 'She is not an empty-hearted toy | Foundati...',
-        thumbnail: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=400&h=225&fit=crop',
-        views: '6.9M views',
-        timestamp: '3 hours ago',
-        date: new Date(), // Today
-        type: 'short',
-    },
-    {
-        id: '4',
-        title: 'Building a Next-Gen Discovery Platform',
-        thumbnail: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&h=225&fit=crop',
-        views: '125K views',
-        channel: 'Playra Engineering',
-        duration: '15:32',
-        timestamp: 'Yesterday',
-        date: new Date(Date.now() - 86400000), // Yesterday
-        type: 'video',
-    },
-    {
-        id: '5',
-        title: 'Advanced React Patterns in 2025',
-        thumbnail: 'https://images.unsplash.com/photo-1633356122102-3fe601e05bd2?w=400&h=225&fit=crop',
-        views: '89K views',
-        channel: 'Tech Talk',
-        duration: '22:10',
-        timestamp: 'Jan 20, 2025',
-        date: new Date('2025-01-20'),
-        type: 'video',
-    },
-];
-
 export default function HistoryPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [showClearModal, setShowClearModal] = useState(false);
     const [showPauseModal, setShowPauseModal] = useState(false);
+    const [activeChip, setActiveChip] = useState<'All' | 'Videos' | 'Styles' | 'Podcasts' | 'Music'>('All');
     const [activeProfileName, setActiveProfileName] = useState('');
+    const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
+    const [history, setHistory] = useState<HistoryItem[]>([]);
+    const [paused, setPaused] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [progressMap, setProgressMap] = useState<Record<string, { current?: number; duration?: number }>>({});
+    const router = useRouter();
+
+    const parseDurationToSeconds = (value: string | null | undefined) => {
+        if (!value) return 0;
+        const parts = value.split(':').map((p) => Number(p));
+        if (parts.some((n) => Number.isNaN(n))) return 0;
+        if (parts.length === 3) {
+            const [h, m, s] = parts;
+            return h * 3600 + m * 60 + s;
+        }
+        if (parts.length === 2) {
+            const [m, s] = parts;
+            return m * 60 + s;
+        }
+        return parts[0] || 0;
+    };
+
+    const formatTime = (secs: number) => {
+        if (!secs || Number.isNaN(secs)) return '0:00';
+        const total = Math.floor(secs);
+        const h = Math.floor(total / 3600);
+        const m = Math.floor((total % 3600) / 60);
+        const s = total % 60;
+        const pad = (n: number) => n.toString().padStart(2, '0');
+        return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
+    };
 
     useEffect(() => {
-        const fetchProfile = async () => {
-            const profile = await getActiveProfile();
-            if (profile) setActiveProfileName(profile.name);
+        const load = async () => {
+            setIsLoading(true);
+            try {
+                const profile = await getActiveProfile();
+                if (profile) {
+                    setActiveProfileName(profile.name);
+                    setActiveProfileId(profile.id);
+                    const pausedFlag = await isHistoryPaused(profile.id);
+                    setPaused(pausedFlag);
+                    const data = await getWatchHistory(profile.id, 300);
+                    const mapped: HistoryItem[] = (data || [])
+                        .filter((row) => row.video)
+                        .map((row) => {
+                            const v = row.video!;
+                            const viewCount = Math.max((v.views ?? 0), 1);
+                            return {
+                                id: v.id,
+                                title: v.title,
+                                thumbnail: v.thumbnail_url,
+                                views: `${viewCount.toLocaleString()} views`,
+                                timestamp: formatDistanceToNow(new Date(row.watched_at), { addSuffix: true }),
+                                date: new Date(row.watched_at),
+                                type: v.is_short ? 'short' : 'video',
+                                channel: v.channel_name || 'Unknown channel',
+                                duration: v.duration || '0:00',
+                            };
+                        });
+                    setHistory(mapped);
+                }
+            } catch (err) {
+                console.error('Failed to load history', err);
+            } finally {
+                setIsLoading(false);
+            }
         };
-        fetchProfile();
+        load();
     }, []);
+
+    // Load local progress (per video) so the history cards can show where you left off
+    useEffect(() => {
+        if (typeof window === 'undefined' || !activeProfileId || history.length === 0) return;
+        const map: Record<string, { current?: number; duration?: number }> = {};
+        history.forEach((item) => {
+            const key = `watch_progress:${activeProfileId}:${item.id}`;
+            try {
+                const raw = localStorage.getItem(key);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    map[item.id] = { current: parsed.current, duration: parsed.duration };
+                }
+            } catch {
+                // ignore
+            }
+        });
+        setProgressMap(map);
+    }, [activeProfileId, history]);
 
     const formatDateLabel = (date: Date) => {
         const today = new Date();
@@ -97,12 +130,28 @@ export default function HistoryPage() {
         return date.toLocaleDateString('en-US', options);
     };
 
-    const groupedHistory = mockHistory.reduce((acc: any, item) => {
-        const label = formatDateLabel(item.date);
-        if (!acc[label]) acc[label] = [];
-        acc[label].push(item);
-        return acc;
-    }, {});
+    const filteredHistory = useMemo(() => {
+        const q = searchQuery.toLowerCase();
+        return history.filter((item) => {
+            const matchesSearch =
+                !q || [item.title, item.channel].some((field) => (field || '').toLowerCase().includes(q));
+            let matchesChip = true;
+            if (activeChip === 'Videos') matchesChip = item.type === 'video' && item.channel !== 'Music';
+            if (activeChip === 'Styles') matchesChip = item.type === 'short';
+            if (activeChip === 'Music') matchesChip = (item as any).category === 'music' || (item.channel || '').toLowerCase().includes('music');
+            if (activeChip === 'Podcasts') matchesChip = (item as any).category === 'podcasts';
+            return matchesSearch && matchesChip;
+        });
+    }, [searchQuery, history, activeChip]);
+
+    const groupedHistory = useMemo(() => {
+        return filteredHistory.reduce((acc: any, item) => {
+            const label = formatDateLabel(item.date);
+            if (!acc[label]) acc[label] = [];
+            acc[label].push(item);
+            return acc;
+        }, {});
+    }, [filteredHistory]);
 
     return (
         <div className="min-h-screen bg-black text-white flex">
@@ -115,7 +164,8 @@ export default function HistoryPage() {
                     {['All', 'Videos', 'Styles', 'Podcasts', 'Music'].map((chip) => (
                         <button
                             key={chip}
-                            className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${chip === 'All' ? 'bg-white text-black' : 'bg-zinc-800 hover:bg-zinc-700 text-white'
+                            onClick={() => setActiveChip(chip as typeof activeChip)}
+                            className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${chip === activeChip ? 'bg-white text-black' : 'bg-zinc-800 hover:bg-zinc-700 text-white'
                                 }`}
                         >
                             {chip}
@@ -124,60 +174,92 @@ export default function HistoryPage() {
                 </div>
 
                 {/* History Sections */}
-                <div className="space-y-12">
-                    {Object.keys(groupedHistory).map((label) => (
-                        <div key={label} className="space-y-6">
-                            <h2 className="text-[20px] font-black border-b border-white/5 pb-2">{label}</h2>
+                {Object.keys(groupedHistory).length === 0 && !isLoading ? (
+                    <div className="text-zinc-400 text-sm font-semibold">No history found. Watch something to see it here.</div>
+                ) : (
+                    <div className="space-y-12">
+                        {Object.keys(groupedHistory).map((label) => (
+                            <div key={label} className="space-y-6">
+                                <h2 className="text-[20px] font-black border-b border-white/5 pb-2">{label}</h2>
 
-                            {/* Special handling for Shorts if grouped by date section */}
-                            {groupedHistory[label].some((i: any) => i.type === 'short') && (
-                                <div className="space-y-4">
-                                    <div className="flex items-center gap-2 font-black uppercase text-lg">
-                                        <img src="/styles-icon.svg?v=blue" alt="Styles" className="w-6 h-6 object-contain" />
-                                        <span className="text-white">Styles</span>
+                                {/* Special handling for Shorts if grouped by date section */}
+                                {groupedHistory[label].some((i: any) => i.type === 'short') && (
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2 font-black uppercase text-lg">
+                                            <img src="/styles-icon.svg?v=blue" alt="Styles" className="w-6 h-6 object-contain" />
+                                            <span className="text-white">Styles</span>
+                                        </div>
+                                        <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
+                                            {groupedHistory[label]
+                                                .filter((item: any) => item.type === 'short')
+                                                .map((item: any) => (
+                                                    <Link key={item.id} href={`/watch/${item.id}`} className="group space-y-2">
+                                                        <div className="aspect-[9/16] rounded-xl overflow-hidden bg-zinc-900 border border-white/5 relative group-hover:border-white/20 transition-all">
+                                                            <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                                            {progressMap[item.id]?.duration ? (
+                                                                <div className="absolute bottom-0 left-0 w-full h-1 bg-white/10">
+                                                                    <div
+                                                                        className="h-full bg-blue-500"
+                                                                        style={{
+                                                                            width: `${Math.min(100, Math.max(0, ((progressMap[item.id].current || 0) / (progressMap[item.id].duration || 1)) * 100))}%`,
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                            ) : null}
+                                                        </div>
+                                                        <div className="px-1">
+                                                            <h3 className="text-sm font-bold line-clamp-2 leading-tight group-hover:text-blue-400 transition-colors uppercase tracking-tight">{item.title}</h3>
+                                                            <p className="text-[12px] text-zinc-400 font-bold mt-1 uppercase tracking-tighter">{item.views}</p>
+                                                        </div>
+                                                    </Link>
+                                                ))}
+                                        </div>
                                     </div>
-                                    <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
-                                        {groupedHistory[label]
-                                            .filter((item: any) => item.type === 'short')
-                                            .map((item: any) => (
-                                                <Link key={item.id} href={`/watch/${item.id}`} className="group space-y-2">
-                                                    <div className="aspect-[9/16] rounded-xl overflow-hidden bg-zinc-900 border border-white/5 relative group-hover:border-white/20 transition-all">
-                                                        <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                )}
+
+                                {/* Standard Videos */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                                    {groupedHistory[label]
+                                        .filter((item: any) => item.type === 'video')
+                                        .map((item: any) => {
+                                            const prog = progressMap[item.id];
+                                            const durationSeconds = prog?.duration ?? parseDurationToSeconds(item.duration);
+                                            const pct =
+                                                durationSeconds && durationSeconds > 0
+                                                    ? Math.min(100, Math.max(0, ((prog?.current || 0) / durationSeconds) * 100))
+                                                    : 0;
+                                            const durationText =
+                                                durationSeconds && durationSeconds > 0
+                                                    ? formatTime(durationSeconds)
+                                                    : item.duration || '0:00';
+                                            return (
+                                                <Link key={item.id} href={`/watch/${item.id}`} className="flex gap-4 group">
+                                                    <div className="w-48 aspect-video rounded-xl overflow-hidden bg-zinc-900 flex-shrink-0 relative border border-white/5">
+                                                        <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                                        {durationText ? (
+                                                            <div className="absolute bottom-2 right-2 bg-black/80 px-1.5 py-0.5 rounded text-[10px] font-black">
+                                                                {durationText}
+                                                            </div>
+                                                        ) : null}
+                                                        {durationSeconds ? (
+                                                            <div className="absolute bottom-0 left-0 w-full h-1 bg-white/10">
+                                                                <div className="h-full bg-blue-500" style={{ width: `${pct}%` }} />
+                                                            </div>
+                                                        ) : null}
                                                     </div>
-                                                    <div className="px-1">
-                                                        <h3 className="text-sm font-bold line-clamp-2 leading-tight group-hover:text-blue-400 transition-colors uppercase tracking-tight">{item.title}</h3>
-                                                        <p className="text-[12px] text-zinc-400 font-bold mt-1 uppercase tracking-tighter">{item.views}</p>
+                                                    <div className="flex-1 space-y-1">
+                                                        <h3 className="font-black text-sm line-clamp-2 leading-tight group-hover:text-blue-400 transition-colors uppercase tracking-tight">{item.title}</h3>
+                                                        <p className="text-[12px] text-zinc-400 font-bold uppercase tracking-tight">{item.channel}</p>
+                                                        <p className="text-[12px] text-zinc-500 font-bold uppercase tracking-tighter">{item.views} • {item.timestamp}</p>
                                                     </div>
                                                 </Link>
-                                            ))}
-                                    </div>
+                                            );
+                                        })}
                                 </div>
-                            )}
-
-                            {/* Standard Videos */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                                {groupedHistory[label]
-                                    .filter((item: any) => item.type === 'video')
-                                    .map((item: any) => (
-                                        <Link key={item.id} href={`/watch/${item.id}`} className="flex gap-4 group">
-                                            <div className="w-48 aspect-video rounded-xl overflow-hidden bg-zinc-900 flex-shrink-0 relative border border-white/5">
-                                                <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                                                <div className="absolute bottom-2 right-2 bg-black/80 px-1.5 py-0.5 rounded text-[10px] font-black">
-                                                    {item.duration}
-                                                </div>
-                                            </div>
-                                            <div className="flex-1 space-y-1">
-                                                <h3 className="font-black text-sm line-clamp-2 leading-tight group-hover:text-blue-400 transition-colors uppercase tracking-tight">{item.title}</h3>
-                                                <p className="text-[12px] text-zinc-400 font-bold uppercase tracking-tight">{item.channel}</p>
-                                                <p className="text-[12px] text-zinc-500 font-bold uppercase tracking-tighter">{item.views} • {item.timestamp}</p>
-                                            </div>
-                                        </Link>
-                                    ))}
                             </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {/* Sidebar Controls */}
@@ -203,10 +285,14 @@ export default function HistoryPage() {
                     />
                     <ControlButton
                         icon={<PauseIcon />}
-                        label="Pause watch history"
+                        label={paused ? 'Unpause watch history' : 'Pause watch history'}
                         onClick={() => setShowPauseModal(true)}
                     />
-                    <ControlButton icon={<SettingsIcon />} label="Manage all history" />
+                    <ControlButton
+                        icon={<SettingsIcon />}
+                        label="Manage all history"
+                        onClick={() => router.push('/history/manage')}
+                    />
                 </div>
 
                 <div className="space-y-4 pt-4 border-t border-white/5">
@@ -244,6 +330,17 @@ export default function HistoryPage() {
                             </button>
                             <button
                                 className="px-5 py-2 text-blue-400 hover:bg-blue-400/10 rounded-full font-bold text-sm transition-colors"
+                                onClick={async () => {
+                                    if (!activeProfileId) return;
+                                    try {
+                                        await clearWatchHistory(activeProfileId);
+                                        setHistory([]);
+                                    } catch (err) {
+                                        console.error('Failed to clear history', err);
+                                    } finally {
+                                        setShowClearModal(false);
+                                    }
+                                }}
                             >
                                 Clear watch history
                             </button>
@@ -281,8 +378,19 @@ export default function HistoryPage() {
                             </button>
                             <button
                                 className="px-5 py-2 text-blue-400 hover:bg-blue-400/10 rounded-full font-bold text-sm transition-colors"
+                                onClick={async () => {
+                                    if (!activeProfileId) return;
+                                    try {
+                                        await setHistoryPause(activeProfileId, !paused);
+                                        setPaused(!paused);
+                                    } catch (err) {
+                                        console.error('Failed to toggle pause', err);
+                                    } finally {
+                                        setShowPauseModal(false);
+                                    }
+                                }}
                             >
-                                Pause
+                                {paused ? 'Unpause' : 'Pause'}
                             </button>
                         </div>
                     </div>

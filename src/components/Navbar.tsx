@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocation } from '@/hooks/useLocation';
 import ProfileMenu from './ProfileMenu';
@@ -31,20 +31,16 @@ export default function Navbar({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [hasUnreadNotifications, setHasUnreadNotifications] = useState(true);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
   const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeechSupported, setIsSpeechSupported] = useState(true);
   const profileContainerRef = useRef<HTMLDivElement>(null);
   const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const recognitionRef = useRef<any>(null);
 
-  const suggestions = [
-    'Next.js tutorial',
-    'React hooks',
-    'TypeScript tips',
-    'CSS grid layout',
-    'Node.js API',
-    'Machine learning basics',
-    'Web performance',
-  ];
+  const suggestions: string[] = [];
 
   const filteredSuggestions = useMemo(
     () =>
@@ -54,11 +50,87 @@ export default function Navbar({
     [searchQuery],
   );
 
+  const getSpeechRecognition = () => {
+    if (typeof window === 'undefined') return null;
+    return (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition || null;
+  };
+
+  useEffect(() => {
+    const SpeechRecognition = getSpeechRecognition();
+    setIsSpeechSupported(Boolean(SpeechRecognition));
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.onresult = null;
+        recognitionRef.current.onstart = null;
+        recognitionRef.current.onerror = null;
+        recognitionRef.current.onend = null;
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
+      }
+    };
+  }, []);
+
   const handleSearch = (query = searchQuery) => {
     const trimmed = query.trim();
     if (!trimmed) return;
     router.push(`/results?search_query=${encodeURIComponent(trimmed)}`);
     setIsDropdownOpen(false);
+  };
+
+  const startListening = () => {
+    const SpeechRecognition = getSpeechRecognition();
+    if (!SpeechRecognition) {
+      setIsSpeechSupported(false);
+      return;
+    }
+
+    if (!recognitionRef.current) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = navigator?.language || 'en-US';
+
+      recognition.onstart = () => setIsListening(true);
+      recognition.onend = () => setIsListening(false);
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error:', event);
+        setIsListening(false);
+      };
+      recognition.onresult = (event: any) => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; i += 1) {
+          transcript += event.results[i][0].transcript;
+        }
+        if (transcript.trim()) {
+          setSearchQuery(transcript.trim());
+        }
+      };
+
+      recognitionRef.current = recognition;
+    }
+
+    try {
+      recognitionRef.current.start();
+    } catch (error) {
+      console.error('Failed to start speech recognition:', error);
+      setIsListening(false);
+    }
+  };
+
+  const stopListening = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
+    setIsListening(false);
+  };
+
+  const handleMicClick = () => {
+    if (isListening) {
+      stopListening();
+      return;
+    }
+    startListening();
   };
 
   return (
@@ -88,13 +160,28 @@ export default function Navbar({
                   type="text"
                   placeholder="Search"
                   value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      handleSearch();
+                    }
+                  }}
                   className="w-full bg-zinc-900 text-white pl-5 pr-5 py-2 rounded-l-full border border-zinc-800 focus:outline-none focus:border-blue-500/50 transition-all font-medium"
                 />
               </div>
-              <button className="bg-zinc-800 hover:bg-zinc-700 px-6 py-[9.5px] rounded-r-full border-y border-r border-zinc-800 transition-colors">
+              <button
+                onClick={() => handleSearch()}
+                className="bg-zinc-800 hover:bg-zinc-700 px-6 py-[9.5px] rounded-r-full border-y border-r border-zinc-800 transition-colors"
+              >
                 <svg className="w-5 h-5 text-gray-200" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
               </button>
-              <button className="ml-4 p-2.5 rounded-full bg-zinc-800 text-white hover:bg-zinc-700 active:scale-95 transition-all">
+              <button
+                onClick={handleMicClick}
+                disabled={!isSpeechSupported}
+                aria-pressed={isListening}
+                aria-label={isSpeechSupported ? 'Voice search' : 'Voice search not supported'}
+                className={`ml-4 p-2.5 rounded-full text-white active:scale-95 transition-all ${isListening ? 'bg-red-600 hover:bg-red-500' : 'bg-zinc-800 hover:bg-zinc-700'} ${!isSpeechSupported ? 'opacity-40 cursor-not-allowed' : ''}`}
+              >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" /><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" /></svg>
               </button>
             </div>
@@ -128,21 +215,26 @@ export default function Navbar({
               <button
                 onClick={() => {
                   setIsNotificationsOpen(!isNotificationsOpen);
-                  if (!isNotificationsOpen) {
-                    setHasUnreadNotifications(false);
-                  }
+                  if (!isNotificationsOpen) setHasUnreadNotifications(false);
                 }}
                 className="flex p-2 rounded-full hover:bg-white/10 text-white active:scale-90 transition-all relative"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
-                {hasUnreadNotifications && (
-                  <span className="absolute top-0.5 right-0.5 bg-red-600 text-[9px] font-bold text-white px-1 rounded-full min-w-[14px] text-center border border-gray-900 leading-tight">9+</span>
+                {hasUnreadNotifications && notificationCount > 0 && (
+                  <span className="absolute top-0.5 right-0.5 bg-red-600 text-[9px] font-bold text-white px-1 rounded-full min-w-[14px] text-center border border-gray-900 leading-tight">
+                    {notificationCount}
+                  </span>
                 )}
               </button>
 
               <NotificationsPopup
                 isOpen={isNotificationsOpen}
                 onClose={() => setIsNotificationsOpen(false)}
+                onCountChange={(count) => {
+                  setNotificationCount(count);
+                  if (count > 0) setHasUnreadNotifications(true);
+                  else setHasUnreadNotifications(false);
+                }}
               />
             </div>
 

@@ -30,6 +30,7 @@ export default function LayoutShell({ children, activeProfile }: LayoutShellProp
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
 
   const isStylesPage = pathname?.startsWith('/styles');
+  const isStudio = pathname?.startsWith('/studio');
 
   useEffect(() => {
     setMounted(true);
@@ -111,6 +112,11 @@ export default function LayoutShell({ children, activeProfile }: LayoutShellProp
 
   if (isAuthPage) {
     return <main className="min-h-screen bg-black">{children}</main>;
+  }
+
+  // Studio pages have their own shell; avoid double nav/sidebars
+  if (isStudio) {
+    return <>{children}</>;
   }
 
   return (

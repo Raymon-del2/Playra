@@ -8,6 +8,31 @@ import { getActiveProfile } from '@/app/actions/profile';
 
 const SKELETON_BATCH = Array.from({ length: 8 });
 
+function formatDurationFromSeconds(seconds: number) {
+  if (!Number.isFinite(seconds) || seconds <= 0) return '0:00';
+  const total = Math.floor(seconds);
+  const hrs = Math.floor(total / 3600);
+  const mins = Math.floor((total % 3600) / 60);
+  const secs = total % 60;
+  const mmss = `${mins}:${secs.toString().padStart(2, '0')}`;
+  return hrs > 0 ? `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}` : mmss;
+}
+
+function parseDurationToSeconds(value: string | null | undefined) {
+  if (!value) return 0;
+  const parts = value.split(':').map((p) => Number(p));
+  if (parts.some((n) => Number.isNaN(n))) return 0;
+  if (parts.length === 3) {
+    const [h, m, s] = parts;
+    return h * 3600 + m * 60 + s;
+  }
+  if (parts.length === 2) {
+    const [m, s] = parts;
+    return m * 60 + s;
+  }
+  return parts[0] || 0;
+}
+
 function VideoCard({
   video,
   isHovered,
@@ -16,7 +41,8 @@ function VideoCard({
   onHoverStart,
   onHoverEnd,
   onToggleMuted,
-  videoRef
+  videoRef,
+  profileId
 }: {
   video: Video;
   isHovered: boolean;
@@ -26,12 +52,92 @@ function VideoCard({
   onHoverEnd: (id: string) => void;
   onToggleMuted: (id: string) => void;
   videoRef: (el: HTMLVideoElement | null) => void;
+  profileId?: string | null;
 }) {
+  const [computedDuration, setComputedDuration] = useState<string | null>(video.duration || null);
+  const [durationSeconds, setDurationSeconds] = useState<number>(parseDurationToSeconds(video.duration));
+  const [progressSeconds, setProgressSeconds] = useState<number>(0);
+  const [hoverPct, setHoverPct] = useState<number | null>(null);
+  const progressKey = `watch_progress:${profileId || 'anon'}:${video.id}`;
+
+  const handleLoadedMetadata = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+    const rawDur = e.currentTarget.duration;
+    const dur = formatDurationFromSeconds(rawDur);
+    if (Number.isFinite(rawDur) && rawDur > 0) {
+      setDurationSeconds(rawDur);
+    }
+    setComputedDuration(dur);
+  };
+
+  // Load saved progress
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = localStorage.getItem(progressKey);
+      if (raw) {
+        const saved = JSON.parse(raw);
+        if (typeof saved.duration === 'number' && saved.duration > 0) {
+          setDurationSeconds((prev) => (prev > 0 ? prev : saved.duration));
+        }
+        if (typeof saved.current === 'number' && saved.current >= 0) {
+          setProgressSeconds(saved.current);
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, [progressKey]);
+
+  const persistProgress = (current: number, total: number) => {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem(
+        progressKey,
+        JSON.stringify({
+          current,
+          duration: total,
+          updatedAt: Date.now(),
+        })
+      );
+    } catch {
+      // ignore
+    }
+  };
+
   return (
     <div
       className="group relative flex flex-col w-full bg-gray-900"
       onMouseEnter={() => onHoverStart(video.id)}
-      onMouseLeave={() => onHoverEnd(video.id)}
+      onMouseLeave={() => {
+        setHoverPct(null);
+        onHoverEnd(video.id);
+      }}
+      onMouseMove={(e) => {
+        if (!isPreviewing || !durationSeconds) return;
+        const rect = (e.currentTarget.querySelector('video') as HTMLVideoElement | null)?.getBoundingClientRect();
+        if (!rect) return;
+        const pct = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+        setHoverPct(pct * 100);
+        const vidEl = (e.currentTarget.querySelector('video') as HTMLVideoElement | null);
+        if (vidEl) {
+          const target = pct * durationSeconds;
+          vidEl.currentTime = target;
+          setProgressSeconds(target);
+        }
+      }}
+      onMouseDown={(e) => {
+        if (!isPreviewing || !durationSeconds) return;
+        const rect = (e.currentTarget.querySelector('video') as HTMLVideoElement | null)?.getBoundingClientRect();
+        if (!rect) return;
+        const pct = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+        const target = pct * durationSeconds;
+        const vidEl = (e.currentTarget.querySelector('video') as HTMLVideoElement | null);
+        if (vidEl) {
+          vidEl.currentTime = target;
+          setProgressSeconds(target);
+          persistProgress(target, durationSeconds);
+        }
+      }}
     >
       <Link href={`/watch/${video.id}`} className="relative block w-full">
         <div className="relative w-full overflow-hidden sm:rounded-xl bg-zinc-950 aspect-video shadow-sm">
@@ -46,9 +152,39 @@ function VideoCard({
             src={video.video_url}
             muted={isMuted}
             playsInline
+            onTimeUpdate={(e) => {
+              const t = e.currentTarget.currentTime;
+              setProgressSeconds(t);
+              const dur = durationSeconds || e.currentTarget.duration;
+              const effectiveDur = dur && Number.isFinite(dur) ? dur : 0;
+              if (effectiveDur > 0) {
+                persistProgress(t, effectiveDur);
+                if (t >= effectiveDur - 0.05) {
+                  e.currentTarget.pause();
+                }
+              }
+            }}
+            onLoadedMetadata={handleLoadedMetadata}
           />
           <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-[10px] font-black px-1.5 py-0.5 rounded z-20">
-            {video.duration || '0:00'}
+            {computedDuration || video.duration || '0:00'}
+          </div>
+          <div className="absolute bottom-0 left-0 w-full h-1 bg-white/10">
+            <div
+              className="h-full bg-blue-500 transition-all"
+              style={{
+                width:
+                  durationSeconds > 0
+                    ? `${Math.min(100, Math.max(0, (progressSeconds / durationSeconds) * 100))}%`
+                    : '0%',
+              }}
+            />
+            {hoverPct !== null ? (
+              <div
+                className="absolute top-0 h-full w-0.5 bg-white/60"
+                style={{ left: `${hoverPct}%` }}
+              />
+            ) : null}
           </div>
         </div>
       </Link>
@@ -156,9 +292,8 @@ export default function Home() {
         const profile = await getActiveProfile();
         setActiveProfile(profile);
 
-        // Pass the account type as a filter (optional, if profile exists)
-        const filterType = profile?.account_type || 'general';
-        const data = await getVideos(50, 0, filterType);
+        // Fetch all videos (no account-type/category filter to avoid hiding uploads)
+        const data = await getVideos(50, 0);
         setVideos(data || []);
       } catch (e) {
         console.error(e);

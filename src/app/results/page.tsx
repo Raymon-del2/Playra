@@ -1,8 +1,9 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { searchVideos, type Video } from '@/lib/supabase';
 
 const filters = [
   'All',
@@ -36,262 +37,6 @@ type ResultItem = {
   badges: string[];
   format?: 'styles';
 };
-
-const results: ResultItem[] = [
-  {
-    id: 'r1',
-    title: 'Next.js in 100 Seconds // Plus Full Beginner\'s Tutorial',
-    thumbnail: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=640&h=360&fit=crop',
-    previewVideo: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-    channel: 'Fireship',
-    channelAvatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=64&h=64&fit=crop',
-    views: '1.4M views',
-    timestamp: '5 years ago',
-    type: 'video',
-    uploadedDays: 1825,
-    watched: true,
-    duration: '11:52',
-    description:
-      'Learn the basics of Next.js in 100 Seconds! Then build your first server-rendered React app with a full Next.js beginner\'s tutorial.',
-    badges: ['Sponsored', 'Sourcegraph', 'HD'],
-  },
-  {
-    id: 'r2',
-    title: 'Next.js 14 Crash Course - App Router, Server Actions, and More',
-    thumbnail: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=640&h=360&fit=crop',
-    previewVideo: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-    channel: 'Coding Garden',
-    channelAvatar: 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39?w=64&h=64&fit=crop',
-    views: '823K views',
-    timestamp: '8 months ago',
-    type: 'video',
-    uploadedDays: 240,
-    watched: false,
-    duration: '1:32:10',
-    description:
-      'A complete crash course covering the App Router, Server Components, data fetching, and deployment in Next.js 14.',
-    badges: ['New', 'Subtitles'],
-  },
-  {
-    id: 'r8',
-    title: 'React Hooks in One Minute #shorts',
-    thumbnail: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=360&h=640&fit=crop',
-    previewVideo: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-    channel: 'Hooks Lab',
-    channelAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=64&h=64&fit=crop',
-    views: '1.1M views',
-    timestamp: '2 weeks ago',
-    type: 'video',
-    uploadedDays: 14,
-    watched: false,
-    duration: '0:58',
-    description: 'Quick hook tips: state updates, dependencies, and clean effects in under a minute.',
-    badges: ['Short'],
-    format: 'styles',
-  },
-  {
-    id: 'r9',
-    title: 'useEffect Cleanup Explained #shorts',
-    thumbnail: 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=360&h=640&fit=crop',
-    previewVideo: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-    channel: 'Dev Clips',
-    channelAvatar: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=64&h=64&fit=crop',
-    views: '742K views',
-    timestamp: '1 month ago',
-    type: 'video',
-    uploadedDays: 30,
-    watched: true,
-    duration: '0:45',
-    description: 'Learn why cleanup functions matter and how to avoid stale effects in React.',
-    badges: ['Short'],
-    format: 'styles',
-  },
-  {
-    id: 's1',
-    title: 'CSS Grid in 60 Seconds 🔥',
-    thumbnail: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=360&h=640&fit=crop',
-    previewVideo: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-    channel: 'CSS Wizards',
-    channelAvatar: 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39?w=64&h=64&fit=crop',
-    views: '890K views',
-    timestamp: '3 days ago',
-    type: 'video',
-    uploadedDays: 3,
-    watched: false,
-    duration: '0:59',
-    description: 'Master CSS Grid layout in under a minute with this quick visual guide.',
-    badges: ['Short'],
-    format: 'styles',
-  },
-  {
-    id: 's2',
-    title: 'TypeScript Tips You Need #dev',
-    thumbnail: 'https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=360&h=640&fit=crop',
-    previewVideo: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-    channel: 'TS Pro',
-    channelAvatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=64&h=64&fit=crop',
-    views: '1.5M views',
-    timestamp: '1 week ago',
-    type: 'video',
-    uploadedDays: 7,
-    watched: false,
-    duration: '0:52',
-    description: 'Quick TypeScript tips that will level up your code quality instantly.',
-    badges: ['Short'],
-    format: 'styles',
-  },
-  {
-    id: 's3',
-    title: 'useState vs useRef 💡',
-    thumbnail: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=360&h=640&fit=crop',
-    previewVideo: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-    channel: 'React Daily',
-    channelAvatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=64&h=64&fit=crop',
-    views: '2.1M views',
-    timestamp: '5 days ago',
-    type: 'video',
-    uploadedDays: 5,
-    watched: true,
-    duration: '0:48',
-    description: 'Know when to use useState and when useRef is the better choice.',
-    badges: ['Short'],
-    format: 'styles',
-  },
-  {
-    id: 's4',
-    title: 'Tailwind Dark Mode Trick ✨',
-    thumbnail: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=360&h=640&fit=crop',
-    previewVideo: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-    channel: 'Design Code',
-    channelAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=64&h=64&fit=crop',
-    views: '650K views',
-    timestamp: '2 weeks ago',
-    type: 'video',
-    uploadedDays: 14,
-    watched: false,
-    duration: '0:38',
-    description: 'Add beautiful dark mode to your site with this simple Tailwind trick.',
-    badges: ['Short'],
-    format: 'styles',
-  },
-  {
-    id: 'r10',
-    title: 'React Hooks Masterclass (Playlist)',
-    thumbnail: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=640&h=360&fit=crop',
-    previewVideo: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-    channel: 'Hooks Lab',
-    channelAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=64&h=64&fit=crop',
-    views: '12 videos',
-    timestamp: 'Playlist',
-    type: 'playlist',
-    uploadedDays: 10,
-    watched: false,
-    duration: '',
-    description: 'A full playlist covering React hooks from basics to advanced patterns.',
-    badges: ['Playlist', 'HD'],
-  },
-  {
-    id: 'r11',
-    title: 'Hooks Lab — Channel',
-    thumbnail: 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=640&h=360&fit=crop',
-    previewVideo: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-    channel: 'Hooks Lab',
-    channelAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=64&h=64&fit=crop',
-    views: '250K subscribers',
-    timestamp: 'Channel',
-    type: 'channel',
-    uploadedDays: 400,
-    watched: true,
-    duration: '',
-    description: 'Official channel featuring weekly React hook lessons and live Q&A sessions.',
-    badges: ['Channel', 'Subtitles'],
-  },
-  {
-    id: 'r6',
-    title: 'React Hooks Explained: useState, useEffect, useMemo, useRef',
-    thumbnail: 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=640&h=360&fit=crop',
-    previewVideo: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-    channel: 'Hooks Lab',
-    channelAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=64&h=64&fit=crop',
-    views: '972K views',
-    timestamp: '10 months ago',
-    type: 'video',
-    uploadedDays: 300,
-    watched: false,
-    duration: '28:44',
-    description:
-      'Master React hooks with real examples: state, effects, memoization, refs, and custom hooks for clean components.',
-    badges: ['Tutorial', 'HD'],
-  },
-  {
-    id: 'r7',
-    title: 'React Hooks in 15 Minutes (useEffect Patterns & Pitfalls)',
-    thumbnail: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=640&h=360&fit=crop',
-    previewVideo: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-    channel: 'Frontend Focus',
-    channelAvatar: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=64&h=64&fit=crop',
-    views: '640K views',
-    timestamp: '4 months ago',
-    type: 'video',
-    uploadedDays: 120,
-    watched: true,
-    duration: '15:02',
-    description:
-      'Quick guide to React hooks, dependency arrays, cleanup functions, and common useEffect mistakes.',
-    badges: ['Popular', 'Subtitles'],
-  },
-  {
-    id: 'r3',
-    title: 'Why Next.js is the Best React Framework in 2025',
-    thumbnail: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=640&h=360&fit=crop',
-    previewVideo: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-    channel: 'Frontend Focus',
-    channelAvatar: 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39?w=64&h=64&fit=crop',
-    views: '312K views',
-    timestamp: '3 weeks ago',
-    type: 'video',
-    uploadedDays: 21,
-    watched: false,
-    duration: '24:06',
-    description:
-      'A deep dive into Next.js performance, DX, and why teams pick it for production apps at scale.',
-    badges: ['Trending', 'HD'],
-  },
-  {
-    id: 'r4',
-    title: 'Next.js App Router Explained (Full Walkthrough)',
-    thumbnail: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=640&h=360&fit=crop',
-    previewVideo: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-    channel: 'The Reactors',
-    channelAvatar: 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39?w=64&h=64&fit=crop',
-    views: '502K views',
-    timestamp: '2 months ago',
-    type: 'video',
-    uploadedDays: 60,
-    watched: true,
-    duration: '42:08',
-    description:
-      'Step-by-step guide to App Router, layouts, loading UI, and server actions. Perfect for experienced React devs.',
-    badges: ['Live'],
-  },
-  {
-    id: 'r5',
-    title: 'Next.js vs Remix: Which Should You Choose?',
-    thumbnail: 'https://images.unsplash.com/photo-1471879832106-c7ab9e0cee23?w=640&h=360&fit=crop',
-    previewVideo: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-    channel: 'Dev Showdown',
-    channelAvatar: 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39?w=64&h=64&fit=crop',
-    views: '215K views',
-    timestamp: '6 months ago',
-    type: 'video',
-    uploadedDays: 180,
-    watched: false,
-    duration: '19:33',
-    description:
-      'Comparing Next.js and Remix with real-world demos, performance benchmarks, and deployment costs.',
-    badges: ['4K', 'HD'],
-  },
-];
 
 function ResultCard({ item }: { item: ResultItem }) {
   const isStyles = item.format === 'styles';
@@ -734,6 +479,57 @@ export default function ResultsPage() {
   const query = searchParams.get('search_query') ?? '';
   const queryLabel = query.trim() || 'All';
   const [activeFilter, setActiveFilter] = useState('All');
+  const [results, setResults] = useState<ResultItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const load = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data = await searchVideos(query, 50);
+        if (!isMounted) return;
+        const formatter = new Intl.NumberFormat('en', { notation: 'compact' });
+        const mapped: ResultItem[] = (data || []).map((video: Video) => {
+          const createdAt = video.created_at ? new Date(video.created_at) : null;
+          const days =
+            createdAt != null ? Math.floor((Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24)) : undefined;
+          const badges: string[] = [];
+          if (video.is_live) badges.push('Live');
+          if (video.is_short) badges.push('Styles');
+          return {
+            id: video.id,
+            title: video.title,
+            thumbnail: video.thumbnail_url,
+            previewVideo: video.video_url,
+            channel: video.channel_name || 'Unknown channel',
+            channelAvatar: video.channel_avatar || '/logo.png',
+            views: `${formatter.format(video.views ?? 0)} views`,
+            timestamp: createdAt ? createdAt.toLocaleDateString() : '',
+            type: 'video',
+            uploadedDays: days,
+            watched: false,
+            duration: video.duration || '',
+            description: video.description || '',
+            badges,
+            format: video.is_short ? 'styles' : undefined,
+          };
+        });
+        setResults(mapped);
+      } catch (err: any) {
+        if (!isMounted) return;
+        setError(err?.message || 'Failed to load results');
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+    load();
+    return () => {
+      isMounted = false;
+    };
+  }, [query]);
 
   const filteredResults = useMemo(() => {
     let items = results;

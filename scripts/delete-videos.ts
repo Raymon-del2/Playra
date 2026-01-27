@@ -1,26 +1,48 @@
 import { supabase } from "../src/lib/supabase";
 
 async function run() {
-    if (!supabase) return;
-    const videoIds = [
-        "83ad3362-1728-4b75-8f82-cd2df23d0430",
-        "da6301ac-47d4-46d3-8633-7252398a3e79",
-        "27a9343d-cd85-49a9-ad34-fc6b868fee1b",
-        "a3a4aca3-bd92-4a01-9075-6929fa957aa9"
-    ];
+    if (!supabase) {
+        console.error("Supabase client not initialized");
+        return;
+    }
 
-    console.log(`Attempting to delete ${videoIds.length} videos...`);
+    console.log("Fetching all video IDs...");
+    const { data: videos, error: fetchError } = await supabase
+        .from('videos')
+        .select('id');
 
-    for (const id of videoIds) {
-        const { error } = await supabase
+    if (fetchError) {
+        console.error("Failed to fetch videos:", fetchError);
+        return;
+    }
+
+    if (!videos || videos.length === 0) {
+        console.log("No videos found to delete.");
+        return;
+    }
+
+    console.log(`Found ${videos.length} videos. Attempting to delete one by one for better debugging...`);
+
+    for (const v of videos) {
+        console.log(`Deleting video: ${v.id}`);
+        const { data, error, status, statusText } = await supabase
             .from('videos')
             .delete()
-            .eq('id', id);
+            .eq('id', v.id)
+            .select();
 
-        if (error) console.error(`Failed ${id}:`, error);
-        else console.log(`Deleted ${id} (possibly, if no error)`);
+        if (error) {
+            console.error(`Error deleting ${v.id}:`, error);
+        } else {
+            console.log(`Status: ${status} ${statusText}`);
+            console.log(`Deleted data:`, data);
+        }
     }
+
     process.exit(0);
 }
 
-run();
+run().catch(err => {
+    console.error("Fatal error:", err);
+    process.exit(1);
+});

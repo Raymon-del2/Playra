@@ -31,17 +31,17 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
 
 
   const exploreItems = [
-    { icon: 'trending', label: 'Trending', path: '/trending' },
-    { icon: 'music', label: 'Music', path: '/music' },
-    { icon: 'gaming', label: 'Gaming', path: '/gaming' },
-    { icon: 'sports', label: 'Sports', path: '/sports' },
+    { icon: 'trending', label: 'Trending', path: '/trending', comingSoon: true },
+    { icon: 'music', label: 'Music', path: '/music', comingSoon: true },
+    { icon: 'gaming', label: 'Gaming', path: '/gaming', comingSoon: true },
+    { icon: 'sports', label: 'Sports', path: '/sports', comingSoon: true },
   ];
 
   const bottomItems = [
-    { icon: 'settings', label: 'Settings', path: '/settings' },
-    { icon: 'report', label: 'Report history', path: '/report' },
-    { icon: 'help', label: 'Help', path: '/help' },
-    { icon: 'feedback', label: 'Feedback', path: '/feedback' },
+    { icon: 'settings', label: 'Settings', path: '/settings', comingSoon: true },
+    { icon: 'report', label: 'Report history', path: '/report', comingSoon: true },
+    { icon: 'help', label: 'Help', path: '/help', comingSoon: true },
+    { icon: 'feedback', label: 'Feedback', path: '/feedback', comingSoon: true },
   ];
 
   const getIcon = (icon: string) => {
@@ -67,9 +67,14 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
   };
 
   const renderItem = (item: any) => (
-    <li key={item.path}>
+    <li key={item.path} className="relative group">
       <Link
         href={item.protected && !isUserAuthenticated ? '/signin' : item.path}
+        onClick={(e) => {
+          if (item.comingSoon) {
+            e.preventDefault();
+          }
+        }}
         className={`rounded-xl transition-all duration-200 ${isCollapsed
           ? 'flex flex-col items-center gap-1.5 py-4'
           : 'flex items-center space-x-5 px-3 py-2.5'
@@ -83,7 +88,31 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
         </span>
         <span className={`${isCollapsed ? 'text-[10px]' : 'text-[14px]'} truncate`}>{item.label}</span>
       </Link>
+      {item.comingSoon && (
+        <div className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+          <div className="bg-black text-white text-xs font-semibold px-2 py-1 rounded shadow-lg whitespace-nowrap">
+            Coming soon
+          </div>
+        </div>
+      )}
     </li>
+  );
+
+  const ComingSoonLink = ({ label }: { label: string }) => (
+    <span className="relative group inline-block">
+      <a
+        href="#"
+        onClick={(e) => e.preventDefault()}
+        className="hover:underline"
+      >
+        {label}
+      </a>
+      <div className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+        <div className="bg-black text-white text-xs font-semibold px-2 py-1 rounded shadow-lg whitespace-nowrap">
+          Coming soon
+        </div>
+      </div>
+    </span>
   );
 
   return (
@@ -152,23 +181,23 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
 
             <div className="px-6 py-4 text-[12px] font-semibold text-gray-500 space-y-3">
               <div className="flex flex-wrap gap-x-2 gap-y-1">
-                <a href="#" className="hover:underline">About</a>
-                <a href="#" className="hover:underline">Press</a>
-                <a href="#" className="hover:underline">Copyright</a>
-                <a href="#" className="hover:underline">Contact us</a>
-                <a href="#" className="hover:underline">Creators</a>
-                <a href="#" className="hover:underline">Advertise</a>
-                <a href="#" className="hover:underline">Developers</a>
+                <ComingSoonLink label="About" />
+                <ComingSoonLink label="Press" />
+                <ComingSoonLink label="Copyright" />
+                <ComingSoonLink label="Contact us" />
+                <ComingSoonLink label="Creators" />
+                <ComingSoonLink label="Advertise" />
+                <ComingSoonLink label="Developers" />
               </div>
               <div className="flex flex-wrap gap-x-2 gap-y-1">
-                <a href="#" className="hover:underline">Terms</a>
-                <a href="#" className="hover:underline">Privacy</a>
-                <a href="#" className="hover:underline">Policy & Safety</a>
-                <a href="#" className="hover:underline">How Playra works</a>
-                <a href="#" className="hover:underline">Test new features</a>
+                <ComingSoonLink label="Terms" />
+                <ComingSoonLink label="Privacy" />
+                <ComingSoonLink label="Policy & Safety" />
+                <ComingSoonLink label="How Playra works" />
+                <ComingSoonLink label="Test new features" />
               </div>
               <div className="pt-2 font-normal text-gray-600">
-                © 2026 Google LLC
+                © {new Date().getFullYear()} Codedwaves LLC
               </div>
             </div>
           </>

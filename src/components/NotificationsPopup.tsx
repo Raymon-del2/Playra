@@ -13,57 +13,13 @@ interface Notification {
     isImportant?: boolean;
 }
 
-const mockNotifications: Notification[] = [
-    {
-        id: '1',
-        channelName: 'askNK',
-        channelAvatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=64&h=64&fit=crop',
-        message: 'uploaded: Brand New Blender Addons You Probably Missed! - Jan #2',
-        thumbnail: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=120&h=68&fit=crop',
-        timestamp: '1 day ago',
-        isImportant: true,
-    },
-    {
-        id: '2',
-        channelName: 'NetworkChuck',
-        channelAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=64&h=64&fit=crop',
-        message: 'uploaded: Virtual Machines EXPLAINED (This Is the Magic)',
-        thumbnail: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=120&h=68&fit=crop',
-        timestamp: '3 days ago',
-        isImportant: true,
-    },
-    {
-        id: '3',
-        channelName: 'Aniplex',
-        channelAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=64&h=64&fit=crop',
-        message: 'uploaded: 「そりゃ無理な相談だぜ！」#15 | TVアニメ',
-        thumbnail: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=120&h=68&fit=crop',
-        timestamp: '9 hours ago',
-    },
-    {
-        id: '4',
-        channelName: 'InspirationTuts',
-        channelAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=64&h=64&fit=crop',
-        message: 'uploaded: New After Effects Plugins have Been Released',
-        thumbnail: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=120&h=68&fit=crop',
-        timestamp: '1 day ago',
-    },
-    {
-        id: '5',
-        channelName: 'Tech Master',
-        channelAvatar: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=64&h=64&fit=crop',
-        message: 'uploaded: Building a Full Stack App with Next.js',
-        thumbnail: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=120&h=68&fit=crop',
-        timestamp: '2 days ago',
-    },
-];
-
 interface NotificationsPopupProps {
     isOpen: boolean;
     onClose: () => void;
+    onCountChange?: (count: number) => void;
 }
 
-export default function NotificationsPopup({ isOpen, onClose }: NotificationsPopupProps) {
+export default function NotificationsPopup({ isOpen, onClose, onCountChange }: NotificationsPopupProps) {
     const popupRef = useRef<HTMLDivElement>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -77,12 +33,12 @@ export default function NotificationsPopup({ isOpen, onClose }: NotificationsPop
 
         if (isOpen) {
             document.addEventListener('mousedown', handleClickOutside);
-            // Simulate loading
             setIsLoading(true);
             const timer = setTimeout(() => {
-                setNotifications(mockNotifications);
+                // TODO: wire real notifications source; currently empty when none
+                setNotifications([]);
                 setIsLoading(false);
-            }, 1500);
+            }, 400);
             return () => {
                 clearTimeout(timer);
                 document.removeEventListener('mousedown', handleClickOutside);
@@ -92,6 +48,10 @@ export default function NotificationsPopup({ isOpen, onClose }: NotificationsPop
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, [isOpen, onClose]);
+
+    useEffect(() => {
+        onCountChange?.(notifications.length);
+    }, [notifications, onCountChange]);
 
     if (!isOpen) return null;
 

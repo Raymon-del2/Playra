@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { getActiveProfile } from '@/app/actions/profile';
@@ -13,6 +13,8 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
     const pathname = usePathname();
     const [activeProfile, setActiveProfile] = useState<any>(null);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const [popoverMessage, setPopoverMessage] = useState<string | null>(null);
+    const popoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -48,6 +50,18 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
         return icons[icon] || icons.dashboard;
     };
 
+    const showComingSoon = (label: string) => {
+        setPopoverMessage(`${label} is coming soon`);
+        if (popoverTimeoutRef.current) clearTimeout(popoverTimeoutRef.current);
+        popoverTimeoutRef.current = setTimeout(() => setPopoverMessage(null), 2400);
+    };
+
+    useEffect(() => {
+        return () => {
+            if (popoverTimeoutRef.current) clearTimeout(popoverTimeoutRef.current);
+        };
+    }, []);
+
     return (
         <div className="min-h-screen bg-[#0f0f0f] text-white flex">
             {/* Sidebar */}
@@ -64,11 +78,11 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
                     </button>
                     {!isSidebarCollapsed && (
                         <Link href="/studio" className="flex items-center gap-2">
-                            <div className="w-6 h-6 bg-red-600 rounded flex items-center justify-center">
-                                <svg className="w-4 h-4" fill="white" viewBox="0 0 24 24">
-                                    <path d="M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 2.19-.16 3.8-.44 4.83-.25.9-.83 1.48-1.73 1.73-.47.13-1.33.22-2.65.28-1.3.07-2.49.1-3.59.1L12 19c-4.19 0-6.8-.16-7.83-.44-.9-.25-1.48-.83-1.73-1.73-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L2 12c0-2.19.16-3.8.44-4.83.25-.9.83-1.48 1.73-1.73.47-.13 1.33-.22 2.65-.28 1.3-.07 2.49-.1 3.59-.1L12 5c4.19 0 6.8.16 7.83.44.9.25 1.48.83 1.73 1.73z" />
-                                </svg>
-                            </div>
+                            <img
+                                src="/Playra.png"
+                                alt="Playra"
+                                className="h-5 w-auto"
+                            />
                             <span className="font-bold text-[15px]">Studio</span>
                         </Link>
                     )}
@@ -97,33 +111,51 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
 
                 {/* Menu Items */}
                 <nav className="flex-1 py-2">
-                    {menuItems.map(item => (
-                        <Link
-                            key={item.path}
-                            href={item.path}
-                            className={`flex items-center gap-4 px-4 py-2.5 transition-colors ${pathname === item.path
-                                    ? 'bg-white/10 text-white'
-                                    : 'text-zinc-400 hover:bg-white/5 hover:text-white'
-                                } ${isSidebarCollapsed ? 'justify-center' : ''}`}
-                        >
-                            {getIcon(item.icon)}
-                            {!isSidebarCollapsed && <span className="text-[13px] font-medium">{item.label}</span>}
-                        </Link>
-                    ))}
+                    {menuItems.map(item => {
+                        const isComingSoon = item.path === '/studio/comments' || item.path === '/studio/subtitles';
+                        return (
+                            <Link
+                                key={item.path}
+                                href={isComingSoon ? '#' : item.path}
+                                onClick={(e) => {
+                                    if (isComingSoon) {
+                                        e.preventDefault();
+                                        showComingSoon(item.label);
+                                    }
+                                }}
+                                className={`relative flex items-center gap-4 px-4 py-2.5 transition-colors ${pathname === item.path
+                                        ? 'bg-white/10 text-white'
+                                        : 'text-zinc-400 hover:bg-white/5 hover:text-white'
+                                    } ${isSidebarCollapsed ? 'justify-center' : ''}`}
+                            >
+                                {getIcon(item.icon)}
+                                {!isSidebarCollapsed && <span className="text-[13px] font-medium">{item.label}</span>}
+                            </Link>
+                        );
+                    })}
                 </nav>
 
                 {/* Bottom Items */}
                 <div className="border-t border-white/10 py-2">
-                    {bottomItems.map(item => (
-                        <Link
-                            key={item.path}
-                            href={item.path}
-                            className={`flex items-center gap-4 px-4 py-2.5 text-zinc-400 hover:bg-white/5 hover:text-white transition-colors ${isSidebarCollapsed ? 'justify-center' : ''}`}
-                        >
-                            {getIcon(item.icon)}
-                            {!isSidebarCollapsed && <span className="text-[13px] font-medium">{item.label}</span>}
-                        </Link>
-                    ))}
+                    {bottomItems.map(item => {
+                        const isComingSoon = item.path === '/studio/settings' || item.path === '/studio/feedback';
+                        return (
+                            <Link
+                                key={item.path}
+                                href={isComingSoon ? '#' : item.path}
+                                onClick={(e) => {
+                                    if (isComingSoon) {
+                                        e.preventDefault();
+                                        showComingSoon(item.label);
+                                    }
+                                }}
+                                className={`flex items-center gap-4 px-4 py-2.5 text-zinc-400 hover:bg-white/5 hover:text-white transition-colors ${isSidebarCollapsed ? 'justify-center' : ''}`}
+                            >
+                                {getIcon(item.icon)}
+                                {!isSidebarCollapsed && <span className="text-[13px] font-medium">{item.label}</span>}
+                            </Link>
+                        );
+                    })}
                 </div>
             </aside>
 
@@ -131,6 +163,12 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
             <main className={`flex-1 transition-all duration-300 ${isSidebarCollapsed ? 'ml-16' : 'ml-56'}`}>
                 {children}
             </main>
+
+            {popoverMessage && (
+                <div className="fixed left-4 bottom-6 z-50 px-4 py-2 rounded-lg bg-white text-black text-sm font-semibold shadow-lg border border-black/10">
+                    {popoverMessage}
+                </div>
+            )}
         </div>
     );
 }

@@ -91,23 +91,6 @@ export async function selectActiveProfile(profileId: string, userId: string) {
             return { success: false, error: "Unauthorized profile selection" };
         }
 
-        const profileName = result.rows[0].name as string;
-
-        // Auto-cleanup for legacy "Guess-me" videos
-        if (profileName === '@Playra' || profileName.toLowerCase() === '@p') {
-            try {
-                if (supabase) {
-                    // We delete instead of update now
-                    await supabase
-                        .from('videos')
-                        .delete()
-                        .or(`channel_name.eq.Guess-me,channel_id.eq.ch_1769262677206_k5xxdmskb`);
-                }
-            } catch (e) {
-                console.error("Auto-cleanup failed (silently):", e);
-            }
-        }
-
         // Set secure cookie
         cookies().set('playra_active_profile', profileId, {
             secure: process.env.NODE_ENV === 'production',

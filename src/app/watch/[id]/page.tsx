@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { getVideoById, Video } from '@/lib/supabase';
+import { getVideoById, recordWatch, isHistoryPaused, incrementViews, Video } from '@/lib/supabase';
 import { formatDistanceToNow } from 'date-fns';
+import { getActiveProfile } from '@/app/actions/profile';
 
 // Related videos will be added later from Supabase data
 
@@ -14,16 +15,58 @@ export default function WatchPage({ params }: { params: { id: string } }) {
   const [dislikes, setDislikes] = useState(234);
   const [isLiked, setIsLiked] = useState(false);
   const [isDisliked, setIsDisliked] = useState(false);
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [videoId, setVideoId] = useState<string | null>(null);
+  const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  const parseDurationToSeconds = (value: string | null | undefined) => {
+    if (!value) return 0;
+    const parts = value.split(':').map((p) => Number(p));
+    if (parts.some((n) => Number.isNaN(n))) return 0;
+    if (parts.length === 3) {
+      const [h, m, s] = parts;
+      return h * 3600 + m * 60 + s;
+    }
+    if (parts.length === 2) {
+      const [m, s] = parts;
+      return m * 60 + s;
+    }
+    return parts[0] || 0;
+  };
 
   useEffect(() => {
     const fetchVideo = async () => {
       try {
+        const profile = await getActiveProfile();
+        setActiveProfileId(profile?.id ?? null);
+
         const data = await getVideoById(params.id);
         if (data) {
           setVideo(data);
+          setVideoId(data.id);
+          // Use stored duration if present
+          const parsed = parseDurationToSeconds(data.duration);
+          if (parsed > 0) setDuration(parsed);
           // Randomize likes for mock-up feel
           setLikes(Math.floor(Math.random() * 50000));
+          // Increment views once when loaded
+          try {
+            const newViews = await incrementViews(data.id);
+            setVideo((prev) => (prev ? { ...prev, views: newViews } : prev));
+          } catch (viewErr) {
+            console.warn('Failed to increment views', viewErr);
+          }
+        }
+
+        // Record watch if not paused
+        if (profile?.id && data) {
+          const paused = await isHistoryPaused(profile.id);
+          if (!paused) {
+            await recordWatch(profile.id, data.id);
+          }
         }
       } catch (error) {
         console.error('Error fetching video:', error);
@@ -38,6 +81,60 @@ export default function WatchPage({ params }: { params: { id: string } }) {
       setIsLoading(false);
     }
   }, [params.id]);
+
+  const formatTime = (secs: number) => {
+    if (secs === undefined || secs === null || Number.isNaN(secs)) return '--:--';
+    if (secs <= 0) return '--:--';
+    const total = Math.floor(secs);
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const s = total % 60;
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
+  };
+
+  const resolvedDuration = duration > 0 ? duration : parseDurationToSeconds(video?.duration);
+  const progressPct = resolvedDuration > 0 ? Math.min(100, Math.max(0, (currentTime / resolvedDuration) * 100)) : 0;
+
+  const persistProgress = (videoId: string, current: number, total: number) => {
+    if (typeof window === 'undefined') return;
+    const key = `watch_progress:${activeProfileId || 'anon'}:${videoId}`;
+    try {
+      localStorage.setItem(
+        key,
+        JSON.stringify({
+          current,
+          duration: total,
+          updatedAt: Date.now(),
+        })
+      );
+    } catch {
+      // ignore storage errors
+    }
+  };
+
+  // Load stored progress when videoId changes
+  useEffect(() => {
+    if (typeof window === 'undefined' || !videoId) return;
+    const key = `watch_progress:${activeProfileId || 'anon'}:${videoId}`;
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        const saved = JSON.parse(raw) as { current?: number; duration?: number };
+        if (typeof saved.duration === 'number' && saved.duration > 0) {
+          setDuration((prev) => (prev > 0 ? prev : saved.duration!));
+        }
+        if (typeof saved.current === 'number' && saved.current >= 0) {
+          setCurrentTime(saved.current);
+          if (videoRef.current) {
+            videoRef.current.currentTime = saved.current;
+          }
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, [videoId, activeProfileId]);
 
   const handleLike = () => {
     if (isLiked) {
@@ -79,19 +176,33 @@ export default function WatchPage({ params }: { params: { id: string } }) {
   const videoSrc = video ? video.video_url : 'https://www.w3schools.com/html/mov_bbb.mp4';
   const channelName = video ? video.channel_name : 'Tech Master';
   const channelAvatar = video ? video.channel_avatar : 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop';
-  const videoViews = video ? `${video.views.toLocaleString()} views` : '125K views';
+  const videoViews = video ? `${Math.max(1, video.views ?? 0).toLocaleString()} views` : '125K views';
   const videoDate = video ? formatDistanceToNow(new Date(video.created_at), { addSuffix: true }) : '2 days ago';
   const videoDescription = video ? video.description : "In this comprehensive tutorial, we'll build a full-stack application using Next.js 14, TypeScript, and modern web development best practices. Learn how to set up your project, implement authentication, create API routes, and deploy your app to production.";
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 p-0 sm:p-6 bg-gray-900 min-h-screen">
       <div className="flex-1">
-        <div className="aspect-video bg-black sm:rounded-lg overflow-hidden mb-4">
+        <div className="aspect-video bg-black sm:rounded-lg overflow-hidden mb-4 relative">
           <video
+            ref={videoRef}
             className="w-full h-full"
             controls
             autoPlay
             poster={video?.thumbnail_url || "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=1280&h=720&fit=crop"}
+            onLoadedMetadata={(e) => {
+              const d = e.currentTarget.duration;
+              if (d && !Number.isNaN(d)) setDuration(d);
+              else if (resolvedDuration > 0) setDuration(resolvedDuration);
+            }}
+            onTimeUpdate={(e) => {
+              const t = e.currentTarget.currentTime;
+              setCurrentTime(t);
+              const effectiveDuration = duration > 0 ? duration : resolvedDuration;
+              if (videoId && effectiveDuration > 0) {
+                persistProgress(videoId, t, effectiveDuration);
+              }
+            }}
           >
             <source src={videoSrc} type="video/mp4" />
             Your browser does not support the video tag.
@@ -126,7 +237,7 @@ export default function WatchPage({ params }: { params: { id: string } }) {
                     {channelName}
                     <svg className="w-3.5 h-3.5 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
                   </h3>
-                  <p className="text-[12.5px] text-gray-400 font-bold">1.2M sub</p>
+                  <p className="text-[12.5px] text-gray-400 font-bold">0 subs</p>
                 </div>
               </div>
               <button
