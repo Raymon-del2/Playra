@@ -100,7 +100,7 @@ export default function Navbar({
 
   useEffect(() => {
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-    
+
     if (searchQuery.length >= 2 && isDropdownOpen) {
       searchTimeoutRef.current = setTimeout(() => {
         fetchSuggestions(searchQuery);
@@ -170,14 +170,14 @@ export default function Navbar({
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 h-14 bg-[#0f0f0f] border-b border-white/10 z-50 flex items-center">
+    <nav className="fixed top-0 left-0 right-0 h-14 bg-[#0f0f0f]/95 backdrop-blur-md border-b border-white/5 z-50 flex items-center">
       {/* Progress line */}
       {isSearching && (
-        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 animate-pulse" />
+        <div className="absolute top-0 left-0 right-0 h-0.5 bg-blue-500 animate-pulse" />
       )}
-      <div className="w-full px-3 sm:px-4">
-        <div className="flex items-center justify-between h-14 sm:h-16 gap-3">
-          <div className="flex items-center gap-4">
+      <div className="w-full px-4">
+        <div className="flex items-center justify-between h-14 gap-2">
+          <div className="flex items-center gap-2 sm:gap-4">
             <button
               onClick={onToggleSidebar}
               className="hidden lg:flex p-2 rounded-full hover:bg-white/10 text-white transition-all active:scale-90"
@@ -185,17 +185,17 @@ export default function Navbar({
               <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
             </button>
 
-            <Link href="/" className="flex items-center gap-2">
+            <Link href="/" className="flex items-center gap-1.5">
               <div className="relative flex items-center">
-                <img src="/Playra.png" alt="Playra" className="h-[20px] sm:h-[22px] w-auto brightness-200" />
+                <img src="/Playra.png" alt="Playra" className="h-[18px] sm:h-[22px] w-auto" />
               </div>
-              <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.25em]">
-                {countryCode || 'GLOBAL'}
+              <span className="hidden xs:inline text-[10px] sm:text-[11px] font-bold text-zinc-500 uppercase tracking-widest bg-zinc-800/50 px-1.5 py-0.5 rounded">
+                {countryCode || 'KE'}
               </span>
             </Link>
           </div>
 
-          <div className="hidden md:flex flex-1 max-w-3xl mx-4 lg:mx-12">
+          <div className="hidden md:flex flex-1 max-w-2xl mx-4">
             <div className="flex w-full items-center">
               <div className="relative flex-1 group">
                 <input

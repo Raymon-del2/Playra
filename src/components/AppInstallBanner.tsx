@@ -79,7 +79,7 @@ export default function AppInstallBanner() {
     }
 
     return (
-        <div className="fixed bottom-20 left-4 right-4 z-[100] lg:hidden animate-slide-in-up">
+        <div className="fixed bottom-[72px] left-4 right-4 z-[100] lg:hidden animate-slide-in-up">
             <div className="bg-zinc-900 border border-white/10 rounded-2xl p-4 shadow-2xl">
                 <div className="flex items-start gap-3">
                     {/* App Icon */}

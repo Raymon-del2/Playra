@@ -52,8 +52,8 @@ export default function MobileNav({
     };
 
     return (
-        <div className="fixed bottom-6 left-0 right-0 flex justify-center z-[100] lg:hidden animate-slide-in-up">
-            <nav className="w-[90%] max-w-[420px] bg-black/70 backdrop-blur-3xl border border-white/10 rounded-full shadow-[0_12px_48px_rgba(0,0,0,0.5)] h-[66px] flex items-center justify-around px-2 pb-safe">
+        <div className="fixed bottom-0 left-0 right-0 z-[100] lg:hidden animate-slide-in-up">
+            <nav className="w-full bg-[#0f0f0f]/95 backdrop-blur-xl border-t border-white/5 h-[64px] flex items-center justify-around px-2 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
                 {navItems.map((item) => {
                     const isActive = pathname === item.path;
                     return (
@@ -65,18 +65,18 @@ export default function MobileNav({
                                     window.scrollTo({ top: 0, behavior: 'smooth' });
                                 }
                             }}
-                            className={`flex flex-col items-center justify-center transition-all duration-300 ${item.isAction ? 'w-14' : 'w-12'} active:scale-95`}
+                            className="flex flex-col items-center justify-center flex-1 h-full active:scale-95 transition-transform"
                         >
-                            <span className={`${isActive ? 'text-white scale-110' : 'text-white/40'} transition-all duration-300 mb-0.5`}>
+                            <span className={`${isActive ? 'text-white' : 'text-zinc-400'} transition-colors mb-1`}>
                                 {getIcon(item)}
                             </span>
                             {item.label && (
-                                <span className={`text-[9px] font-black tracking-tighter truncate w-full text-center uppercase transition-colors ${isActive ? 'text-white' : 'text-white/30'}`}>
+                                <span className={`text-[10px] font-medium tracking-tight truncate w-full text-center transition-colors ${isActive ? 'text-white' : 'text-zinc-500'}`}>
                                     {item.label}
                                 </span>
                             )}
                         </Link>
-                    )
+                    );
                 })}
             </nav>
         </div>

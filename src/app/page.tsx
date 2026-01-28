@@ -189,9 +189,9 @@ function VideoCard({
         </div>
       </Link>
 
-      <div className="flex gap-3 px-3 sm:px-0 py-3.5">
+      <div className="flex gap-3 px-3 py-3 md:px-0">
         <Link href={`/channel/${video.channel_id}`} className="flex-shrink-0 mt-0.5">
-          <div className="w-9 h-9 rounded-full bg-zinc-800 border border-white/5 shadow-md overflow-hidden">
+          <div className="w-10 h-10 rounded-full bg-zinc-800 border border-white/5 shadow-md overflow-hidden">
             <img
               src={video.channel_avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'}
               alt={video.channel_name}
@@ -202,11 +202,11 @@ function VideoCard({
 
         <div className="flex flex-1 flex-col min-w-0">
           <Link href={`/watch/${video.id}`} className="w-full">
-            <h3 className="font-bold text-white text-[14px] leading-[1.3] line-clamp-2 mb-1 group-hover:text-blue-400 transition-colors uppercase tracking-tight">
+            <h3 className="font-bold text-white text-[15px] leading-tight line-clamp-2 mb-1 group-hover:text-blue-400 transition-colors tracking-tight">
               {video.title}
             </h3>
           </Link>
-          <div className="flex flex-wrap items-center text-[11px] text-zinc-400 font-bold gap-x-1.5">
+          <div className="flex flex-wrap items-center text-[12px] text-zinc-400 font-medium gap-x-1.5">
             <Link href={`/channel/${video.channel_id}`} className="hover:text-white transition-colors">
               {video.channel_name}
             </Link>
@@ -373,7 +373,7 @@ export default function Home() {
 
     window.addEventListener('video-updated', handleVideoUpdate);
     window.addEventListener('storage', handleStorageChange);
-    
+
     return () => {
       window.removeEventListener('video-updated', handleVideoUpdate);
       window.removeEventListener('storage', handleStorageChange);
@@ -456,7 +456,7 @@ export default function Home() {
             return (
               <div className="pb-20">
                 {/* Initial Grid of Regular Videos */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-4 gap-y-10 p-4 sm:p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-y-1 md:gap-x-4 md:gap-y-10 p-0 sm:p-6">
                   {displayVideos.slice(0, 8).map((video) => (
                     <VideoCard
                       key={video.id}
@@ -485,7 +485,7 @@ export default function Home() {
 
                 {/* Remaining Grid of Regular Videos */}
                 {displayVideos.length > 8 && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-4 gap-y-10 p-4 sm:p-6 pt-0">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-y-1 md:gap-x-4 md:gap-y-10 p-0 sm:p-6 pt-0">
                     {displayVideos.slice(8).map((video) => (
                       <VideoCard
                         key={video.id}

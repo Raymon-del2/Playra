@@ -141,7 +141,7 @@ export default function LayoutShell({ children, activeProfile }: LayoutShellProp
 
         <main
           className={`flex-1 pt-14 sm:pt-16 min-h-screen transition-all duration-300 ${isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'
-            } pb-[96px] lg:pb-0`}
+            } pb-[64px] lg:pb-0`}
         >
           {children}
         </main>
