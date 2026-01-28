@@ -99,7 +99,8 @@ export async function selectActiveProfile(profileId: string, userId: string) {
         }
 
         // Set secure cookie
-        cookies().set('playra_active_profile', profileId, {
+        const cookieStore = await cookies();
+        cookieStore.set('playra_active_profile', profileId, {
             secure: process.env.NODE_ENV === 'production',
             httpOnly: true,
             sameSite: 'strict',
@@ -118,7 +119,7 @@ export async function selectActiveProfile(profileId: string, userId: string) {
 }
 
 export async function getActiveProfile() {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const profileId = cookieStore.get('playra_active_profile')?.value;
 
     if (!profileId) return null;
