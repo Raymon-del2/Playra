@@ -1,10 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
 import MobileNav from '@/components/MobileNav';
 import MobileDrawer from '@/components/MobileDrawer';
+import TopLoader from '@/components/TopLoader';
+import AppInstallBanner from '@/components/AppInstallBanner';
+import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { auth } from '@/lib/firebase';
@@ -121,6 +124,9 @@ export default function LayoutShell({ children, activeProfile }: LayoutShellProp
 
   return (
     <>
+      <Suspense fallback={null}>
+        <TopLoader />
+      </Suspense>
       <Navbar
         isSidebarCollapsed={isSidebarCollapsed}
         onToggleSidebar={toggleSidebar}
@@ -151,6 +157,9 @@ export default function LayoutShell({ children, activeProfile }: LayoutShellProp
         onClose={() => setIsMobileDrawerOpen(false)}
         isSignedIn={isSignedIn}
       />
+
+      <AppInstallBanner />
+      <ServiceWorkerRegister />
     </>
   );
 }

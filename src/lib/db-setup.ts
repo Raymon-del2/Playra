@@ -25,6 +25,7 @@ export async function initDatabase() {
                 name TEXT NOT NULL,
                 description TEXT,
                 avatar TEXT, -- Base64 storage
+                banner TEXT, -- Base64 storage for channel cover
                 verified BOOLEAN DEFAULT 0,
                 account_type TEXT DEFAULT 'general', -- adult | family | kids | general
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -102,6 +103,32 @@ export async function initDatabase() {
             FOREIGN KEY(channel_id) REFERENCES channels(id),
             UNIQUE(subscriber_id, channel_id)
         );
+        `);
+
+        // Comments Table
+        await turso.execute(`
+            CREATE TABLE IF NOT EXISTS comments (
+                id TEXT PRIMARY KEY,
+                video_id TEXT NOT NULL,
+                profile_id TEXT NOT NULL,
+                parent_id TEXT,
+                content TEXT NOT NULL,
+                likes INTEGER DEFAULT 0,
+                dislikes INTEGER DEFAULT 0,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        // Comment Engagement Table
+        await turso.execute(`
+            CREATE TABLE IF NOT EXISTS comment_engagement (
+                id TEXT PRIMARY KEY,
+                comment_id TEXT NOT NULL,
+                profile_id TEXT NOT NULL,
+                type TEXT NOT NULL, -- like | dislike
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(comment_id, profile_id)
+            );
         `);
 
         console.log("Turso tables initialized successfully.");

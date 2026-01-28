@@ -278,6 +278,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [activeProfile, setActiveProfile] = useState<any>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [previewingId, setPreviewingId] = useState<string | null>(null);
@@ -294,15 +295,90 @@ export default function Home() {
 
         // Fetch all videos (no account-type/category filter to avoid hiding uploads)
         const data = await getVideos(50, 0);
-        setVideos(data || []);
-      } catch (e) {
-        console.error(e);
+
+        // Ensure the uploader sees their latest avatar on their own videos
+        let hydrated = (data || []).map((v) => {
+          if (profile?.id && v.channel_id === profile.id && profile.avatar) {
+            return { ...v, channel_avatar: profile.avatar };
+          }
+          return v;
+        });
+
+        // Fetch fresh avatars for all channel ids (ensures changes propagate like the profile view)
+        try {
+          const channelIds = Array.from(new Set(hydrated.map((v) => v.channel_id).filter(Boolean)));
+          const avatarEntries = await Promise.all(
+            channelIds.map(async (cid) => {
+              try {
+                const res = await fetch(`/api/channel-avatar/${cid}`);
+                if (!res.ok) return null;
+                const json = await res.json();
+                if (json?.avatar) return [cid, json.avatar] as [string, string];
+              } catch {
+                // ignore per-channel errors
+              }
+              return null;
+            })
+          );
+          const avatarMap = new Map<string, string>();
+          avatarEntries.forEach((entry) => {
+            if (entry) avatarMap.set(entry[0], entry[1]);
+          });
+          if (avatarMap.size > 0) {
+            hydrated = hydrated.map((v) => {
+              const latest = avatarMap.get(v.channel_id);
+              return latest ? { ...v, channel_avatar: latest } : v;
+            });
+          }
+        } catch {
+          // ignore avatar refresh errors
+        }
+
+        setVideos(hydrated);
+      } catch (error) {
+        console.error(error);
       } finally {
         setIsLoading(false);
       }
     };
     fetchVideos();
-  }, []);
+
+    // Check for video updates made while page wasn't loaded
+    const lastUpdate = localStorage.getItem('video-updated');
+    console.log('Checking for video updates, lastUpdate:', lastUpdate);
+    if (lastUpdate) {
+      const updateAge = Date.now() - parseInt(lastUpdate);
+      console.log('Update age:', updateAge, 'ms');
+      // If update was within last 30 seconds, refetch
+      if (updateAge < 30000) {
+        console.log('Detected recent video update, refetching...');
+        fetchVideos();
+        localStorage.removeItem('video-updated');
+      }
+    }
+
+    // Listen for video update events from studio
+    const handleVideoUpdate = (e: any) => {
+      console.log('Video update event received:', e.detail);
+      fetchVideos();
+    };
+
+    // Listen for localStorage changes (cross-tab support)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'video-updated') {
+        console.log('Video update detected via localStorage');
+        fetchVideos();
+      }
+    };
+
+    window.addEventListener('video-updated', handleVideoUpdate);
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('video-updated', handleVideoUpdate);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [refreshKey]);
 
   const handleHoverStart = (id: string) => {
     setHoveredId(id);

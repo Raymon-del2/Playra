@@ -69,6 +69,13 @@ export async function updateProfileAvatar(profileId: string, avatarBase64: strin
             args: [avatarBase64, profileId]
         });
 
+        // Propagate avatar change to Supabase videos so all viewers see the updated profile photo
+        try {
+            await updateChannelAvatarInVideos(profileId, avatarBase64);
+        } catch (supabaseError) {
+            console.warn("Failed to sync avatar to videos table in Supabase; falling back to existing channel_avatar", supabaseError);
+        }
+
         revalidatePath('/select-profile');
         return { success: true };
     } catch (error) {
@@ -125,7 +132,7 @@ export async function getActiveProfile() {
         if (result.rows.length === 0) return null;
 
         const row = result.rows[0];
-        return {
+        const profile = {
             id: row.id as string,
             user_id: row.user_id as string,
             name: row.name as string,
@@ -135,13 +142,24 @@ export async function getActiveProfile() {
             account_type: row.account_type as string || 'general',
             created_at: String(row.created_at)
         };
+
+        // Best-effort: push latest avatar to Supabase videos so cards show the updated profile photo
+        try {
+            if (profile.avatar) {
+                await updateChannelAvatarInVideos(profile.id, profile.avatar);
+            }
+        } catch (err) {
+            console.warn('Avatar sync to videos skipped', err);
+        }
+
+        return profile;
     } catch (error) {
         console.error("Error fetching active profile:", error);
         return null;
     }
 }
 
-import { deleteChannelVideos, supabase } from "@/lib/supabase";
+import { deleteChannelVideos, supabase, updateChannelAvatarInVideos } from "@/lib/supabase";
 
 export async function getProfileVideoCount(profileId: string) {
     try {

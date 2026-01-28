@@ -142,3 +142,70 @@ export async function getSuggestedCreators(subscriberId: string) {
         return { suggested: [], self: null };
     }
 }
+
+export async function getSubscriberCount(channelId: string) {
+    try {
+        const result = await turso.execute({
+            sql: "SELECT COUNT(*) as count FROM subscriptions WHERE channel_id = ?",
+            args: [channelId]
+        });
+        return Number(result.rows[0].count);
+    } catch (error) {
+        console.error("Error getting subscriber count:", error);
+        return 0;
+    }
+}
+
+export async function isSubscribed(subscriberId: string, channelId: string) {
+    try {
+        const result = await turso.execute({
+            sql: "SELECT id, notifications FROM subscriptions WHERE subscriber_id = ? AND channel_id = ?",
+            args: [subscriberId, channelId]
+        });
+        if (result.rows.length > 0) {
+            return {
+                subscribed: true,
+                notifications: Boolean(result.rows[0].notifications ?? 1)
+            };
+        }
+        return { subscribed: false, notifications: false };
+    } catch (error) {
+        console.error("Error checking subscription:", error);
+        return { subscribed: false, notifications: false };
+    }
+}
+
+export async function subscribeToChannel(subscriberId: string, channelId: string) {
+    return subscribe(subscriberId, channelId);
+}
+
+export async function unsubscribeFromChannel(subscriberId: string, channelId: string) {
+    return unsubscribe(subscriberId, channelId);
+}
+
+export async function toggleSubscriptionNotifications(subscriberId: string, channelId: string) {
+    try {
+        // Get current status
+        const result = await turso.execute({
+            sql: "SELECT notifications FROM subscriptions WHERE subscriber_id = ? AND channel_id = ?",
+            args: [subscriberId, channelId]
+        });
+
+        if (result.rows.length === 0) {
+            return false;
+        }
+
+        const currentNotifications = Boolean(result.rows[0].notifications ?? 1);
+        const newNotifications = !currentNotifications;
+
+        await turso.execute({
+            sql: "UPDATE subscriptions SET notifications = ? WHERE subscriber_id = ? AND channel_id = ?",
+            args: [newNotifications ? 1 : 0, subscriberId, channelId]
+        });
+
+        return newNotifications;
+    } catch (error) {
+        console.error("Error toggling notifications:", error);
+        return false;
+    }
+}

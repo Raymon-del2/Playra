@@ -480,6 +480,7 @@ export default function ResultsPage() {
   const queryLabel = query.trim() || 'All';
   const [activeFilter, setActiveFilter] = useState('All');
   const [results, setResults] = useState<ResultItem[]>([]);
+  const [profiles, setProfiles] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -489,7 +490,15 @@ export default function ResultsPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const data = await searchVideos(query, 50);
+        // Use unified search API for videos and profiles
+        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&limit=50`);
+        if (!res.ok) throw new Error('Search failed');
+        const json = await res.json();
+        const videos = json.videos || [];
+        const channelProfiles = json.profiles || [];
+        setProfiles(channelProfiles);
+
+        const data = videos;
         if (!isMounted) return;
         const formatter = new Intl.NumberFormat('en', { notation: 'compact' });
         const mapped: ResultItem[] = (data || []).map((video: Video) => {
@@ -600,8 +609,8 @@ export default function ResultsPage() {
   }, [query]);
 
   return (
-    <div className="px-6 py-6">
-      <div className="flex items-center gap-3 overflow-x-auto pb-4 scrollbar-hide">
+    <div className="px-6 pt-8 pb-8 md:pt-10">
+      <div className="flex items-center gap-3 overflow-x-auto pb-5 scrollbar-hide">
         {filters.map((filter) => (
           <button
             key={filter}
@@ -616,13 +625,47 @@ export default function ResultsPage() {
         ))}
       </div>
 
+      {/* Profiles Section - Show when filter is All or Channels */}
+      {(activeFilter === 'All' || activeFilter === 'Channels') && profiles.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-lg font-bold text-white mb-4">Profiles</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            {profiles.map((profile: any) => (
+              <Link
+                key={profile.id}
+                href={`/channel/${profile.id}`}
+                className="group flex flex-col items-center gap-3 p-4 rounded-xl bg-zinc-900/50 hover:bg-zinc-800/50 transition-colors border border-white/5"
+              >
+                <div className="w-16 h-16 rounded-full overflow-hidden bg-zinc-800 flex-shrink-0">
+                  {profile.avatar ? (
+                    <img src={profile.avatar} alt={profile.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-zinc-500">
+                      {profile.name?.[0]?.toUpperCase() || '?'}
+                    </div>
+                  )}
+                </div>
+                <div className="text-center">
+                  <h3 className="text-sm font-bold text-white truncate max-w-[140px]">{profile.name}</h3>
+                  <p className="text-xs text-zinc-400 truncate max-w-[140px]">@{profile.name?.replace(/^@+/, '').replace(/\s+/g, '').toLowerCase()}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* STYLES Carousel - Show on "All" or "Styles" filter */}
       {(activeFilter === 'All' || activeFilter === 'Styles') && stylesItems.length > 0 && (
         <StylesCarousel items={stylesItems} />
       )}
 
       <div className="space-y-8">
-        {filteredResults.length === 0 && (activeFilter !== 'All' && activeFilter !== 'Styles' || stylesItems.length === 0) ? (
+        {/* Videos list */}
+        {filteredResults.map((item) => <ResultCard key={item.id} item={item} />)}
+
+        {/* No results fallback: only if no profiles and no videos */}
+        {profiles.length === 0 && filteredResults.length === 0 && stylesItems.length === 0 && (
           <div className="bg-gray-800 rounded-2xl p-6 flex flex-col md:flex-row items-center gap-6">
             <video
               src="/No-results.mp4"
@@ -639,8 +682,6 @@ export default function ResultsPage() {
               </p>
             </div>
           </div>
-        ) : (
-          filteredResults.map((item) => <ResultCard key={item.id} item={item} />)
         )}
       </div>
     </div>

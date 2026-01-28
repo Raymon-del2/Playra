@@ -148,6 +148,7 @@ export async function deleteVideoWithAssets(params: { id: string; videoUrl?: str
 
 // Get all videos
 export async function getVideos(limit = 20, offset = 0, category?: string) {
+    // First get videos
     let query = ensureSupabase()
         .from('videos')
         .select('*')
@@ -159,10 +160,18 @@ export async function getVideos(limit = 20, offset = 0, category?: string) {
         query = query.eq('category', category);
     }
 
-    const { data, error } = await query;
+    const { data: videos, error } = await query;
 
     if (error) throw error;
-    return data as Video[];
+    if (!videos || videos.length === 0) {
+        console.log('getVideos: No videos found');
+        return videos as Video[];
+    }
+
+    console.log('getVideos: Fetched', videos.length, 'videos');
+    console.log('getVideos: Sample video:', videos[0]);
+
+    return videos as Video[];
 }
 
 // --- Watch history helpers ---
@@ -270,6 +279,7 @@ export async function getWatchHistory(profileId: string, limit = 200) {
 
 // Search videos by title, description, or channel name
 export async function searchVideos(query: string | null, limit = 50) {
+    // First get videos
     let builder = ensureSupabase()
         .from('videos')
         .select('*')
@@ -282,13 +292,16 @@ export async function searchVideos(query: string | null, limit = 50) {
         builder = builder.or(`title.ilike.${pattern},description.ilike.${pattern},channel_name.ilike.${pattern}`);
     }
 
-    const { data, error } = await builder;
+    const { data: videos, error } = await builder;
     if (error) throw error;
-    return data as Video[];
+    if (!videos || videos.length === 0) return videos as Video[];
+
+    return videos as Video[];
 }
 
 // Get only styles (shorts)
 export async function getStyles(limit = 20, offset = 0, category?: string) {
+    // First get videos
     let query = ensureSupabase()
         .from('videos')
         .select('*')
@@ -301,22 +314,52 @@ export async function getStyles(limit = 20, offset = 0, category?: string) {
         query = query.eq('category', category);
     }
 
-    const { data, error } = await query;
-
+    const { data: videos, error } = await query;
     if (error) throw error;
-    return data as Video[];
+    if (!videos || videos.length === 0) return videos as Video[];
+
+    return videos as Video[];
 }
 
 // Get video by ID
 export async function getVideoById(id: string) {
-    const { data, error } = await ensureSupabase()
+    // First get video
+    const { data: video, error } = await ensureSupabase()
         .from('videos')
         .select('*')
         .eq('id', id)
         .single();
 
     if (error) throw error;
-    return data as Video;
+    if (!video) return video as Video;
+
+    // Get profile avatar for this channel; swallow errors to avoid breaking the watch page
+    try {
+        const { data: profile } = await ensureSupabase()
+            .from('profiles')
+            .select('avatar')
+            .eq('id', video.channel_id)
+            .maybeSingle();
+
+        if (profile?.avatar) {
+            video.channel_avatar = profile.avatar;
+        }
+    } catch (profileError) {
+        console.warn('Profile avatar lookup failed; using stored channel_avatar', profileError);
+    }
+
+    return video as Video;
+}
+
+// Force-refresh channel avatar for all videos from this channel
+export async function updateChannelAvatarInVideos(channelId: string, avatar: string) {
+    const client = ensureSupabase();
+    const { error } = await client
+        .from('videos')
+        .update({ channel_avatar: avatar })
+        .eq('channel_id', channelId);
+    if (error) throw error;
+    return true;
 }
 
 // Increment views
@@ -386,4 +429,433 @@ export async function deleteChannelVideos(channelId: string) {
 
     if (error) throw error;
     return { success: true };
+}
+
+// ============== COMMENTS SYSTEM ==============
+
+export interface Comment {
+    id: string;
+    video_id: string;
+    profile_id: string;
+    parent_id: string | null;
+    content: string;
+    likes: number;
+    dislikes: number;
+    created_at: string;
+    updated_at: string;
+    // Joined fields
+    profile_name?: string;
+    profile_avatar?: string;
+    replies?: Comment[];
+    user_liked?: boolean;
+    user_disliked?: boolean;
+}
+
+// Get comments for a video
+export async function getVideoComments(videoId: string, profileId?: string) {
+    const { data: comments, error } = await ensureSupabase()
+        .from('comments')
+        .select('*')
+        .eq('video_id', videoId)
+        .is('parent_id', null)
+        .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    if (!comments || comments.length === 0) return [];
+
+    // Get profile info for commenters
+    const profileIds = Array.from(new Set(comments.map((c: any) => c.profile_id)));
+    const { data: profiles } = await ensureSupabase()
+        .from('profiles')
+        .select('id, name, avatar')
+        .in('id', profileIds);
+
+    const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+
+    // Get replies for each comment
+    const commentIds = comments.map((c: any) => c.id);
+    const { data: replies } = await ensureSupabase()
+        .from('comments')
+        .select('*')
+        .in('parent_id', commentIds)
+        .order('created_at', { ascending: true });
+
+    // Get reply profile info
+    const replyProfileIds = Array.from(new Set((replies || []).map((r: any) => r.profile_id)));
+    if (replyProfileIds.length > 0) {
+        const { data: replyProfiles } = await ensureSupabase()
+            .from('profiles')
+            .select('id, name, avatar')
+            .in('id', replyProfileIds);
+        (replyProfiles || []).forEach((p: any) => profileMap.set(p.id, p));
+    }
+
+    // Get user engagement if logged in
+    let userEngagement = new Map();
+    if (profileId) {
+        const allCommentIds = commentIds.concat((replies || []).map((r: any) => r.id));
+        const { data: engagements } = await ensureSupabase()
+            .from('comment_engagement')
+            .select('comment_id, type')
+            .eq('profile_id', profileId)
+            .in('comment_id', allCommentIds);
+        (engagements || []).forEach((e: any) => userEngagement.set(e.comment_id, e.type));
+    }
+
+    // Map replies to parent comments
+    const replyMap = new Map<string, Comment[]>();
+    (replies || []).forEach((r: any) => {
+        const profile = profileMap.get(r.profile_id);
+        const reply: Comment = {
+            ...r,
+            profile_name: profile?.name || 'Unknown',
+            profile_avatar: profile?.avatar,
+            user_liked: userEngagement.get(r.id) === 'like',
+            user_disliked: userEngagement.get(r.id) === 'dislike',
+        };
+        if (!replyMap.has(r.parent_id)) replyMap.set(r.parent_id, []);
+        replyMap.get(r.parent_id)!.push(reply);
+    });
+
+    return comments.map((c: any) => {
+        const profile = profileMap.get(c.profile_id);
+        return {
+            ...c,
+            profile_name: profile?.name || 'Unknown',
+            profile_avatar: profile?.avatar,
+            replies: replyMap.get(c.id) || [],
+            user_liked: userEngagement.get(c.id) === 'like',
+            user_disliked: userEngagement.get(c.id) === 'dislike',
+        } as Comment;
+    });
+}
+
+// Add a comment
+export async function addComment(videoId: string, profileId: string, content: string, parentId?: string) {
+    const { data, error } = await ensureSupabase()
+        .from('comments')
+        .insert([{
+            video_id: videoId,
+            profile_id: profileId,
+            content: content.trim(),
+            parent_id: parentId || null,
+            likes: 0,
+            dislikes: 0,
+        }])
+        .select()
+        .single();
+
+    if (error) throw error;
+    return data;
+}
+
+// Like/dislike a comment
+export async function engageComment(commentId: string, profileId: string, type: 'like' | 'dislike' | null) {
+    const client = ensureSupabase();
+
+    // Check existing engagement
+    const { data: existing } = await client
+        .from('comment_engagement')
+        .select('id, type')
+        .eq('comment_id', commentId)
+        .eq('profile_id', profileId)
+        .maybeSingle();
+
+    // Get current comment stats
+    const { data: comment } = await client
+        .from('comments')
+        .select('likes, dislikes')
+        .eq('id', commentId)
+        .single();
+
+    if (!comment) throw new Error('Comment not found');
+
+    let likes = comment.likes;
+    let dislikes = comment.dislikes;
+
+    if (existing) {
+        // Remove existing engagement effect
+        if (existing.type === 'like') likes--;
+        if (existing.type === 'dislike') dislikes--;
+
+        if (type === null || type === existing.type) {
+            // Just remove
+            await client.from('comment_engagement').delete().eq('id', existing.id);
+        } else {
+            // Update to new type
+            await client.from('comment_engagement').update({ type }).eq('id', existing.id);
+            if (type === 'like') likes++;
+            if (type === 'dislike') dislikes++;
+        }
+    } else if (type) {
+        // Create new engagement
+        await client.from('comment_engagement').insert([{
+            comment_id: commentId,
+            profile_id: profileId,
+            type,
+        }]);
+        if (type === 'like') likes++;
+        if (type === 'dislike') dislikes++;
+    }
+
+    // Update comment counts
+    await client.from('comments').update({ likes, dislikes }).eq('id', commentId);
+
+    return { likes, dislikes };
+}
+
+// Delete a comment
+export async function deleteComment(commentId: string, profileId: string) {
+    const { error } = await ensureSupabase()
+        .from('comments')
+        .delete()
+        .eq('id', commentId)
+        .eq('profile_id', profileId);
+
+    if (error) throw error;
+    return true;
+}
+
+// Get comment count for a video
+export async function getCommentCount(videoId: string) {
+    const { count, error } = await ensureSupabase()
+        .from('comments')
+        .select('*', { count: 'exact', head: true })
+        .eq('video_id', videoId);
+
+    if (error) throw error;
+    return count || 0;
+}
+
+// ============== SUBSCRIPTIONS SYSTEM ==============
+
+export interface Subscription {
+    id: string;
+    subscriber_id: string;
+    channel_id: string;
+    notifications: boolean;
+    created_at: string;
+}
+
+// Subscribe to a channel
+export async function subscribeToChannel(subscriberId: string, channelId: string) {
+    const { data, error } = await ensureSupabase()
+        .from('subscriptions')
+        .insert([{
+            subscriber_id: subscriberId,
+            channel_id: channelId,
+            notifications: true,
+        }])
+        .select()
+        .single();
+
+    if (error) throw error;
+    return data;
+}
+
+// Unsubscribe from a channel
+export async function unsubscribeFromChannel(subscriberId: string, channelId: string) {
+    const { error } = await ensureSupabase()
+        .from('subscriptions')
+        .delete()
+        .eq('subscriber_id', subscriberId)
+        .eq('channel_id', channelId);
+
+    if (error) throw error;
+    return true;
+}
+
+// Check if subscribed
+export async function isSubscribed(subscriberId: string, channelId: string) {
+    const { data, error } = await ensureSupabase()
+        .from('subscriptions')
+        .select('id, notifications')
+        .eq('subscriber_id', subscriberId)
+        .eq('channel_id', channelId)
+        .maybeSingle();
+
+    if (error) throw error;
+    return data ? { subscribed: true, notifications: data.notifications } : { subscribed: false, notifications: false };
+}
+
+// Toggle notifications for a subscription
+export async function toggleSubscriptionNotifications(subscriberId: string, channelId: string) {
+    const { data: existing } = await ensureSupabase()
+        .from('subscriptions')
+        .select('id, notifications')
+        .eq('subscriber_id', subscriberId)
+        .eq('channel_id', channelId)
+        .single();
+
+    if (!existing) throw new Error('Not subscribed');
+
+    const { error } = await ensureSupabase()
+        .from('subscriptions')
+        .update({ notifications: !existing.notifications })
+        .eq('id', existing.id);
+
+    if (error) throw error;
+    return !existing.notifications;
+}
+
+// Get subscriber count for a channel
+export async function getSubscriberCount(channelId: string) {
+    const { count, error } = await ensureSupabase()
+        .from('subscriptions')
+        .select('*', { count: 'exact', head: true })
+        .eq('channel_id', channelId);
+
+    if (error) throw error;
+    return count || 0;
+}
+
+// Get user's subscriptions with channel info
+export async function getSubscriptions(subscriberId: string) {
+    const { data: subs, error } = await ensureSupabase()
+        .from('subscriptions')
+        .select('*')
+        .eq('subscriber_id', subscriberId)
+        .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    if (!subs || subs.length === 0) return [];
+
+    // Get channel profiles
+    const channelIds = subs.map((s: any) => s.channel_id);
+    const { data: profiles } = await ensureSupabase()
+        .from('profiles')
+        .select('id, name, avatar')
+        .in('id', channelIds);
+
+    const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+
+    return subs.map((s: any) => {
+        const profile = profileMap.get(s.channel_id);
+        return {
+            ...s,
+            channel_name: profile?.name || 'Unknown Channel',
+            channel_avatar: profile?.avatar,
+        };
+    });
+}
+
+// Get videos from subscribed channels
+export async function getSubscriptionFeed(subscriberId: string, limit = 50) {
+    // Get subscribed channel IDs
+    const { data: subs } = await ensureSupabase()
+        .from('subscriptions')
+        .select('channel_id')
+        .eq('subscriber_id', subscriberId);
+
+    if (!subs || subs.length === 0) return [];
+
+    const channelIds = subs.map((s: any) => s.channel_id);
+
+    // Get videos from those channels
+    const { data: videos, error } = await ensureSupabase()
+        .from('videos')
+        .select('*')
+        .in('channel_id', channelIds)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+    if (error) throw error;
+    return videos as Video[];
+}
+
+// ============== RELATED VIDEOS ==============
+
+// Get related videos based on category, channel, or recent uploads
+export async function getRelatedVideos(videoId: string, category?: string, channelId?: string, limit = 20) {
+    const client = ensureSupabase();
+
+    // Strategy: Get videos from same category or channel, excluding current video
+    let query = client
+        .from('videos')
+        .select('*')
+        .neq('id', videoId)
+        .not('channel_id', 'in', '("ch_1769262677206_k5xxdmskb")')
+        .order('views', { ascending: false })
+        .limit(limit);
+
+    // Prioritize same category
+    if (category && category !== 'general') {
+        query = query.eq('category', category);
+    }
+
+    const { data: videos, error } = await query;
+    if (error) throw error;
+
+    // If not enough videos from category, get more from same channel or general
+    if ((!videos || videos.length < limit) && channelId) {
+        const existing = new Set((videos || []).map((v: any) => v.id));
+        const { data: channelVideos } = await client
+            .from('videos')
+            .select('*')
+            .eq('channel_id', channelId)
+            .neq('id', videoId)
+            .order('created_at', { ascending: false })
+            .limit(limit - (videos?.length || 0));
+
+        if (channelVideos) {
+            channelVideos.forEach((v: any) => {
+                if (!existing.has(v.id)) {
+                    videos?.push(v);
+                }
+            });
+        }
+    }
+
+    // Fill with trending if still not enough
+    if (!videos || videos.length < 5) {
+        const existing = new Set((videos || []).map((v: any) => v.id));
+        const { data: trendingVideos } = await client
+            .from('videos')
+            .select('*')
+            .neq('id', videoId)
+            .not('channel_id', 'in', '("ch_1769262677206_k5xxdmskb")')
+            .order('views', { ascending: false })
+            .limit(limit);
+
+        if (trendingVideos) {
+            trendingVideos.forEach((v: any) => {
+                if (!existing.has(v.id) && (videos?.length || 0) < limit) {
+                    videos?.push(v);
+                }
+            });
+        }
+    }
+
+    return (videos || []) as Video[];
+}
+
+// ============== TRENDING ==============
+
+// Get trending videos (most viewed in last 7 days, or all-time if not enough)
+export async function getTrendingVideos(limit = 50) {
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    const { data: recentVideos, error } = await ensureSupabase()
+        .from('videos')
+        .select('*')
+        .not('channel_id', 'in', '("ch_1769262677206_k5xxdmskb")')
+        .gte('created_at', sevenDaysAgo)
+        .order('views', { ascending: false })
+        .limit(limit);
+
+    if (error) throw error;
+
+    // If not enough recent videos, get all-time trending
+    if (!recentVideos || recentVideos.length < 10) {
+        const { data: allTimeVideos } = await ensureSupabase()
+            .from('videos')
+            .select('*')
+            .not('channel_id', 'in', '("ch_1769262677206_k5xxdmskb")')
+            .order('views', { ascending: false })
+            .limit(limit);
+
+        return (allTimeVideos || []) as Video[];
+    }
+
+    return recentVideos as Video[];
 }

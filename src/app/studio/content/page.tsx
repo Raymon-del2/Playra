@@ -29,6 +29,9 @@ export default function ChannelContent() {
     const [isLoadingList, setIsLoadingList] = useState(true);
     const [deleteTarget, setDeleteTarget] = useState<any>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [editTarget, setEditTarget] = useState<any>(null);
+    const [isSavingEdit, setIsSavingEdit] = useState(false);
+    const [editTitle, setEditTitle] = useState('');
 
     const tabs = ['Videos', 'Styles', 'Live', 'Posts', 'Playlists', 'Podcasts', 'Promotions', 'Collaborations', 'Music'];
 
@@ -154,6 +157,42 @@ export default function ChannelContent() {
         }
     };
 
+    const handleEdit = async () => {
+        if (!editTarget || !editTitle.trim()) return;
+        setIsSavingEdit(true);
+        try {
+            console.log('Updating video:', editTarget.id, 'to title:', editTitle.trim());
+            const { data, error } = await supabase!
+                .from('videos')
+                .update({ title: editTitle.trim() })
+                .eq('id', editTarget.id)
+                .select();
+            
+            if (error) {
+                console.error('Supabase update error:', error);
+                throw error;
+            }
+            
+            console.log('Supabase update result:', data);
+            
+            setVideos((prev) =>
+                prev.map((v) => (v.id === editTarget.id ? { ...v, title: editTitle.trim() } : v))
+            );
+            setEditTarget(null);
+            setEditTitle('');
+            
+            // Dispatch event to refresh home page
+            localStorage.setItem('video-updated', Date.now().toString());
+            window.dispatchEvent(new CustomEvent('video-updated', { detail: { videoId: editTarget.id } }));
+            console.log('Event dispatched');
+        } catch (error) {
+            console.error('Error updating video:', error);
+            alert('Failed to update video title');
+        } finally {
+            setIsSavingEdit(false);
+        }
+    };
+
     const resetModal = () => {
         setIsUploadModalOpen(false);
         setUploadStep('idle');
@@ -239,7 +278,7 @@ export default function ChannelContent() {
                     <div className="bg-[#111] rounded-2xl border border-white/10 shadow-2xl w-full max-w-md p-6 space-y-4">
                         <h3 className="text-xl font-bold text-white">Delete this video?</h3>
                         <p className="text-sm text-zinc-400">
-                            This will permanently remove “{deleteTarget.title}”. You cannot undo this action.
+                            This will permanently remove "{deleteTarget.title}". You cannot undo this action.
                         </p>
                         <div className="flex items-center justify-end gap-3">
                             <button
@@ -270,6 +309,43 @@ export default function ChannelContent() {
                                 className="px-4 py-2 rounded-full text-sm font-semibold bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-60"
                             >
                                 {isDeleting ? 'Deleting...' : 'Delete'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit video title modal */}
+            {editTarget && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm">
+                    <div className="bg-[#111] rounded-2xl border border-white/10 shadow-2xl w-full max-w-md p-6 space-y-4">
+                        <h3 className="text-xl font-bold text-white">Edit video title</h3>
+                        <div className="space-y-2">
+                            <label className="text-sm text-zinc-400">New title</label>
+                            <input
+                                type="text"
+                                value={editTitle}
+                                onChange={(e) => setEditTitle(e.target.value)}
+                                className="w-full bg-zinc-800 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-blue-500 outline-none"
+                                placeholder="Enter new title"
+                            />
+                        </div>
+                        <div className="flex items-center justify-end gap-3">
+                            <button
+                                onClick={() => {
+                                    setEditTarget(null);
+                                    setEditTitle('');
+                                }}
+                                className="px-4 py-2 rounded-full text-sm font-semibold bg-white/10 text-white hover:bg-white/20 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                disabled={isSavingEdit || !editTitle.trim()}
+                                onClick={handleEdit}
+                                className="px-4 py-2 rounded-full text-sm font-semibold bg-blue-500 text-white hover:bg-blue-600 transition-colors disabled:opacity-60"
+                            >
+                                {isSavingEdit ? 'Saving...' : 'Save'}
                             </button>
                         </div>
                     </div>
@@ -360,6 +436,15 @@ export default function ChannelContent() {
                                 <div className="text-sm text-zinc-400">{video.views || 0}</div>
                                 <div className="text-sm text-zinc-400">0</div>
                                 <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => {
+                                            setEditTarget(video);
+                                            setEditTitle(video.title);
+                                        }}
+                                        className="px-3 py-1.5 text-sm font-semibold rounded-full bg-blue-500/10 text-blue-200 hover:bg-blue-500/20 border border-blue-500/30 transition-colors"
+                                    >
+                                        Edit
+                                    </button>
                                     <button
                                         onClick={() => setDeleteTarget(video)}
                                         className="px-3 py-1.5 text-sm font-semibold rounded-full bg-red-500/10 text-red-200 hover:bg-red-500/20 border border-red-500/30 transition-colors"

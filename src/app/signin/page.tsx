@@ -7,7 +7,8 @@ import {
     signInWithEmailAndPassword,
     signInWithPopup,
     createUserWithEmailAndPassword,
-    updateProfile
+    updateProfile,
+    sendPasswordResetEmail
 } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
 import { syncUserToDb } from '@/app/actions/auth';
@@ -20,6 +21,7 @@ export default function SignInPage() {
     const [name, setName] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [resetSent, setResetSent] = useState(false);
 
     const getFriendlyErrorMessage = (error: any) => {
         const code = error?.code || '';
@@ -43,10 +45,28 @@ export default function SignInPage() {
         }
     };
 
+    const handlePasswordReset = async () => {
+        if (!email) {
+            setError('Enter your email first, then tap reset.');
+            return;
+        }
+        setLoading(true);
+        setError(null);
+        try {
+            await sendPasswordResetEmail(auth, email);
+            setResetSent(true);
+        } catch (err: any) {
+            setError(getFriendlyErrorMessage(err));
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleEmailAuth = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError(null);
+        setResetSent(false);
 
         try {
             if (isSignUp) {
@@ -118,7 +138,7 @@ export default function SignInPage() {
                         {isSignUp ? 'Create your account' : 'Welcome back'}
                     </h1>
                     <p className="text-zinc-400 font-bold text-sm tracking-wide">
-                        The future of Discovery is here.
+                        If you use Google first, set a password via “Create account” or “Forgot password” to sign in with email later.
                     </p>
                 </div>
 
@@ -130,6 +150,12 @@ export default function SignInPage() {
                         <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-xs font-black flex items-center gap-3 animate-shake">
                             <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                             {error}
+                        </div>
+                    )}
+                    {resetSent && !error && (
+                        <div className="mb-6 p-4 bg-green-500/10 border border-green-500/20 rounded-2xl text-green-300 text-xs font-black flex items-center gap-3">
+                            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                            Reset email sent. Check your inbox.
                         </div>
                     )}
 
@@ -174,7 +200,13 @@ export default function SignInPage() {
 
                         {!isSignUp && (
                             <div className="flex justify-end">
-                                <button type="button" className="text-xs font-black text-blue-400 hover:text-blue-300 transition-colors">Forgot Password?</button>
+                                <button
+                                    type="button"
+                                    onClick={handlePasswordReset}
+                                    className="text-xs font-black text-blue-400 hover:text-blue-300 transition-colors"
+                                >
+                                    Forgot Password?
+                                </button>
                             </div>
                         )}
 

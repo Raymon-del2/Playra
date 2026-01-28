@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { auth } from '@/lib/firebase'; // Adjust import if needed
+import { auth } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
 
 interface ProfileMenuProps {
@@ -46,6 +46,8 @@ export default function ProfileMenu({ isOpen, onClose, activeProfile, userEmail 
 
     if (!isOpen || !activeProfile) return null;
 
+    const displayHandle = `@${activeProfile.name.replace(/^@+/, '').replace(/\s+/g, '').toLowerCase()}`;
+
     return (
         <div
             ref={menuRef}
@@ -64,25 +66,27 @@ export default function ProfileMenu({ isOpen, onClose, activeProfile, userEmail 
                 </div>
                 <div className="flex flex-col min-w-0">
                     <span className="font-semibold truncate">{activeProfile.name}</span>
-                    <span className="text-gray-400 text-sm truncate">
-                        {activeProfile.name.startsWith('@')
-                            ? activeProfile.name.toLowerCase()
-                            : `@${activeProfile.name.replace(/\s+/g, '').toLowerCase()}`}
-                    </span>
+                    <span className="text-gray-400 text-sm truncate">{displayHandle}</span>
                     <Link href="/channel" className="text-blue-400 text-sm mt-1 hover:text-blue-300">
                         View your channel
                     </Link>
                 </div>
             </div>
 
-            <div className="max-h-[calc(100vh-100px)] overflow-y-auto custom-scrollbar">
+            <div className="py-2">
                 {/* Section 1 */}
                 <div className="py-2 border-b border-gray-700/50">
-                    <MenuItem icon={<GoogleIcon />} label="Google Account" />
+                    <div className="relative group">
+                        <MenuItem icon={<CmailIcon />} label="Cmail Account" />
+                        <div className="pointer-events-none absolute right-0 top-0 translate-x-full ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-50">
+                            <div className="bg-black text-white text-xs font-semibold px-2 py-1 rounded shadow-lg whitespace-nowrap">
+                                Coming soon
+                            </div>
+                        </div>
+                    </div>
                     <MenuItem
                         icon={<SwitchAccountIcon />}
                         label="Switch account"
-                        hasSubmenu
                         onClick={() => router.push('/select-profile')}
                     />
                     <MenuItem
@@ -94,28 +98,15 @@ export default function ProfileMenu({ isOpen, onClose, activeProfile, userEmail 
 
                 {/* Section 2 */}
                 <div className="py-2 border-b border-gray-700/50">
-                    <MenuItem icon={<StudioIcon />} label="Playra Studio" />
-                    <MenuItem icon={<PurchasesIcon />} label="Purchases and memberships" />
+                    <MenuItem
+                        icon={<StudioIcon />}
+                        label="Playra Studio"
+                        onClick={() => router.push('/studio')}
+                    />
                 </div>
 
                 {/* Section 3 */}
-                <div className="py-2 border-b border-gray-700/50">
-                    <MenuItem icon={<DataIcon />} label="Your data in Playra" />
-                    <MenuItem icon={<AppearanceIcon />} label="Appearance: Device theme" hasSubmenu />
-                    <MenuItem icon={<LanguageIcon />} label="Display language: English" hasSubmenu />
-                    <MenuItem icon={<RestrictedIcon />} label="Restricted Mode: Off" hasSubmenu />
-                    <MenuItem icon={<LocationIcon />} label="Location: Kenya" hasSubmenu />
-                    <MenuItem icon={<KeyboardIcon />} label="Keyboard shortcuts" />
-                </div>
-
-                {/* Section 4 */}
-                <div className="py-2 border-b border-gray-700/50">
-                    <MenuItem icon={<SettingsIcon />} label="Settings" />
-                </div>
-
-                {/* Section 5 */}
                 <div className="py-2">
-                    <MenuItem icon={<HelpIcon />} label="Help" />
                     <MenuItem icon={<FeedbackIcon />} label="Send feedback" />
                 </div>
             </div>
@@ -153,9 +144,10 @@ function MenuItem({
 }
 
 // Icons
-const GoogleIcon = () => (
+const CmailIcon = () => (
     <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.761H12.545z" />
+        <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2"/>
+        <text x="12" y="16" textAnchor="middle" fontSize="14" fontWeight="bold" fill="currentColor">C</text>
     </svg>
 );
 
@@ -180,60 +172,6 @@ const StudioIcon = () => (
     </svg>
 );
 
-const PurchasesIcon = () => (
-    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-);
-
-const DataIcon = () => (
-    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-    </svg>
-);
-
-const AppearanceIcon = () => (
-    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-    </svg>
-);
-
-const LanguageIcon = () => (
-    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
-    </svg>
-);
-
-const RestrictedIcon = () => (
-    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-    </svg>
-);
-
-const LocationIcon = () => (
-    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-);
-
-const KeyboardIcon = () => (
-    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-    </svg>
-);
-
-const SettingsIcon = () => (
-    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-    </svg>
-);
-
-const HelpIcon = () => (
-    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-);
 
 const FeedbackIcon = () => (
     <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
