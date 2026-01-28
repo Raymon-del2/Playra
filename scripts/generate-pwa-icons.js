@@ -20,7 +20,7 @@ async function generateIcons() {
             await sharp(sourceImage)
                 .resize(size, size, {
                     fit: 'contain',
-                    background: { r: 10, g: 10, b: 10, alpha: 1 } // Match app background #0a0a0a
+                    background: { r: 0, g: 0, b: 0, alpha: 0 } // Transparent background
                 })
                 .toFile(path.join(publicDir, `icon-${size}x${size}.png`));
 
@@ -35,12 +35,12 @@ async function generateIcons() {
         await sharp(sourceImage)
             .resize(512, 512, {
                 fit: 'contain',
-                background: { r: 10, g: 10, b: 10, alpha: 1 },
+                background: { r: 0, g: 0, b: 0, alpha: 0 },
                 kernel: sharp.kernel.lanczos3
             })
             .extend({
                 top: 64, bottom: 64, left: 64, right: 64,
-                background: { r: 10, g: 10, b: 10, alpha: 1 }
+                background: { r: 0, g: 0, b: 0, alpha: 0 }
             })
             .resize(512, 512)
             .toFile(path.join(publicDir, 'icon-maskable-512x512.png'));

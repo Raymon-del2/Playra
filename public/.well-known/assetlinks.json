@@ -1,0 +1,14 @@
+[
+    {
+        "relation": [
+            "delegate_permission/common.handle_all_urls"
+        ],
+        "target": {
+            "namespace": "android_app",
+            "package_name": "app.vercel.playra_app.twa",
+            "sha256_cert_fingerprints": [
+                "88:C7:21:7F:3E:25:35:97:22:17:85:CC:07:95:7E:62:EE:A8:FA:9C:1F:CD:D3:D8:78:4F:37:D9:A2:F3:59:8C"
+            ]
+        }
+    }
+]
