@@ -8,6 +8,8 @@ import MobileDrawer from '@/components/MobileDrawer';
 import TopLoader from '@/components/TopLoader';
 import AppInstallBanner from '@/components/AppInstallBanner';
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
+import SplashScreen from '@/components/SplashScreen';
+import WhoIsWatchingOverlay from '@/components/WhoIsWatchingOverlay';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { auth } from '@/lib/firebase';
@@ -31,21 +33,47 @@ export default function LayoutShell({ children, activeProfile }: LayoutShellProp
   const [user, setUser] = useState<any>(null);
   const [mounted, setMounted] = useState(false);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
+  const [showSplash, setShowSplash] = useState(false);
+  const [showWhoIsWatching, setShowWhoIsWatching] = useState(false);
+  const [userProfiles, setUserProfiles] = useState<any[]>([]);
+  const [isFirstLoad, setIsFirstLoad] = useState(true);
 
   const isStylesPage = pathname?.startsWith('/styles');
   const isStudio = pathname?.startsWith('/studio');
 
+  // Load profiles helper
+  const loadProfiles = async (userId: string) => {
+    try {
+      const { getUserProfiles } = await import('@/app/actions/profile');
+      const pros = await getUserProfiles(userId);
+      setUserProfiles(pros);
+    } catch (e) {
+      console.error("LayoutShell: Failed to load profiles", e);
+    }
+  };
+
   useEffect(() => {
     setMounted(true);
+
+    // Initial load check
+    const hasSeenSplash = sessionStorage.getItem('playra_splash_seen');
+    if (!hasSeenSplash) {
+      setShowSplash(true);
+      sessionStorage.setItem('playra_splash_seen', 'true');
+    } else {
+      setIsFirstLoad(false);
+    }
 
     // Auth Listener
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
         setIsSignedIn(true);
         setUser(user);
+        loadProfiles(user.uid);
       } else {
         setIsSignedIn(false);
         setUser(null);
+        setUserProfiles([]);
       }
     });
 
@@ -58,6 +86,29 @@ export default function LayoutShell({ children, activeProfile }: LayoutShellProp
 
     return () => unsubscribeAuth();
   }, []);
+
+  // Handle flow after splash
+  const handleSplashFinish = () => {
+    setShowSplash(false);
+    setIsFirstLoad(false);
+
+    // If signed in but no active profile, show account switcher
+    if (isSignedIn && !activeProfile) {
+      setShowWhoIsWatching(true);
+    }
+  };
+
+  // If signed in but activeProfile disappears (e.g. cookie cleared) and we aren't showing splash
+  useEffect(() => {
+    if (!showSplash && isSignedIn && !activeProfile && userProfiles.length > 0 && !showWhoIsWatching && !isFirstLoad) {
+      // Check if we are on an auth page, if so don't show overlay
+      const isAuth = pathname === '/signin' || pathname === '/set-account' || pathname === '/select-profile';
+      if (!isAuth) {
+        setShowWhoIsWatching(true);
+      }
+    }
+  }, [isSignedIn, activeProfile, showSplash, userProfiles, pathname, isFirstLoad, showWhoIsWatching]);
+
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -160,6 +211,21 @@ export default function LayoutShell({ children, activeProfile }: LayoutShellProp
 
       <AppInstallBanner />
       <ServiceWorkerRegister />
+
+      {showSplash && (
+        <SplashScreen onFinish={handleSplashFinish} />
+      )}
+
+      {showWhoIsWatching && !showSplash && (
+        <WhoIsWatchingOverlay
+          profiles={userProfiles}
+          userId={user?.uid}
+          onSelect={() => {
+            setShowWhoIsWatching(false);
+            window.location.reload(); // Refresh to pick up active profile cookie
+          }}
+        />
+      )}
     </>
   );
 }
