@@ -185,9 +185,9 @@ export default function Navbar({
               <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
             </button>
 
-            <Link href="/" className="flex items-center gap-1.5">
+            <Link href="/" className="flex items-center gap-1.5 scale-110 origin-left">
               <div className="relative flex items-center">
-                <img src="/Playra.png" alt="Playra" className="h-[28px] w-auto" />
+                <img src="/Playra.png" alt="Playra" className="h-[32px] w-auto max-w-[120px]" />
               </div>
               <span className="hidden xs:inline text-[10px] sm:text-[11px] font-bold text-zinc-500 uppercase tracking-widest bg-zinc-800/50 px-1.5 py-0.5 rounded">
                 {countryCode || 'KE'}

@@ -106,7 +106,7 @@ function VideoCard({
 
   return (
     <div
-      className="group relative flex flex-col w-full bg-gray-900"
+      className="group relative flex flex-col w-full bg-[#0f0f0f]"
       onMouseEnter={() => onHoverStart(video.id)}
       onMouseLeave={() => {
         setHoverPct(null);

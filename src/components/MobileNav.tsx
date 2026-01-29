@@ -30,8 +30,8 @@ export default function MobileNav({
                 </div>
             ),
             create: (
-                <div className="bg-white/10 hover:bg-white/20 p-2 rounded-full transition-colors active:scale-90 border border-white/5 shadow-xl">
-                    <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                <div className="bg-white/10 hover:bg-white/20 p-1.5 rounded-full transition-colors active:scale-90 border border-white/5 shadow-xl">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                 </div>
             ),
             subscriptions: <svg className="w-6 h-6" fill={isActive ? "currentColor" : "none"} stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>,
@@ -53,7 +53,7 @@ export default function MobileNav({
 
     return (
         <div className="fixed bottom-0 left-0 right-0 z-[100] lg:hidden animate-slide-in-up">
-            <nav className="w-full bg-[#0f0f0f]/95 backdrop-blur-xl border-t border-[#2a2a2a] h-[60px] flex items-center justify-around px-0 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
+            <nav className="w-full bg-[#0f0f0f]/95 backdrop-blur-xl border-t border-[#2a2a2a] h-[60px] flex items-center justify-between px-0 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
                 {navItems.map((item) => {
                     const isActive = pathname === item.path;
                     return (
@@ -65,7 +65,7 @@ export default function MobileNav({
                                     window.scrollTo({ top: 0, behavior: 'smooth' });
                                 }
                             }}
-                            className="flex flex-col items-center justify-center flex-1 h-full active:scale-95 transition-transform"
+                            className="flex flex-col items-center justify-center w-[20%] h-full active:scale-95 transition-transform"
                         >
                             <span className={`${isActive ? 'text-white' : 'text-[#aaaaaa]'} transition-colors mb-0.5`}>
                                 {getIcon(item)}
