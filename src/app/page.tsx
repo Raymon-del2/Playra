@@ -461,7 +461,7 @@ export default function Home() {
             return (
               <div className="pb-20">
                 {/* Initial Grid of Regular Videos */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-y-1 md:gap-x-4 md:gap-y-10 p-0 sm:p-6 pt-28">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-y-1 md:gap-x-4 md:gap-y-10 p-0 sm:p-6 pt-0 mt-24">
                   {displayVideos.slice(0, 8).map((video) => (
                     <VideoCard
                       key={video.id}
