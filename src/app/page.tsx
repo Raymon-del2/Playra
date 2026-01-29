@@ -430,7 +430,7 @@ export default function Home() {
   );
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] pb-20">
+    <div className="min-h-screen bg-[#0f0f0f] pb-20 max-w-full overflow-x-hidden">
       {/* Category Bar */}
       <div className="flex items-center gap-3 overflow-x-auto px-4 py-3 sticky top-16 bg-[#0f0f0f]/95 backdrop-blur-md z-40 scrollbar-hide">
         {['All', 'Live', 'Music', 'Gaming', 'News', 'Recently uploaded', 'New to you'].map((cat) => (

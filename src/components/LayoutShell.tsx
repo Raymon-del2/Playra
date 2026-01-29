@@ -187,11 +187,11 @@ export default function LayoutShell({ children, activeProfile }: LayoutShellProp
         activeProfile={activeProfile}
       />
 
-      <div className="flex bg-gray-900 min-h-screen">
+      <div className="flex bg-[#0f0f0f] min-h-screen">
         <Sidebar isCollapsed={isSidebarCollapsed} isSignedIn={isSignedIn} activeProfile={activeProfile} />
 
         <main
-          className={`flex-1 pt-14 sm:pt-16 min-h-screen transition-all duration-300 ${isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'
+          className={`flex-1 pt-16 min-h-screen transition-all duration-300 ${isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'
             } pb-[64px] lg:pb-0`}
         >
           {children}

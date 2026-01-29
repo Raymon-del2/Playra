@@ -185,11 +185,12 @@ export default function Navbar({
               <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
             </button>
 
-            <Link href="/" className="flex items-center gap-2 flex-shrink-0 relative z-10">
-              <div className="relative flex items-center h-16">
-                <img src="/Playra.png" alt="Playra" className="h-[38px] w-auto max-w-[150px] object-contain" />
+            <Link href="/" className="flex items-center gap-2 flex-shrink-0 group">
+              <div className="flex items-center gap-2">
+                <img src="/Playra.png" alt="" className="h-[24px] w-auto brightness-110" />
+                <span className="text-white font-black text-xl tracking-tighter uppercase leading-none">Playra</span>
               </div>
-              <span className="hidden xs:inline text-[10px] sm:text-[11px] font-bold text-zinc-500 uppercase tracking-widest bg-zinc-800/50 px-1.5 py-0.5 rounded">
+              <span className="hidden xs:inline text-[9px] font-black text-zinc-500 uppercase tracking-widest bg-zinc-800/50 px-1.5 py-0.5 rounded ml-1 border border-white/5">
                 {countryCode || 'KE'}
               </span>
             </Link>
@@ -314,12 +315,11 @@ export default function Navbar({
           <div className="flex items-center space-x-1 sm:space-x-4">
             <button
               onClick={() => {
-                // Future: Add a dedicated mobile search overlay
                 router.push('/results?focus=true');
               }}
-              className="md:hidden p-1.5 rounded-full hover:bg-white/10 text-white active:scale-90 transition-all mr-1"
+              className="md:hidden p-2 rounded-full hover:bg-white/10 text-white active:scale-95 transition-all"
             >
-              <svg className="w-[22px] h-[22px]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </button>
