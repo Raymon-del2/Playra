@@ -52,8 +52,8 @@ export default function MobileNav({
     };
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 z-[100] lg:hidden animate-slide-in-up">
-            <nav className="w-full bg-[#0f0f0f] border-t border-[#2a2a2a] h-[60px] flex items-center justify-around px-2 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
+        <nav className="mobile-nav-fixed lg:hidden shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
+            <div className="flex items-center justify-evenly h-[60px] w-full px-1">
                 {navItems.map((item) => {
                     const isActive = pathname === item.path;
                     return (
@@ -68,21 +68,22 @@ export default function MobileNav({
                                     }
                                 }
                             }}
-                            className="flex flex-col items-center justify-center flex-1 min-w-0 h-full active:scale-95 transition-transform"
+                            className="flex flex-col items-center justify-center h-full px-2 active:scale-95 transition-transform"
+                            style={{ width: '20%', maxWidth: '80px' }}
                         >
-                            <span className={`${isActive ? 'text-white' : 'text-[#aaaaaa]'} transition-colors mb-0.5`}>
+                            <span className={`${isActive ? 'text-white' : 'text-[#aaaaaa]'} transition-colors`}>
                                 {getIcon(item)}
                             </span>
                             {item.label && (
-                                <span className={`text-[10px] font-medium uppercase tracking-tight truncate w-full px-1 text-center transition-colors ${isActive ? 'text-white' : 'text-[#aaaaaa]'}`}>
-                                    {item.label}
+                                <span className={`text-[9px] font-medium uppercase tracking-tight mt-0.5 text-center transition-colors whitespace-nowrap overflow-hidden text-ellipsis ${isActive ? 'text-white' : 'text-[#aaaaaa]'}`} style={{ maxWidth: '100%' }}>
+                                    {item.label.length > 6 ? item.label.slice(0, 6) + '…' : item.label}
                                 </span>
                             )}
                         </Link>
                     );
                 })}
-            </nav>
-        </div>
+            </div>
+        </nav>
     );
 }
 

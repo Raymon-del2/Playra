@@ -114,7 +114,7 @@ export default function StudioAnalyticsPage() {
   };
 
   return (
-    <div className="min-h-screen p-8 text-white">
+    <div className="min-h-screen p-4 sm:p-8 text-white w-full max-w-full overflow-x-hidden pb-24 lg:pb-8">
       <div ref={overviewRef} className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <h1 className="text-2xl font-bold">Channel analytics</h1>
         <div className="flex items-center gap-3 text-sm text-zinc-300">
@@ -130,9 +130,8 @@ export default function StudioAnalyticsPage() {
           <button
             key={tab}
             onClick={() => scrollToSection(tab)}
-            className={`pb-3 transition-colors ${
-              activeTab === tab ? 'text-white border-b-2 border-white' : 'text-zinc-400 hover:text-white'
-            }`}
+            className={`pb-3 transition-colors ${activeTab === tab ? 'text-white border-b-2 border-white' : 'text-zinc-400 hover:text-white'
+              }`}
           >
             {tab}
           </button>
@@ -214,9 +213,8 @@ export default function StudioAnalyticsPage() {
             <button
               key={tab}
               onClick={() => setActiveContentTab(tab)}
-              className={`pb-2 border-b-2 transition-colors ${
-                activeContentTab === tab ? 'border-white text-white' : 'border-transparent text-zinc-400 hover:text-white'
-              }`}
+              className={`pb-2 border-b-2 transition-colors ${activeContentTab === tab ? 'border-white text-white' : 'border-transparent text-zinc-400 hover:text-white'
+                }`}
             >
               {tab}
             </button>

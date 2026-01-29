@@ -22,7 +22,7 @@ export default function DownloadPage() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-zinc-900 to-black text-white">
+        <div className="min-h-screen bg-gradient-to-b from-zinc-900 to-black text-white pb-24 lg:pb-8">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-white/5">
                 <Link href="/" className="flex items-center gap-2">
@@ -141,7 +141,7 @@ export default function DownloadPage() {
                 </div>
 
                 {/* Features */}
-                <div className="mt-16 grid grid-cols-3 gap-6 text-center">
+                <div className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 text-center">
                     <div>
                         <div className="w-12 h-12 bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-3">
                             <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

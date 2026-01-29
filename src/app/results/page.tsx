@@ -609,7 +609,7 @@ export default function ResultsPage() {
   }, [query]);
 
   return (
-    <div className="px-6 pt-8 pb-8 md:pt-10">
+    <div className="px-4 sm:px-6 pt-6 sm:pt-8 pb-24 lg:pb-8 w-full max-w-full overflow-x-hidden">
       <div className="flex items-center gap-3 overflow-x-auto pb-5 scrollbar-hide">
         {filters.map((filter) => (
           <button

@@ -22,7 +22,7 @@ export default function StudioDashboard() {
   ];
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden pb-24 lg:pb-0">
       {/* Top bar */}
       <div className="h-14 border-b border-white/10 flex items-center justify-between px-6">
         <div className="flex items-center gap-4">
@@ -30,7 +30,7 @@ export default function StudioDashboard() {
             <input
               type="text"
               placeholder="Search across your channel"
-              className="w-[400px] h-9 bg-[#121212] border border-white/10 rounded-full px-10 text-sm focus:border-white/30 outline-none transition-colors"
+              className="w-full max-w-[400px] h-9 bg-[#121212] border border-white/10 rounded-full px-10 text-sm focus:border-white/30 outline-none transition-colors"
             />
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -70,7 +70,7 @@ export default function StudioDashboard() {
       <div className="p-8">
         <h1 className="text-2xl font-bold mb-8">Channel dashboard</h1>
 
-        <div className="grid grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8">
           {stats.map((stat, i) => (
             <div key={i} className="bg-[#1a1a1a] rounded-xl p-6 border border-white/5">
               <p className="text-sm text-zinc-400 mb-2">{stat.label}</p>

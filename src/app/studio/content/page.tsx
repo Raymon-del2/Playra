@@ -167,20 +167,20 @@ export default function ChannelContent() {
                 .update({ title: editTitle.trim() })
                 .eq('id', editTarget.id)
                 .select();
-            
+
             if (error) {
                 console.error('Supabase update error:', error);
                 throw error;
             }
-            
+
             console.log('Supabase update result:', data);
-            
+
             setVideos((prev) =>
                 prev.map((v) => (v.id === editTarget.id ? { ...v, title: editTitle.trim() } : v))
             );
             setEditTarget(null);
             setEditTitle('');
-            
+
             // Dispatch event to refresh home page
             localStorage.setItem('video-updated', Date.now().toString());
             window.dispatchEvent(new CustomEvent('video-updated', { detail: { videoId: editTarget.id } }));
@@ -216,7 +216,7 @@ export default function ChannelContent() {
     };
 
     return (
-        <div className="min-h-screen bg-[#0f0f0f] text-white">
+        <div className="min-h-screen bg-[#0f0f0f] text-white w-full max-w-full overflow-x-hidden pb-24 lg:pb-0">
             {/* Header / Search Area */}
             <div className="h-14 border-b border-white/10 flex items-center justify-between px-6 bg-[#0f0f0f] sticky top-0 z-20">
                 <div className="relative">
@@ -272,85 +272,85 @@ export default function ChannelContent() {
                             </div>
                         )}
 
-            {/* Delete confirmation modal */}
-            {deleteTarget && (
-                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm">
-                    <div className="bg-[#111] rounded-2xl border border-white/10 shadow-2xl w-full max-w-md p-6 space-y-4">
-                        <h3 className="text-xl font-bold text-white">Delete this video?</h3>
-                        <p className="text-sm text-zinc-400">
-                            This will permanently remove "{deleteTarget.title}". You cannot undo this action.
-                        </p>
-                        <div className="flex items-center justify-end gap-3">
-                            <button
-                                onClick={() => setDeleteTarget(null)}
-                                className="px-4 py-2 rounded-full text-sm font-semibold bg-white/10 text-white hover:bg-white/20 transition-colors"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                disabled={isDeleting}
-                                onClick={async () => {
-                                    if (!deleteTarget) return;
-                                    setIsDeleting(true);
-                                    try {
-                                        await deleteVideoWithAssets({
-                                            id: deleteTarget.id,
-                                            videoUrl: deleteTarget.video_url,
-                                            thumbnailUrl: deleteTarget.thumbnail_url
-                                        });
-                                        setVideos((prev) => prev.filter((v) => v.id !== deleteTarget.id));
-                                    } catch (error) {
-                                        console.error('Error deleting video:', error);
-                                    } finally {
-                                        setIsDeleting(false);
-                                        setDeleteTarget(null);
-                                    }
-                                }}
-                                className="px-4 py-2 rounded-full text-sm font-semibold bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-60"
-                            >
-                                {isDeleting ? 'Deleting...' : 'Delete'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+                        {/* Delete confirmation modal */}
+                        {deleteTarget && (
+                            <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm">
+                                <div className="bg-[#111] rounded-2xl border border-white/10 shadow-2xl w-full max-w-md p-6 space-y-4">
+                                    <h3 className="text-xl font-bold text-white">Delete this video?</h3>
+                                    <p className="text-sm text-zinc-400">
+                                        This will permanently remove "{deleteTarget.title}". You cannot undo this action.
+                                    </p>
+                                    <div className="flex items-center justify-end gap-3">
+                                        <button
+                                            onClick={() => setDeleteTarget(null)}
+                                            className="px-4 py-2 rounded-full text-sm font-semibold bg-white/10 text-white hover:bg-white/20 transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            disabled={isDeleting}
+                                            onClick={async () => {
+                                                if (!deleteTarget) return;
+                                                setIsDeleting(true);
+                                                try {
+                                                    await deleteVideoWithAssets({
+                                                        id: deleteTarget.id,
+                                                        videoUrl: deleteTarget.video_url,
+                                                        thumbnailUrl: deleteTarget.thumbnail_url
+                                                    });
+                                                    setVideos((prev) => prev.filter((v) => v.id !== deleteTarget.id));
+                                                } catch (error) {
+                                                    console.error('Error deleting video:', error);
+                                                } finally {
+                                                    setIsDeleting(false);
+                                                    setDeleteTarget(null);
+                                                }
+                                            }}
+                                            className="px-4 py-2 rounded-full text-sm font-semibold bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-60"
+                                        >
+                                            {isDeleting ? 'Deleting...' : 'Delete'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
-            {/* Edit video title modal */}
-            {editTarget && (
-                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm">
-                    <div className="bg-[#111] rounded-2xl border border-white/10 shadow-2xl w-full max-w-md p-6 space-y-4">
-                        <h3 className="text-xl font-bold text-white">Edit video title</h3>
-                        <div className="space-y-2">
-                            <label className="text-sm text-zinc-400">New title</label>
-                            <input
-                                type="text"
-                                value={editTitle}
-                                onChange={(e) => setEditTitle(e.target.value)}
-                                className="w-full bg-zinc-800 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-blue-500 outline-none"
-                                placeholder="Enter new title"
-                            />
-                        </div>
-                        <div className="flex items-center justify-end gap-3">
-                            <button
-                                onClick={() => {
-                                    setEditTarget(null);
-                                    setEditTitle('');
-                                }}
-                                className="px-4 py-2 rounded-full text-sm font-semibold bg-white/10 text-white hover:bg-white/20 transition-colors"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                disabled={isSavingEdit || !editTitle.trim()}
-                                onClick={handleEdit}
-                                className="px-4 py-2 rounded-full text-sm font-semibold bg-blue-500 text-white hover:bg-blue-600 transition-colors disabled:opacity-60"
-                            >
-                                {isSavingEdit ? 'Saving...' : 'Save'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+                        {/* Edit video title modal */}
+                        {editTarget && (
+                            <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm">
+                                <div className="bg-[#111] rounded-2xl border border-white/10 shadow-2xl w-full max-w-md p-6 space-y-4">
+                                    <h3 className="text-xl font-bold text-white">Edit video title</h3>
+                                    <div className="space-y-2">
+                                        <label className="text-sm text-zinc-400">New title</label>
+                                        <input
+                                            type="text"
+                                            value={editTitle}
+                                            onChange={(e) => setEditTitle(e.target.value)}
+                                            className="w-full bg-zinc-800 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-blue-500 outline-none"
+                                            placeholder="Enter new title"
+                                        />
+                                    </div>
+                                    <div className="flex items-center justify-end gap-3">
+                                        <button
+                                            onClick={() => {
+                                                setEditTarget(null);
+                                                setEditTitle('');
+                                            }}
+                                            className="px-4 py-2 rounded-full text-sm font-semibold bg-white/10 text-white hover:bg-white/20 transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            disabled={isSavingEdit || !editTitle.trim()}
+                                            onClick={handleEdit}
+                                            className="px-4 py-2 rounded-full text-sm font-semibold bg-blue-500 text-white hover:bg-blue-600 transition-colors disabled:opacity-60"
+                                        >
+                                            {isSavingEdit ? 'Saving...' : 'Save'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

@@ -312,17 +312,26 @@ export default function Navbar({
             </div>
           </div>
 
-          <div className="flex items-center space-x-1 sm:space-x-4">
-            <button
-              onClick={() => {
-                router.push('/results?focus=true');
-              }}
-              className="md:hidden p-2 rounded-full hover:bg-white/10 text-white active:scale-95 transition-all"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+          {/* Mobile Search Bar - separate section between logo and actions */}
+          <div className="flex md:hidden flex-1 justify-center px-2">
+            <div className="relative w-full max-w-[180px]">
+              <input
+                type="text"
+                placeholder="Search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSearch();
+                }}
+                className="w-full bg-zinc-800 text-white pl-8 pr-3 py-1.5 rounded-full text-sm border border-zinc-700 focus:outline-none focus:border-blue-500/50 placeholder:text-zinc-500"
+              />
+              <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
-            </button>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
 
             <button className="hidden xs:flex p-2 rounded-full hover:bg-white/10 text-white active:scale-90 transition-all">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 13.5v3.375C3 17.439 3.561 18 4.125 18h3.375m-4.5-9a4.5 4.5 0 014.5-4.5h11.25a4.5 4.5 0 014.5 4.5v11.25a4.5 4.5 0 01-4.5 4.5H10.5" /><path d="M3 13.5c3.314 0 6 2.686 6 6M3 9c5.523 0 10 4.477 10 10" /></svg>

@@ -189,9 +189,9 @@ function VideoCard({
         </div>
       </Link>
 
-      <div className="flex gap-3 px-3 py-3 md:px-0">
+      <div className="flex gap-3 p-3 md:px-0">
         <Link href={`/channel/${video.channel_id}`} className="flex-shrink-0 mt-0.5">
-          <div className="w-[36px] h-[36px] rounded-full bg-zinc-800 border border-white/5 shadow-md overflow-hidden">
+          <div className="w-9 h-9 rounded-full bg-zinc-800 border border-white/5 shadow-md overflow-hidden">
             <img
               src={video.channel_avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'}
               alt={video.channel_name}
@@ -203,7 +203,7 @@ function VideoCard({
         <div className="flex flex-1 flex-col min-w-0">
           <div className="flex justify-between items-start gap-2">
             <Link href={`/watch/${video.id}`} className="flex-1 min-w-0">
-              <h3 className="font-bold text-white text-[15px] leading-[1.2] line-clamp-2 mb-1 group-hover:text-blue-400 transition-colors tracking-tight">
+              <h3 className="font-bold text-white text-[15px] leading-tight line-clamp-2 mb-1 group-hover:text-blue-400 transition-colors tracking-tight">
                 {video.title}
               </h3>
             </Link>
@@ -213,13 +213,11 @@ function VideoCard({
               </svg>
             </button>
           </div>
-          <div className="flex flex-wrap items-center text-[12px] text-[#aaaaaa] font-medium gap-x-1.5">
-            <Link href={`/channel/${video.channel_id}`} className="hover:text-white transition-colors">
-              {video.channel_name}
-            </Link>
-            <span className="opacity-30">•</span>
+          <div className="flex items-center text-[12px] text-[#aaaaaa] font-medium truncate">
+            <span>@{video.channel_name.replace(/^@/, '').toLowerCase()}</span>
+            <span className="mx-1">•</span>
             <span>{video.views.toLocaleString()} views</span>
-            <span className="opacity-30">•</span>
+            <span className="mx-1">•</span>
             <span>{formatDistanceToNow(new Date(video.created_at), { addSuffix: true })}</span>
           </div>
         </div>
@@ -432,7 +430,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#0f0f0f] pb-20 max-w-full overflow-x-hidden">
       {/* Category Bar */}
-      <div className="flex items-center gap-3 overflow-x-auto px-4 py-3 sticky top-16 bg-[#0f0f0f]/95 backdrop-blur-md z-40 scrollbar-hide">
+      <div className="flex items-center gap-3 overflow-x-auto px-4 py-2 sticky top-14 bg-[#0f0f0f] z-40 scrollbar-hide border-b border-white/5 mb-8">
         {['All', 'Live', 'Music', 'Gaming', 'News', 'Recently uploaded', 'New to you'].map((cat) => (
           <button
             key={cat}
@@ -463,7 +461,7 @@ export default function Home() {
             return (
               <div className="pb-20">
                 {/* Initial Grid of Regular Videos */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-y-1 md:gap-x-4 md:gap-y-10 p-0 sm:p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-y-1 md:gap-x-4 md:gap-y-10 p-0 sm:p-6 pt-4">
                   {displayVideos.slice(0, 8).map((video) => (
                     <VideoCard
                       key={video.id}

@@ -41,10 +41,12 @@
 
 html,
 body {
-  width: 100vw;
+  width: 100% !important;
+  max-width: 100% !important;
   height: 100%;
   overflow: hidden;
   position: fixed;
+  inset: 0;
   background: #0f0f0f !important;
   margin: 0;
   padding: 0;
@@ -64,14 +66,33 @@ body {
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: 80px;
-  /* Room for mobile nav */
+  background: #0f0f0f;
+  /* Account for bottom nav (60px) + safe area on iOS */
+  padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px));
 }
 
 @media (min-width: 1024px) {
   .main-content-area {
     padding-bottom: 0;
   }
+}
+
+/* Safe area padding utility */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Fixed bottom navigation bar - must account for safe areas */
+.mobile-nav-fixed {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  height: calc(60px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: #0f0f0f;
+  border-top: 1px solid #2a2a2a;
 }
 
 html.styles-scrollbar-hidden,
@@ -313,4 +334,89 @@ body.styles-scrollbar-hidden::-webkit-scrollbar-thumb {
 
 .style-vibrant {
   filter: saturate(1.8) contrast(1.2);
+}
+
+/* ==========================================
+   PLAYRA SPLASH SCREEN - Aura-Morph Animation
+   ========================================== */
+
+/* The SVG stroke-draw animation for the Play triangle */
+.animate-draw-logo {
+  stroke-dasharray: 200;
+  stroke-dashoffset: 200;
+  animation: draw-logo 2s ease-out forwards;
+}
+
+@keyframes draw-logo {
+  0% {
+    stroke-dashoffset: 200;
+    filter: blur(8px);
+    opacity: 0;
+  }
+
+  30% {
+    opacity: 1;
+    filter: blur(0px);
+  }
+
+  100% {
+    stroke-dashoffset: 0;
+    filter: blur(0px);
+  }
+}
+
+/* Aura glow pulse behind the logo */
+.aura-glow {
+  animation: aura-pulse 2s ease-in-out infinite;
+}
+
+@keyframes aura-pulse {
+
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.6;
+    transform: scale(1.1);
+  }
+}
+
+/* Shimmer effect for premium feel */
+.shimmer-effect {
+  background: linear-gradient(120deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.1) 50%,
+      transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Fade-in-up for splash elements */
+.animate-fade-in-up {
+  animation: fade-in-up 0.8s ease-out forwards;
+}
+
+@keyframes fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

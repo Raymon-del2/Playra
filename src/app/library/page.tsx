@@ -16,7 +16,7 @@ export default function YouPage() {
     ];
 
     return (
-        <div className="bg-gray-900 min-h-screen text-white pb-20 overflow-x-hidden">
+        <div className="bg-gray-900 min-h-screen text-white pb-24 overflow-x-hidden">
             {/* Top Header - Settings Pin */}
             <div className="flex justify-end p-4 sticky top-0 bg-gray-900 z-10">
                 <button className="p-2 rounded-full hover:bg-white/10 transition-colors active:scale-90">
