@@ -185,9 +185,9 @@ export default function Navbar({
               <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
             </button>
 
-            <Link href="/" className="flex items-center gap-1.5 scale-110 origin-left">
-              <div className="relative flex items-center">
-                <img src="/Playra.png" alt="Playra" className="h-[32px] w-auto max-w-[120px]" />
+            <Link href="/" className="flex items-center gap-2 flex-shrink-0 relative z-10">
+              <div className="relative flex items-center h-16">
+                <img src="/Playra.png" alt="Playra" className="h-[38px] w-auto max-w-[150px] object-contain" />
               </div>
               <span className="hidden xs:inline text-[10px] sm:text-[11px] font-bold text-zinc-500 uppercase tracking-widest bg-zinc-800/50 px-1.5 py-0.5 rounded">
                 {countryCode || 'KE'}
@@ -317,9 +317,9 @@ export default function Navbar({
                 // Future: Add a dedicated mobile search overlay
                 router.push('/results?focus=true');
               }}
-              className="md:hidden p-2 rounded-full hover:bg-white/10 text-white active:scale-90 transition-all"
+              className="md:hidden p-1.5 rounded-full hover:bg-white/10 text-white active:scale-90 transition-all mr-1"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <svg className="w-[22px] h-[22px]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </button>
