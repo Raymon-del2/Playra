@@ -104,11 +104,35 @@ export default function ChannelContent() {
         }
     };
 
+    const getVideoDuration = (file: File): Promise<string> => {
+        return new Promise((resolve) => {
+            const video = document.createElement('video');
+            video.preload = 'metadata';
+            video.onloadedmetadata = () => {
+                window.URL.revokeObjectURL(video.src);
+                const duration = video.duration;
+                const hrs = Math.floor(duration / 3600);
+                const mins = Math.floor((duration % 3600) / 60);
+                const secs = Math.floor(duration % 60);
+                if (hrs > 0) {
+                    resolve(`${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`);
+                } else {
+                    resolve(`${mins}:${secs.toString().padStart(2, '0')}`);
+                }
+            };
+            video.onerror = () => resolve('0:00');
+            video.src = window.URL.createObjectURL(file);
+        });
+    };
+
     const handleSave = async () => {
         if (!selectedFile || !activeProfile) return;
 
         setIsSaving(true);
         try {
+            // Calculate video duration
+            setUploadProgress(10);
+            const duration = await getVideoDuration(selectedFile);
             // 1. Upload to Storage
             const timestamp = Date.now();
             const filePath = `${activeProfile.id}/${timestamp}-${selectedFile.name}`;
@@ -136,7 +160,7 @@ export default function ChannelContent() {
                 channel_id: activeProfile.id,
                 channel_name: activeProfile.name,
                 channel_avatar: activeProfile.avatar || '',
-                duration: '0:00', // Should be calculated
+                duration: duration,
                 is_live: activeTab === 'Live',
                 is_short: activeTab === 'Styles',
                 is_post: activeTab === 'Posts',
@@ -299,8 +323,9 @@ export default function ChannelContent() {
                                                         thumbnailUrl: deleteTarget.thumbnail_url
                                                     });
                                                     setVideos((prev) => prev.filter((v) => v.id !== deleteTarget.id));
-                                                } catch (error) {
+                                                } catch (error: any) {
                                                     console.error('Error deleting video:', error);
+                                                    alert(`Failed to delete: ${error.message || 'Unknown error'}`);
                                                 } finally {
                                                     setIsDeleting(false);
                                                     setDeleteTarget(null);

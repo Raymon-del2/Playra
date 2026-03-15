@@ -131,7 +131,7 @@ export default function SubscriptionsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#0f0f0f] text-white pb-24">
+        <div className="min-h-screen bg-[#0f0f0f] text-white pb-24 pt-14">
             {/* Header */}
             <div className="px-4 pt-6 pb-4">
                 <h1 className="text-2xl font-bold">Subscriptions</h1>

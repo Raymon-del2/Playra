@@ -4,6 +4,25 @@ import { turso } from "@/lib/turso";
 import { initDatabase } from "@/lib/db-setup";
 import { revalidatePath } from "next/cache";
 
+export async function getBatchProfiles(profileIds: string[]) {
+    if (!profileIds.length) return [];
+    try {
+        const placeholders = profileIds.map(() => '?').join(',');
+        const result = await turso.execute({
+            sql: `SELECT id, name, avatar FROM channels WHERE id IN (${placeholders})`,
+            args: profileIds
+        });
+        return result.rows.map(row => ({
+            id: row.id as string,
+            name: row.name as string,
+            avatar: row.avatar as string | null
+        }));
+    } catch (error) {
+        console.error("Error fetching batch profiles:", error);
+        return [];
+    }
+}
+
 export async function getUserProfiles(userId: string) {
     try {
         const result = await turso.execute({
@@ -118,6 +137,38 @@ export async function selectActiveProfile(profileId: string, userId: string) {
     }
 }
 
+export async function selectActiveProfileByName(handle: string) {
+    try {
+        const cleanHandle = handle.startsWith('@') ? handle : `@${handle}`;
+        const result = await turso.execute({
+            sql: "SELECT id FROM channels WHERE LOWER(name) = LOWER(?)",
+            args: [cleanHandle]
+        });
+
+        if (result.rows.length === 0) {
+            return { success: false, error: "Profile not found" };
+        }
+
+        const profileId = result.rows[0].id as string;
+        
+        // Set secure cookie
+        const cookieStore = await cookies();
+        cookieStore.set('playra_active_profile', profileId, {
+            secure: process.env.NODE_ENV === 'production',
+            httpOnly: true,
+            sameSite: 'strict',
+            path: '/',
+            maxAge: 60 * 60 * 24 * 30 // 30 days
+        });
+
+        revalidatePath('/', 'layout');
+        return { success: true, profileId };
+    } catch (error) {
+        console.error("Error selecting profile by name:", error);
+        return { success: false, error: "Failed to select profile" };
+    }
+}
+
 export async function getActiveProfile() {
     const cookieStore = await cookies();
     const profileId = cookieStore.get('playra_active_profile')?.value;
@@ -175,6 +226,25 @@ export async function getProfileVideoCount(profileId: string) {
     } catch (e) {
         console.error("Error getting video count:", e);
         return 0;
+    }
+}
+
+export async function updateProfileName(profileId: string, newName: string) {
+    try {
+        await turso.execute({
+            sql: `
+                UPDATE channels 
+                SET name = ?
+                WHERE id = ?
+            `,
+            args: [newName, profileId]
+        });
+
+        revalidatePath('/select-profile');
+        return { success: true };
+    } catch (error) {
+        console.error("Error updating profile name:", error);
+        return { success: false, error: "Failed to update name" };
     }
 }
 

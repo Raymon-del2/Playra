@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import {
@@ -19,7 +19,204 @@ interface CommentsProps {
     profileAvatar?: string;
 }
 
-export default function Comments({ videoId, profileId, profileName, profileAvatar }: CommentsProps) {
+interface CommentItemProps {
+    comment: Comment;
+    isReply?: boolean;
+    profileId?: string | null;
+    profileName?: string;
+    profileAvatar?: string;
+    replyingTo: string | null;
+    replyContent: string;
+    expandedReplies: Set<string>;
+    onReply: (commentId: string) => void;
+    onSubmitReply: (parentId: string) => void;
+    onCancelReply: () => void;
+    onReplyContentChange: (content: string) => void;
+    onToggleReplies: (commentId: string) => void;
+    onLike: (commentId: string, currentlyLiked: boolean) => void;
+    onDislike: (commentId: string, currentlyDisliked: boolean) => void;
+    onDelete: (commentId: string) => void;
+}
+
+const CommentItemComponent = ({ 
+    comment, 
+    isReply = false, 
+    profileId,
+    profileName,
+    profileAvatar,
+    replyingTo,
+    replyContent,
+    expandedReplies,
+    onReply,
+    onSubmitReply,
+    onCancelReply,
+    onReplyContentChange,
+    onToggleReplies,
+    onLike,
+    onDislike,
+    onDelete,
+}: CommentItemProps) => {
+    const isOwner = profileId === comment.profile_id;
+    const isReplying = replyingTo === comment.id;
+
+    return (
+        <div className={`flex gap-3 ${isReply ? 'ml-12 mt-3' : ''}`}>
+            <Link href={`/channel/${comment.profile_id}`} className="flex-shrink-0">
+                <div className="w-10 h-10 rounded-full overflow-hidden bg-zinc-800">
+                    {comment.profile_avatar ? (
+                        <img src={comment.profile_avatar} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center text-sm font-bold text-zinc-400">
+                            {comment.profile_name?.[0]?.toUpperCase() || '?'}
+                        </div>
+                    )}
+                </div>
+            </Link>
+
+            <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                    <Link href={`/channel/${comment.profile_id}`} className="text-[13px] font-bold text-white hover:text-blue-400 transition-colors">
+                        {comment.profile_name?.startsWith('@') ? comment.profile_name : `@${comment.profile_name?.replace(/\s+/g, '').toLowerCase()}`}
+                    </Link>
+                    <span className="text-xs text-zinc-500">
+                        {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                    </span>
+                </div>
+
+                <p className="text-[14px] text-zinc-200 mt-1 whitespace-pre-wrap break-words leading-relaxed">
+                    {comment.content}
+                </p>
+
+                <div className="flex items-center gap-4 mt-2">
+                    <button
+                        onClick={() => onLike(comment.id, comment.user_liked || false)}
+                        disabled={!profileId}
+                        className={`flex items-center gap-1.5 text-xs transition-colors ${comment.user_liked ? 'text-blue-400' : 'text-zinc-400 hover:text-white'} disabled:opacity-50`}
+                    >
+                        <svg className="w-4 h-4" fill={comment.user_liked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
+                        </svg>
+                        {comment.likes > 0 && <span>{comment.likes}</span>}
+                    </button>
+
+                    <button
+                        onClick={() => onDislike(comment.id, comment.user_disliked || false)}
+                        disabled={!profileId}
+                        className={`flex items-center gap-1.5 text-xs transition-colors ${comment.user_disliked ? 'text-blue-400' : 'text-zinc-400 hover:text-white'} disabled:opacity-50`}
+                    >
+                        <svg className="w-4 h-4 rotate-180" fill={comment.user_disliked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
+                        </svg>
+                    </button>
+
+                    {!isReply && profileId && (
+                        <button
+                            onClick={() => onReply(comment.id)}
+                            className="text-xs font-bold text-zinc-400 hover:text-white transition-colors"
+                        >
+                            Reply
+                        </button>
+                    )}
+
+                    {isOwner && (
+                        <button
+                            onClick={() => onDelete(comment.id)}
+                            className="text-xs text-zinc-500 hover:text-red-400 transition-colors ml-auto"
+                        >
+                            Delete
+                        </button>
+                    )}
+                </div>
+
+                {isReplying && (
+                    <div className="flex gap-3 mt-4">
+                        <div className="w-8 h-8 rounded-full overflow-hidden bg-zinc-800 flex-shrink-0">
+                            {profileAvatar ? (
+                                <img src={profileAvatar} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center text-xs font-bold text-zinc-400">
+                                    {profileName?.[0]?.toUpperCase() || '?'}
+                                </div>
+                            )}
+                        </div>
+                        <div className="flex-1">
+                            <textarea
+                                value={replyContent}
+                                onChange={(e) => onReplyContentChange(e.target.value)}
+                                placeholder="Add a reply..."
+                                rows={2}
+                                className="w-full bg-transparent text-white text-sm border-b border-zinc-700 focus:border-blue-500 outline-none resize-none py-1 transition-colors"
+                            />
+                            <div className="flex justify-end gap-2 mt-2">
+                                <button
+                                    onClick={onCancelReply}
+                                    className="px-3 py-1.5 text-sm font-bold text-zinc-400 hover:text-white transition-colors rounded-full"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={() => onSubmitReply(comment.id)}
+                                    disabled={!replyContent.trim()}
+                                    className="px-4 py-1.5 text-sm font-bold bg-blue-600 hover:bg-blue-500 text-white rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    Reply
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {!isReply && comment.replies && comment.replies.length > 0 && (
+                    <div className="mt-3">
+                        <button
+                            onClick={() => onToggleReplies(comment.id)}
+                            className="flex items-center gap-2 text-blue-400 text-sm font-bold hover:bg-blue-400/10 px-3 py-1.5 rounded-full transition-colors -ml-3"
+                        >
+                            <svg
+                                className={`w-4 h-4 transition-transform ${expandedReplies.has(comment.id) ? 'rotate-180' : ''}`}
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                                viewBox="0 0 24 24"
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                            </svg>
+                            {comment.replies.length} {comment.replies.length === 1 ? 'reply' : 'replies'}
+                        </button>
+
+                        {expandedReplies.has(comment.id) && (
+                            <div className="space-y-4 mt-2">
+                                {comment.replies.map((reply) => (
+                                    <CommentItemComponent 
+                                        key={reply.id} 
+                                        comment={reply} 
+                                        isReply 
+                                        profileId={profileId}
+                                        profileName={profileName}
+                                        profileAvatar={profileAvatar}
+                                        replyingTo={replyingTo}
+                                        replyContent={replyContent}
+                                        expandedReplies={expandedReplies}
+                                        onReply={onReply}
+                                        onSubmitReply={onSubmitReply}
+                                        onCancelReply={onCancelReply}
+                                        onReplyContentChange={onReplyContentChange}
+                                        onToggleReplies={onToggleReplies}
+                                        onLike={onLike}
+                                        onDislike={onDislike}
+                                        onDelete={onDelete}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+function Comments({ videoId, profileId, profileName, profileAvatar }: CommentsProps) {
     const [comments, setComments] = useState<Comment[]>([]);
     const [commentCount, setCommentCount] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
@@ -30,7 +227,6 @@ export default function Comments({ videoId, profileId, profileName, profileAvata
     const [sortBy, setSortBy] = useState<'top' | 'newest'>('top');
     const [showSortMenu, setShowSortMenu] = useState(false);
     const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
-    const inputRef = useRef<HTMLTextAreaElement>(null);
 
     useEffect(() => {
         loadComments();
@@ -55,56 +251,175 @@ export default function Comments({ videoId, profileId, profileName, profileAvata
     const handleSubmitComment = async () => {
         if (!profileId || !newComment.trim()) return;
 
-        setIsSubmitting(true);
+        const content = newComment.trim();
+        const tempId = `temp-${Date.now()}`;
+        
+        // Create optimistic comment
+        const optimisticComment: Comment = {
+            id: tempId,
+            video_id: videoId,
+            profile_id: profileId,
+            parent_id: null,
+            profile_name: profileName || 'You',
+            profile_avatar: profileAvatar || undefined,
+            content,
+            likes: 0,
+            dislikes: 0,
+            created_at: new Date().toISOString(),
+            user_liked: false,
+            user_disliked: false,
+            replies: [],
+        };
+        
+        // Optimistic update - add immediately
+        setComments(prev => [optimisticComment, ...prev]);
+        setCommentCount(prev => prev + 1);
+        setNewComment('');
+        
+        // Save to DB in background (silent) - no reload needed
         try {
-            await addComment(videoId, profileId, newComment);
-            setNewComment('');
-            await loadComments();
+            await addComment(videoId, profileId, content);
+            // Silent refresh to get real ID without UI flicker
+            loadComments().catch(() => {});
         } catch (error) {
             console.error('Failed to add comment:', error);
-        } finally {
-            setIsSubmitting(false);
         }
     };
 
     const handleSubmitReply = async (parentId: string) => {
         if (!profileId || !replyContent.trim()) return;
 
-        setIsSubmitting(true);
+        const content = replyContent.trim();
+        const tempId = `temp-reply-${Date.now()}`;
+        
+        // Create optimistic reply
+        const optimisticReply: Comment = {
+            id: tempId,
+            video_id: videoId,
+            profile_id: profileId,
+            parent_id: parentId,
+            profile_name: profileName || 'You',
+            profile_avatar: profileAvatar || undefined,
+            content,
+            likes: 0,
+            dislikes: 0,
+            created_at: new Date().toISOString(),
+            user_liked: false,
+            user_disliked: false,
+            replies: [],
+        };
+        
+        // Optimistic update - add immediately
+        setComments(prev => prev.map(c => {
+            if (c.id === parentId) {
+                return {
+                    ...c,
+                    replies: [...(c.replies || []), optimisticReply],
+                };
+            }
+            return c;
+        }));
+        setReplyContent('');
+        setReplyingTo(null);
+        setExpandedReplies(prev => new Set(Array.from(prev).concat([parentId])));
+        
+        // Save to DB in background (silent) - no reload needed
         try {
-            await addComment(videoId, profileId, replyContent, parentId);
-            setReplyContent('');
-            setReplyingTo(null);
-            await loadComments();
-            setExpandedReplies(prev => new Set(Array.from(prev).concat([parentId])));
+            await addComment(videoId, profileId, content, parentId);
+            // Silent refresh to get real data without UI flicker
+            loadComments().catch(() => {});
         } catch (error) {
             console.error('Failed to add reply:', error);
-        } finally {
-            setIsSubmitting(false);
         }
     };
 
-    const handleLike = async (commentId: string, currentlyLiked: boolean) => {
+    const handleLike = useCallback(async (commentId: string, currentlyLiked: boolean) => {
         if (!profileId) return;
+        
+        // Optimistic update - show immediately for both comments and replies
+        setComments(prev => prev.map(c => {
+            // Check if it's a top-level comment
+            if (c.id === commentId) {
+                return {
+                    ...c,
+                    user_liked: !currentlyLiked,
+                    user_disliked: false,
+                    likes: !currentlyLiked ? c.likes + 1 : c.likes - 1,
+                };
+            }
+            // Check if it's a reply
+            if (c.replies && c.replies.length > 0) {
+                return {
+                    ...c,
+                    replies: c.replies.map(r => {
+                        if (r.id === commentId) {
+                            return {
+                                ...r,
+                                user_liked: !currentlyLiked,
+                                user_disliked: false,
+                                likes: !currentlyLiked ? r.likes + 1 : r.likes - 1,
+                            };
+                        }
+                        return r;
+                    }),
+                };
+            }
+            return c;
+        }));
+        
+        // Save to DB in background (silent)
         try {
             await engageComment(commentId, profileId, currentlyLiked ? null : 'like');
-            await loadComments();
         } catch (error) {
             console.error('Failed to like comment:', error);
         }
-    };
+    }, [profileId]);
 
-    const handleDislike = async (commentId: string, currentlyDisliked: boolean) => {
+    const handleDislike = useCallback(async (commentId: string, currentlyDisliked: boolean) => {
         if (!profileId) return;
+        
+        // Optimistic update - show immediately for both comments and replies
+        setComments(prev => prev.map(c => {
+            // Check if it's a top-level comment
+            if (c.id === commentId) {
+                const wasLiked = c.user_liked;
+                return {
+                    ...c,
+                    user_disliked: !currentlyDisliked,
+                    user_liked: false,
+                    likes: wasLiked ? c.likes - 1 : c.likes,
+                };
+            }
+            // Check if it's a reply
+            if (c.replies && c.replies.length > 0) {
+                return {
+                    ...c,
+                    replies: c.replies.map(r => {
+                        if (r.id === commentId) {
+                            const wasLiked = r.user_liked;
+                            return {
+                                ...r,
+                                user_disliked: !currentlyDisliked,
+                                user_liked: false,
+                                likes: wasLiked ? r.likes - 1 : r.likes,
+                            };
+                        }
+                        return r;
+                    }),
+                };
+            }
+            return c;
+        }));
+        
+        // Save to DB in background (silent)
         try {
             await engageComment(commentId, profileId, currentlyDisliked ? null : 'dislike');
-            await loadComments();
         } catch (error) {
             console.error('Failed to dislike comment:', error);
         }
-    };
+    }, [profileId]);
 
-    const handleDelete = async (commentId: string) => {
+    const handleDelete = useCallback(async (commentId: string) => {
         if (!profileId) return;
         try {
             await deleteComment(commentId, profileId);
@@ -112,9 +427,9 @@ export default function Comments({ videoId, profileId, profileName, profileAvata
         } catch (error) {
             console.error('Failed to delete comment:', error);
         }
-    };
+    }, [profileId]);
 
-    const toggleReplies = (commentId: string) => {
+    const toggleReplies = useCallback((commentId: string) => {
         setExpandedReplies(prev => {
             const next = new Set(prev);
             if (next.has(commentId)) {
@@ -124,161 +439,16 @@ export default function Comments({ videoId, profileId, profileName, profileAvata
             }
             return next;
         });
-    };
+    }, []);
 
-    const sortedComments = [...comments].sort((a, b) => {
-        if (sortBy === 'top') {
-            return b.likes - a.likes;
-        }
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-    });
-
-    const CommentItem = ({ comment, isReply = false }: { comment: Comment; isReply?: boolean }) => {
-        const isOwner = profileId === comment.profile_id;
-
-        return (
-            <div className={`flex gap-3 ${isReply ? 'ml-12 mt-3' : ''}`}>
-                <Link href={`/channel/${comment.profile_id}`} className="flex-shrink-0">
-                    <div className="w-10 h-10 rounded-full overflow-hidden bg-zinc-800">
-                        {comment.profile_avatar ? (
-                            <img src={comment.profile_avatar} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                            <div className="w-full h-full flex items-center justify-center text-sm font-bold text-zinc-400">
-                                {comment.profile_name?.[0]?.toUpperCase() || '?'}
-                            </div>
-                        )}
-                    </div>
-                </Link>
-
-                <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                        <Link href={`/channel/${comment.profile_id}`} className="text-[13px] font-bold text-white hover:text-blue-400 transition-colors">
-                            @{comment.profile_name?.replace(/\s+/g, '').toLowerCase()}
-                        </Link>
-                        <span className="text-xs text-zinc-500">
-                            {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
-                        </span>
-                    </div>
-
-                    <p className="text-[14px] text-zinc-200 mt-1 whitespace-pre-wrap break-words leading-relaxed">
-                        {comment.content}
-                    </p>
-
-                    <div className="flex items-center gap-4 mt-2">
-                        <button
-                            onClick={() => handleLike(comment.id, comment.user_liked || false)}
-                            disabled={!profileId}
-                            className={`flex items-center gap-1.5 text-xs transition-colors ${comment.user_liked ? 'text-blue-400' : 'text-zinc-400 hover:text-white'} disabled:opacity-50`}
-                        >
-                            <svg className="w-4 h-4" fill={comment.user_liked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
-                            </svg>
-                            {comment.likes > 0 && <span>{comment.likes}</span>}
-                        </button>
-
-                        <button
-                            onClick={() => handleDislike(comment.id, comment.user_disliked || false)}
-                            disabled={!profileId}
-                            className={`flex items-center gap-1.5 text-xs transition-colors ${comment.user_disliked ? 'text-blue-400' : 'text-zinc-400 hover:text-white'} disabled:opacity-50`}
-                        >
-                            <svg className="w-4 h-4 rotate-180" fill={comment.user_disliked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
-                            </svg>
-                        </button>
-
-                        {!isReply && profileId && (
-                            <button
-                                onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
-                                className="text-xs font-bold text-zinc-400 hover:text-white transition-colors"
-                            >
-                                Reply
-                            </button>
-                        )}
-
-                        {isOwner && (
-                            <button
-                                onClick={() => handleDelete(comment.id)}
-                                className="text-xs text-zinc-500 hover:text-red-400 transition-colors ml-auto"
-                            >
-                                Delete
-                            </button>
-                        )}
-                    </div>
-
-                    {/* Reply Input */}
-                    {replyingTo === comment.id && (
-                        <div className="flex gap-3 mt-4">
-                            <div className="w-8 h-8 rounded-full overflow-hidden bg-zinc-800 flex-shrink-0">
-                                {profileAvatar ? (
-                                    <img src={profileAvatar} alt="" className="w-full h-full object-cover" />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-xs font-bold text-zinc-400">
-                                        {profileName?.[0]?.toUpperCase() || '?'}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="flex-1">
-                                <textarea
-                                    value={replyContent}
-                                    onChange={(e) => setReplyContent(e.target.value)}
-                                    placeholder="Add a reply..."
-                                    rows={1}
-                                    className="w-full bg-transparent text-white text-sm border-b border-zinc-700 focus:border-blue-500 outline-none resize-none py-1 transition-colors"
-                                />
-                                <div className="flex justify-end gap-2 mt-2">
-                                    <button
-                                        onClick={() => {
-                                            setReplyingTo(null);
-                                            setReplyContent('');
-                                        }}
-                                        className="px-3 py-1.5 text-sm font-bold text-zinc-400 hover:text-white transition-colors rounded-full"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={() => handleSubmitReply(comment.id)}
-                                        disabled={!replyContent.trim() || isSubmitting}
-                                        className="px-4 py-1.5 text-sm font-bold bg-blue-600 hover:bg-blue-500 text-white rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                    >
-                                        Reply
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Replies */}
-                    {!isReply && comment.replies && comment.replies.length > 0 && (
-                        <div className="mt-3">
-                            <button
-                                onClick={() => toggleReplies(comment.id)}
-                                className="flex items-center gap-2 text-blue-400 text-sm font-bold hover:bg-blue-400/10 px-3 py-1.5 rounded-full transition-colors -ml-3"
-                            >
-                                <svg
-                                    className={`w-4 h-4 transition-transform ${expandedReplies.has(comment.id) ? 'rotate-180' : ''}`}
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth={2}
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                                </svg>
-                                {comment.replies.length} {comment.replies.length === 1 ? 'reply' : 'replies'}
-                            </button>
-
-                            {expandedReplies.has(comment.id) && (
-                                <div className="space-y-4 mt-2">
-                                    {comment.replies.map((reply) => (
-                                        <CommentItem key={reply.id} comment={reply} isReply />
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
-            </div>
-        );
-    };
+    const sortedComments = useMemo(() => {
+        return [...comments].sort((a, b) => {
+            if (sortBy === 'top') {
+                return b.likes - a.likes;
+            }
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
+    }, [comments, sortBy]);
 
     return (
         <div className="mt-8">
@@ -341,14 +511,10 @@ export default function Comments({ videoId, profileId, profileName, profileAvata
                     </div>
                     <div className="flex-1">
                         <textarea
-                            ref={inputRef}
                             value={newComment}
                             onChange={(e) => setNewComment(e.target.value)}
                             placeholder="Add a comment..."
-                            rows={1}
-                            onFocus={() => {
-                                if (inputRef.current) inputRef.current.rows = 3;
-                            }}
+                            rows={3}
                             className="w-full bg-transparent text-white border-b border-zinc-700 focus:border-blue-500 outline-none resize-none py-2 transition-colors"
                         />
                         {newComment.trim() && (
@@ -413,10 +579,32 @@ export default function Comments({ videoId, profileId, profileName, profileAvata
             ) : (
                 <div className="space-y-6">
                     {sortedComments.map((comment) => (
-                        <CommentItem key={comment.id} comment={comment} />
+                        <CommentItemComponent 
+                            key={comment.id} 
+                            comment={comment}
+                            profileId={profileId}
+                            profileName={profileName}
+                            profileAvatar={profileAvatar}
+                            replyingTo={replyingTo}
+                            replyContent={replyContent}
+                            expandedReplies={expandedReplies}
+                            onReply={(id) => setReplyingTo(replyingTo === id ? null : id)}
+                            onSubmitReply={handleSubmitReply}
+                            onCancelReply={() => {
+                                setReplyingTo(null);
+                                setReplyContent('');
+                            }}
+                            onReplyContentChange={setReplyContent}
+                            onToggleReplies={toggleReplies}
+                            onLike={handleLike}
+                            onDislike={handleDislike}
+                            onDelete={handleDelete}
+                        />
                     ))}
                 </div>
             )}
         </div>
     );
 }
+
+export default memo(Comments);

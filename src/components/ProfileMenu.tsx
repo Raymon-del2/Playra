@@ -35,10 +35,8 @@ export default function ProfileMenu({ isOpen, onClose, activeProfile, userEmail 
     const handleSignOut = async () => {
         try {
             await signOut(auth);
-            // Optional: Clear active profile cookie manually if needed, 
-            // but session handling should probably do it or middleware.
-            // For now, reload or redirect to home.
-            window.location.href = '/';
+            // Redirect to sign in page
+            window.location.href = '/signin';
         } catch (error) {
             console.error('Error signing out:', error);
         }
@@ -76,14 +74,6 @@ export default function ProfileMenu({ isOpen, onClose, activeProfile, userEmail 
             <div className="py-2">
                 {/* Section 1 */}
                 <div className="py-2 border-b border-gray-700/50">
-                    <div className="relative group">
-                        <MenuItem icon={<CmailIcon />} label="Cmail Account" />
-                        <div suppressHydrationWarning className="pointer-events-none absolute right-0 top-0 translate-x-full ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-50">
-                            <div suppressHydrationWarning className="bg-black text-white text-xs font-semibold px-2 py-1 rounded shadow-lg whitespace-nowrap">
-                                Coming soon
-                            </div>
-                        </div>
-                    </div>
                     <MenuItem
                         icon={<SwitchAccountIcon />}
                         label="Switch account"
@@ -107,7 +97,11 @@ export default function ProfileMenu({ isOpen, onClose, activeProfile, userEmail 
 
                 {/* Section 3 */}
                 <div className="py-2">
-                    <MenuItem icon={<FeedbackIcon />} label="Send feedback" />
+                    <MenuItem
+                        icon={<FeedbackIcon />}
+                        label="Send feedback"
+                        onClick={() => router.push('/feedback')}
+                    />
                 </div>
             </div>
         </div>

@@ -4,13 +4,23 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { getUserProfiles, createProfile, updateProfileAvatar, selectActiveProfile, checkProfileName, deleteProfile, getProfileVideoCount } from '@/app/actions/profile';
+import { 
+    getUserProfiles, 
+    createProfile, 
+    updateProfileAvatar, 
+    updateProfileName,
+    selectActiveProfile, 
+    checkProfileName, 
+    deleteProfile, 
+    getProfileVideoCount 
+} from '@/app/actions/profile';
 
 export default function SelectProfilePage() {
     const router = useRouter();
     const [user, setUser] = useState<any>(null);
     const [profiles, setProfiles] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [authInitialized, setAuthInitialized] = useState(false);
     const [showCreate, setShowCreate] = useState(false);
 
     // Create Profile Form State
@@ -19,7 +29,17 @@ export default function SelectProfilePage() {
     const [newAccountType, setNewAccountType] = useState<'adult' | 'kids' | 'family'>('adult');
     const [creating, setCreating] = useState(false);
 
-    // Deletion State
+    // Edit Modal State
+    const [editingProfile, setEditingProfile] = useState<any | null>(null);
+    const [editMode, setEditMode] = useState<'menu' | 'name' | 'photo'>('menu');
+    const [editName, setEditName] = useState('');
+    const [updating, setUpdating] = useState(false);
+
+    // Edit Name Checker State
+    const [editNameStatus, setEditNameStatus] = useState<{ available: boolean; loading: boolean; error: string | null }>({ available: true, loading: false, error: null });
+    const editNameTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // Delete State
     const [profileToDelete, setProfileToDelete] = useState<any | null>(null);
     const [videoCount, setVideoCount] = useState(0);
     const [deleting, setDeleting] = useState(false);
@@ -28,9 +48,8 @@ export default function SelectProfilePage() {
     const [nameStatus, setNameStatus] = useState<{ available: boolean; loading: boolean; error: string | null; suggestions?: string[] }>({ available: false, loading: false, error: null });
     const checkTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    // Edit Profile State
-    const [editingProfileId, setEditingProfileId] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const editFileInputRef = useRef<HTMLInputElement>(null);
 
     const compressImage = (file: File): Promise<string> => {
         return new Promise((resolve, reject) => {
@@ -84,17 +103,23 @@ export default function SelectProfilePage() {
 
     const handleEditFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file && editingProfileId) {
+        if (file && editingProfile) {
             try {
+                setUpdating(true);
                 const compressed = await compressImage(file);
-                await updateProfileAvatar(editingProfileId, compressed);
-                if (user) {
-                    const pros = await getUserProfiles(user.uid);
-                    setProfiles(pros);
+                const res = await updateProfileAvatar(editingProfile.id, compressed);
+                if (res.success) {
+                    if (user) {
+                        const pros = await getUserProfiles(user.uid);
+                        setProfiles(pros);
+                    }
+                    setEditingProfile(null);
+                    setEditMode('menu');
                 }
-                setEditingProfileId(null);
             } catch (err) {
                 console.error("Compression/Upload failed", err);
+            } finally {
+                setUpdating(false);
             }
         }
     };
@@ -150,11 +175,12 @@ export default function SelectProfilePage() {
         setCreating(false);
     };
 
-    const handleDeleteClick = async (e: React.MouseEvent, profile: any) => {
-        e.stopPropagation();
-        setProfileToDelete(profile);
-        setVideoCount(0); // Reset
-        const count = await getProfileVideoCount(profile.id);
+    const handleDeleteClick = async () => {
+        if (!editingProfile) return;
+        setEditingProfile(null);
+        setProfileToDelete(editingProfile);
+        setVideoCount(0);
+        const count = await getProfileVideoCount(editingProfile.id);
         setVideoCount(count);
     };
 
@@ -172,19 +198,74 @@ export default function SelectProfilePage() {
         setDeleting(false);
     };
 
+    const handleEditClick = (profile: any) => {
+        setEditingProfile(profile);
+        setEditMode('menu');
+        setEditName(profile.name);
+        setEditNameStatus({ available: true, loading: false, error: null });
+    };
+
+    const handleEditNameChange = (val: string) => {
+        setEditName(val);
+        if (editNameTimerRef.current) clearTimeout(editNameTimerRef.current);
+
+        if (val.length < 2) {
+            setEditNameStatus({ available: false, loading: false, error: null });
+            return;
+        }
+
+        if (!val.startsWith('@')) {
+            setEditNameStatus({ available: false, loading: false, error: 'Must start with @' });
+            return;
+        }
+
+        // If name is same as current profile name, it's valid
+        if (editingProfile && val === editingProfile.name) {
+            setEditNameStatus({ available: true, loading: false, error: null });
+            return;
+        }
+
+        setEditNameStatus(prev => ({ ...prev, loading: true, error: null }));
+
+        editNameTimerRef.current = setTimeout(async () => {
+            const res = await checkProfileName(val);
+            setEditNameStatus({
+                available: res.available,
+                loading: false,
+                error: res.error || null
+            });
+        }, 500);
+    };
+
+    const handleUpdateName = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingProfile || !editName) return;
+
+        if (!editName.startsWith('@')) {
+            alert("Profile name must start with @");
+            return;
+        }
+
+        setUpdating(true);
+        const res = await updateProfileName(editingProfile.id, editName);
+        if (res.success) {
+            if (user) {
+                const pros = await getUserProfiles(user.uid);
+                setProfiles(pros);
+            }
+            setEditingProfile(null);
+            setEditMode('menu');
+        } else {
+            alert(res.error);
+        }
+        setUpdating(false);
+    };
+
     const handleSelect = async (profileId: string) => {
         if (user) {
             await selectActiveProfile(profileId, user.uid);
             window.location.href = '/'; // Full reload to pick up cookie
         }
-    };
-
-    const handleEdit = (e: React.MouseEvent, profileId: string) => {
-        e.stopPropagation();
-        setEditingProfileId(profileId);
-        setTimeout(() => {
-            fileInputRef.current?.click();
-        }, 0);
     };
 
     useEffect(() => {
@@ -205,17 +286,19 @@ export default function SelectProfilePage() {
                     console.error("Failed to load profiles", e);
                 }
                 setLoading(false);
-            } else {
+            } else if (authInitialized) {
+                // Only redirect if auth has initialized and there's no user
                 router.push('/signin');
             }
+            setAuthInitialized(true);
         });
         return () => {
             unsubscribe();
             clearTimeout(safetyTimer);
         };
-    }, [router]);
+    }, [router, authInitialized]);
 
-    if (loading) {
+    if (loading || !authInitialized) {
         return (
             <div className="min-h-screen bg-black flex items-center justify-center p-4">
                 <div className="flex flex-col items-center gap-8">
@@ -242,54 +325,47 @@ export default function SelectProfilePage() {
                 <p className="text-zinc-500 font-bold mb-16 uppercase tracking-[0.2em] text-xs sm:text-sm text-center opacity-60">Select your identity</p>
 
                 <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleEditFileChange} />
+                <input type="file" ref={editFileInputRef} className="hidden" accept="image/*" onChange={handleEditFileChange} />
 
                 <div className="flex flex-wrap items-start justify-center gap-10 sm:gap-14 w-full">
                     {profiles.map((profile) => (
-                        <div key={profile.id} className="group flex flex-col items-center gap-5 cursor-pointer max-w-[140px]">
+                        <div key={profile.id} className="flex flex-col items-center gap-3 max-w-[140px]">
+                            {/* Profile Avatar - No hover effects */}
                             <div
-                                className="w- 28 h-28 sm:w-36 sm:h-36 rounded-full p-[4px] bg-gradient-to-tr from-transparent to-transparent group-hover:from-blue-500 group-hover:to-purple-500 transition-all duration-500 relative"
+                                className="w-28 h-28 sm:w-36 sm:h-36 rounded-full p-[3px] bg-zinc-800 cursor-pointer"
+                                onClick={() => handleSelect(profile.id)}
                             >
-                                <div
-                                    className="w-full h-full rounded-full overflow-hidden border-4 border-zinc-900 group-hover:border-black transition-all relative ring-1 ring-white/5"
-                                    onClick={() => handleSelect(profile.id)}
-                                >
+                                <div className="w-full h-full rounded-full overflow-hidden border-4 border-zinc-900 relative">
                                     {profile.avatar ? (
-                                        <img src={profile.avatar} alt={profile.name} className="w-full h-full object-cover scale-105 group-hover:scale-110 transition-transform duration-500" />
+                                        <img src={profile.avatar} alt={profile.name} className="w-full h-full object-cover" />
                                     ) : (
                                         <div className="w-full h-full bg-zinc-900 flex items-center justify-center text-4xl font-black text-zinc-700 uppercase">
                                             {profile.name[0]}
                                         </div>
                                     )}
                                 </div>
-
-                                {/* Edit/Delete Controls Overlay - Show on hover */}
-                                <div className="absolute top-0 right-0 flex gap-1 -translate-y-2 translate-x-2 opacity-0 group-hover:opacity-100 transition-all z-20">
-                                    <button
-                                        title="Edit Avatar"
-                                        className="p-2 bg-zinc-800 rounded-full border border-white/10 hover:bg-zinc-700 hover:scale-110 shadow-2xl transition-all"
-                                        onClick={(e) => handleEdit(e, profile.id)}
-                                    >
-                                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                                    </button>
-                                    <button
-                                        title="Delete Profile"
-                                        className="p-2 bg-red-600/90 rounded-full border border-red-500/20 hover:bg-red-500 hover:scale-110 shadow-2xl transition-all"
-                                        onClick={(e) => handleDeleteClick(e, profile)}
-                                    >
-                                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                    </button>
-                                </div>
                             </div>
+
+                            {/* Profile Info */}
                             <div className="flex flex-col items-center text-center w-full">
-                                <span className="text-zinc-400 font-bold text-lg sm:text-xl group-hover:text-white transition-colors capitalize truncate w-full">{profile.name}</span>
-                                <span className={`text-[10px] font-black uppercase tracking-tighter mt-1.5 px-2.5 py-1 rounded-md ${profile.account_type === 'kids' ? 'text-green-400 bg-green-400/10' :
+                                <span className="text-zinc-400 font-bold text-lg sm:text-xl capitalize truncate w-full">{profile.name}</span>
+                                <span className={`text-[10px] font-black uppercase tracking-tighter mt-1 px-2.5 py-1 rounded-md ${
+                                    profile.account_type === 'kids' ? 'text-green-400 bg-green-400/10' :
                                     profile.account_type === 'family' ? 'text-yellow-400 bg-yellow-400/10' :
-                                        profile.account_type === 'adult' ? 'text-red-400 bg-red-400/10' :
-                                            'text-blue-400 bg-blue-400/10'
-                                    }`}>
+                                    profile.account_type === 'adult' ? 'text-red-400 bg-red-400/10' :
+                                    'text-blue-400 bg-blue-400/10'
+                                }`}>
                                     {profile.account_type || 'general'}
                                 </span>
                             </div>
+
+                            {/* Edit Button */}
+                            <button
+                                onClick={() => handleEditClick(profile)}
+                                className="text-zinc-500 hover:text-white text-sm font-medium transition-colors mt-1"
+                            >
+                                Edit
+                            </button>
                         </div>
                     ))}
 
@@ -308,6 +384,118 @@ export default function SelectProfilePage() {
                     )}
                 </div>
             </div>
+
+            {/* Edit Profile Modal */}
+            {editingProfile && (
+                <div className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[100] flex items-center justify-center p-4">
+                    <div className="bg-zinc-950 border border-white/5 p-8 sm:p-10 rounded-[32px] max-w-sm w-full shadow-[0_0_100px_rgba(0,0,0,1)] relative overflow-hidden">
+                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 to-purple-600"></div>
+                        
+                        {editMode === 'menu' && (
+                            <>
+                                <h2 className="text-2xl font-black text-white mb-8 text-center">Edit Profile</h2>
+                                
+                                <div className="flex flex-col items-center mb-8">
+                                    <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-zinc-800">
+                                        {editingProfile.avatar ? (
+                                            <img src={editingProfile.avatar} alt={editingProfile.name} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="w-full h-full bg-zinc-900 flex items-center justify-center text-3xl font-black text-zinc-700 uppercase">
+                                                {editingProfile.name[0]}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <span className="text-white font-bold mt-4">{editingProfile.name}</span>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <button
+                                        onClick={() => editFileInputRef.current?.click()}
+                                        className="w-full h-14 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-black text-sm uppercase tracking-widest transition-colors flex items-center justify-center gap-3"
+                                    >
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2z" /></svg>
+                                        Change Photo
+                                    </button>
+                                    
+                                    <button
+                                        onClick={() => setEditMode('name')}
+                                        className="w-full h-14 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-black text-sm uppercase tracking-widest transition-colors flex items-center justify-center gap-3"
+                                    >
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                        Edit Name
+                                    </button>
+                                    
+                                    <button
+                                        onClick={handleDeleteClick}
+                                        className="w-full h-14 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-2xl font-black text-sm uppercase tracking-widest transition-colors flex items-center justify-center gap-3"
+                                    >
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                        Delete Profile
+                                    </button>
+                                </div>
+
+                                <button
+                                    onClick={() => setEditingProfile(null)}
+                                    className="w-full h-14 mt-6 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-black text-sm uppercase tracking-widest transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                            </>
+                        )}
+
+                        {editMode === 'name' && (
+                            <>
+                                <h2 className="text-2xl font-black text-white mb-8 text-center">Edit Name</h2>
+                                
+                                <form onSubmit={handleUpdateName} className="space-y-6">
+                                    <div>
+                                        <div className="flex justify-between items-end px-1 mb-2">
+                                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">New Name</label>
+                                            <span className={`text-[9px] font-bold ${
+                                                editNameStatus.error ? 'text-red-500' : 
+                                                editNameStatus.loading ? 'text-blue-500' :
+                                                editNameStatus.available ? 'text-green-500' : 'text-zinc-500'
+                                            }`}>
+                                                {editNameStatus.loading ? 'Checking...' : 
+                                                 editNameStatus.error ? editNameStatus.error :
+                                                 editNameStatus.available && editName.length > 1 ? 'Available' : ''}
+                                            </span>
+                                        </div>
+                                        <input
+                                            type="text"
+                                            value={editName}
+                                            onChange={(e) => handleEditNameChange(e.target.value)}
+                                            placeholder="@username"
+                                            className={`w-full h-14 bg-white/5 border rounded-2xl px-5 text-white font-bold outline-none transition-all ${
+                                                editNameStatus.available && editName.length > 1 ? 'border-green-500/30 bg-green-500/5' :
+                                                editNameStatus.error ? 'border-red-500/30 bg-red-500/5' : 'border-white/10'
+                                            }`}
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="flex gap-4">
+                                        <button
+                                            type="button"
+                                            onClick={() => setEditMode('menu')}
+                                            className="flex-1 h-14 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-colors"
+                                        >
+                                            Back
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            disabled={updating || !editName || !editNameStatus.available || editNameStatus.loading}
+                                            className="flex-1 h-14 bg-white text-black hover:bg-zinc-200 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl disabled:opacity-30"
+                                        >
+                                            {updating ? 'Saving...' : 'Save'}
+                                        </button>
+                                    </div>
+                                </form>
+                            </>
+                        )}
+                    </div>
+                </div>
+            )}
 
             {/* Create Modal */}
             {showCreate && (

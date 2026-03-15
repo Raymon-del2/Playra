@@ -1,4 +1,5 @@
 import { turso } from './turso';
+import { supabase } from './supabase';
 
 // Ensure all needed tables exist
 export async function ensureEngagementTables() {
@@ -33,6 +34,16 @@ export async function ensureEngagementTables() {
   `);
 
   await turso.execute(`
+    CREATE TABLE IF NOT EXISTS video_dislikes (
+      id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+      video_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(video_id, user_id)
+    );
+  `);
+
+  await turso.execute(`
     CREATE TABLE IF NOT EXISTS watch_later (
       id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
       user_id TEXT NOT NULL,
@@ -62,10 +73,75 @@ export async function ensureEngagementTables() {
   `);
 }
 
+export async function getBatchVideoEngagement(videoIds: string[], userId?: string) {
+  if (!videoIds.length) return {};
+  await ensureEngagementTables();
+
+  const idList = videoIds.map(id => `'${id}'`).join(',');
+  
+  // Batch Fetch Likes Count
+  const likesRes = await turso.execute(`
+    SELECT video_id, COUNT(*) as count 
+    FROM video_likes 
+    WHERE video_id IN (${idList}) 
+    GROUP BY video_id
+  `);
+  
+  const viewsRes = await turso.execute(`
+    SELECT video_id, COUNT(*) as count 
+    FROM video_views 
+    WHERE video_id IN (${idList}) 
+    GROUP BY video_id
+  `);
+
+  let userLikes: Set<string> = new Set();
+  let userDislikes: Set<string> = new Set();
+
+  if (userId) {
+    const userLikesRes = await turso.execute({
+      sql: `SELECT video_id FROM video_likes WHERE user_id = ? AND video_id IN (${idList})`,
+      args: [userId]
+    });
+    userLikes = new Set(userLikesRes.rows.map(r => r.video_id as string));
+
+    const userDislikesRes = await turso.execute({
+      sql: `SELECT video_id FROM video_dislikes WHERE user_id = ? AND video_id IN (${idList})`,
+      args: [userId]
+    });
+    userDislikes = new Set(userDislikesRes.rows.map(r => r.video_id as string));
+  }
+
+  const results: Record<string, any> = {};
+  
+  // Pre-fill with zeros
+  videoIds.forEach(id => {
+    results[id] = {
+      likes: 0,
+      views: 0,
+      userLiked: userLikes.has(id),
+      userDisliked: userDislikes.has(id)
+    };
+  });
+
+  likesRes.rows.forEach(r => {
+    if (results[r.video_id as string]) {
+      results[r.video_id as string].likes = Number(r.count);
+    }
+  });
+
+  viewsRes.rows.forEach(r => {
+    if (results[r.video_id as string]) {
+      results[r.video_id as string].views = Number(r.count);
+    }
+  });
+
+  return results;
+}
+
 export async function getVideoEngagement(videoId: string, userId?: string, channelId?: string) {
   await ensureEngagementTables();
 
-  const [likesRes, viewsRes, subsRes, userLikeRes, userSubRes] = await Promise.all([
+  const [likesRes, viewsRes, subsRes, userLikeRes, userDislikeRes, userSubRes] = await Promise.all([
     turso.execute({ sql: `SELECT COUNT(*) as count FROM video_likes WHERE video_id = ?`, args: [videoId] }),
     turso.execute({ sql: `SELECT COUNT(*) as count FROM video_views WHERE video_id = ?`, args: [videoId] }),
     channelId
@@ -74,6 +150,12 @@ export async function getVideoEngagement(videoId: string, userId?: string, chann
     userId
       ? turso.execute({
           sql: `SELECT 1 FROM video_likes WHERE video_id = ? AND user_id = ? LIMIT 1`,
+          args: [videoId, userId],
+        })
+      : Promise.resolve({ rows: [] }),
+    userId
+      ? turso.execute({
+          sql: `SELECT 1 FROM video_dislikes WHERE video_id = ? AND user_id = ? LIMIT 1`,
           args: [videoId, userId],
         })
       : Promise.resolve({ rows: [] }),
@@ -90,6 +172,7 @@ export async function getVideoEngagement(videoId: string, userId?: string, chann
     views: Number(viewsRes.rows?.[0]?.count ?? 0),
     subs: Number(subsRes.rows?.[0]?.count ?? 0),
     userLiked: !!userLikeRes.rows?.[0],
+    userDisliked: !!userDislikeRes.rows?.[0],
     userSubscribed: !!userSubRes.rows?.[0],
   };
 }
@@ -106,6 +189,12 @@ export async function addView(videoId: string, userId?: string) {
 
 export async function likeVideo(videoId: string, userId: string) {
   await ensureEngagementTables();
+  // Remove dislike if exists
+  await turso.execute({
+    sql: `DELETE FROM video_dislikes WHERE video_id = ? AND user_id = ?`,
+    args: [videoId, userId],
+  });
+  // Add like
   await turso.execute({
     sql: `INSERT OR IGNORE INTO video_likes (video_id, user_id) VALUES (?, ?)`,
     args: [videoId, userId],
@@ -122,6 +211,102 @@ export async function unlikeVideo(videoId: string, userId: string) {
   });
   const res = await turso.execute({ sql: `SELECT COUNT(*) as count FROM video_likes WHERE video_id = ?`, args: [videoId] });
   return Number(res.rows?.[0]?.count ?? 0);
+}
+
+export async function dislikeVideo(videoId: string, userId: string) {
+  await ensureEngagementTables();
+  // Remove like if exists
+  await turso.execute({
+    sql: `DELETE FROM video_likes WHERE video_id = ? AND user_id = ?`,
+    args: [videoId, userId],
+  });
+  // Add dislike
+  await turso.execute({
+    sql: `INSERT OR IGNORE INTO video_dislikes (video_id, user_id) VALUES (?, ?)`,
+    args: [videoId, userId],
+  });
+  const res = await turso.execute({ sql: `SELECT COUNT(*) as count FROM video_likes WHERE video_id = ?`, args: [videoId] });
+  return Number(res.rows?.[0]?.count ?? 0);
+}
+
+export async function undislikeVideo(videoId: string, userId: string) {
+  await ensureEngagementTables();
+  await turso.execute({
+    sql: `DELETE FROM video_dislikes WHERE video_id = ? AND user_id = ?`,
+    args: [videoId, userId],
+  });
+  const res = await turso.execute({ sql: `SELECT COUNT(*) as count FROM video_likes WHERE video_id = ?`, args: [videoId] });
+  return Number(res.rows?.[0]?.count ?? 0);
+}
+
+export async function getLikedVideos(userId: string) {
+  await ensureEngagementTables();
+  
+  // Get liked video IDs from Turso
+  const likesRes = await turso.execute({
+    sql: `SELECT video_id, created_at as liked_at FROM video_likes WHERE user_id = ? ORDER BY created_at DESC`,
+    args: [userId],
+  });
+  
+  const likedRows = likesRes.rows || [];
+  if (likedRows.length === 0) return [];
+  
+  // Get video IDs
+  const videoIds = likedRows.map((row: any) => row.video_id as string);
+  
+  // Fetch videos from Supabase
+  if (!supabase) {
+    throw new Error('Supabase not configured');
+  }
+  
+  const { data: videos, error } = await supabase
+    .from('videos')
+    .select('*')
+    .in('id', videoIds);
+  
+  if (error) {
+    console.error('Error fetching videos from Supabase:', error);
+    throw error;
+  }
+  
+  // Create a map for quick lookup
+  const videoMap = new Map((videos || []).map((v: any) => [v.id, v]));
+  
+  // Get unique channel IDs to fetch profile info
+  const channelIds = Array.from(new Set((videos || []).map((v: any) => v.channel_id).filter(Boolean)));
+  
+  // Fetch channel profiles from Supabase
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, name, avatar')
+    .in('id', channelIds);
+  
+  const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+  
+  // Merge data and maintain order from likes
+  return likedRows.map((row: any) => {
+    const video = videoMap.get(row.video_id as string);
+    if (!video) return null;
+    
+    const profile = profileMap.get(video.channel_id);
+    
+    return {
+      id: video.id,
+      title: video.title,
+      description: video.description,
+      thumbnail_url: video.thumbnail_url,
+      duration: video.duration,
+      views: video.views,
+      created_at: video.created_at,
+      category: video.category,
+      is_live: video.is_live,
+      is_short: video.is_short,
+      channel_id: video.channel_id,
+      channel_name: video.channel_name || profile?.name || 'Unknown',
+      channel_avatar: profile?.avatar || video.channel_avatar,
+      liked_at: row.liked_at,
+    };
+  }).filter(Boolean);
 }
 
 export async function subscribeChannel(channelId: string, subscriberId: string) {
@@ -160,6 +345,23 @@ export async function removeWatchLater(userId: string, videoId: string) {
     args: [userId, videoId],
   });
   return { ok: true };
+}
+
+export async function batchCheckWatchLater(userId: string, videoIds: string[]) {
+  if (!videoIds.length) return {};
+  await ensureEngagementTables();
+  const idList = videoIds.map(id => `'${id}'`).join(',');
+  const res = await turso.execute(`
+    SELECT video_id FROM watch_later 
+    WHERE user_id = ? AND video_id IN (${idList})
+  `, [userId]);
+  
+  const savedIds = new Set(res.rows.map(r => r.video_id as string));
+  const results: Record<string, boolean> = {};
+  videoIds.forEach(id => {
+    results[id] = savedIds.has(id);
+  });
+  return results;
 }
 
 export async function listWatchLater(userId: string) {

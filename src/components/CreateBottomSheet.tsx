@@ -94,7 +94,7 @@ export default function CreateBottomSheet({ isOpen, onClose }: CreateBottomSheet
     ];
 
     return (
-        <div className="fixed inset-0 z-[200] lg:hidden">
+        <div suppressHydrationWarning className="fixed inset-0 z-[200] lg:hidden">
             {/* Scrim overlay */}
             <div
                 className={`absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-300 ${isAnimating ? 'opacity-100' : 'opacity-0'}`}

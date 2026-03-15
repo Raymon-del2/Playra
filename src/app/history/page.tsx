@@ -294,12 +294,6 @@ export default function HistoryPage() {
                         onClick={() => router.push('/history/manage')}
                     />
                 </div>
-
-                <div className="space-y-4 pt-4 border-t border-white/5">
-                    <a href="#" className="block text-sm font-bold text-zinc-400 hover:text-white transition-colors">Comments</a>
-                    <a href="#" className="block text-sm font-bold text-zinc-400 hover:text-white transition-colors">Posts</a>
-                    <a href="#" className="block text-sm font-bold text-zinc-400 hover:text-white transition-colors">Live chat</a>
-                </div>
             </div>
             {/* Clear History Modal */}
             {showClearModal && (

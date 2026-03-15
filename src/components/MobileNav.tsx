@@ -13,9 +13,7 @@ export default function MobileNav({
     userAvatar?: string
 }) {
     const pathname = usePathname();
-    const [isCreateOpen, setIsCreateOpen] = useState(false);
-
-    const navItems = [
+    const [isCreateOpen, setIsCreateOpen] = useState(false);    const navItems = [
         { icon: 'home', label: 'Home', path: '/' },
         { icon: 'shorts', label: 'Style', path: '/styles' },
         { icon: 'create', label: '', path: '#', isAction: true },
@@ -26,38 +24,41 @@ export default function MobileNav({
     const getIcon = (item: any) => {
         const isActive = pathname === item.path;
         const icons: { [key: string]: JSX.Element } = {
-            home: <svg className="w-6 h-6" fill={isActive ? "currentColor" : "none"} stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path d="M12 3L4 9v12h5v-7h6v7h5V9z" /></svg>,
+            home: isActive ? (
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M4 10V21H9V15H15V21H20V10L12 3L4 10Z" /></svg>
+            ) : (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3L4 10V21H9V15H15V21H20V10L12 3L4 10Z" /></svg>
+            ),
             shorts: (
-                <div suppressHydrationWarning className="relative">
-                    <img src="/styles-icon.svg?v=blue" alt="" className={`w-6 h-6 object-contain ${isActive ? '' : 'grayscale opacity-80'}`} />
-                </div>
+                <svg className="w-6 h-6" fill={isActive ? "currentColor" : "none"} stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                    <path d="M17.65,10.15L12,5l-5.65,5.15V21h11.3V10.15z" />
+                    <path d="M10,13l4,2-4,2V13z" fill="currentColor" />
+                </svg>
             ),
-            create: (
-                <div suppressHydrationWarning className="bg-white/10 hover:bg-white/20 p-1.5 rounded-full transition-colors active:scale-90 border border-white/5 shadow-xl">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-                </div>
+            subscriptions: isActive ? (
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 18H14V20H10V18ZM17 18V20H19V18H17ZM5 18V20H7V18H5ZM20 6H4V16H20V6ZM22 4V18H2V4H22Z" /></svg>
+            ) : (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 18H14V20H10V18ZM17 18V20H19V18H17ZM5 18V20H7V18H5ZM20 6H4V16H20V6ZM22 4V18H2V4H22Z" /></svg>
             ),
-            subscriptions: <svg className="w-6 h-6" fill={isActive ? "currentColor" : "none"} stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>,
             you: (
-                <div suppressHydrationWarning className={`w-7 h-7 rounded-full overflow-hidden border-2 shadow-md transition-all ${isActive ? 'border-white scale-110' : 'border-white/10 grayscale-[0.3]'}`}>
+                <div className={`w-7 h-7 rounded-full overflow-hidden border-2 transition-all ${isActive ? 'border-white' : 'border-white/20'}`}>
                     {isSignedIn && userAvatar ? (
                         <img src={userAvatar} alt="" className="w-full h-full object-cover" />
                     ) : (
-                        <div suppressHydrationWarning className="w-full h-full bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center">
-                            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>
+                        <div className="w-full h-full bg-zinc-800 flex items-center justify-center">
+                            <svg className="w-4 h-4 text-zinc-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>
                         </div>
                     )}
                 </div>
             ),
         };
-
         return icons[item.icon];
     };
 
     return (
         <>
-            <nav suppressHydrationWarning className="mobile-nav-fixed lg:hidden shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
-                <div suppressHydrationWarning className="flex items-center justify-evenly h-[60px] w-full px-1">
+            <nav suppressHydrationWarning className="mobile-nav-fixed lg:hidden bg-[#0f0f0f] border-t border-white/5 pb-safe">
+                <div suppressHydrationWarning className="flex items-center justify-around h-[50px] w-full">
                     {navItems.map((item) => {
                         const isActive = pathname === item.path;
 
@@ -67,12 +68,11 @@ export default function MobileNav({
                                 <button
                                     key="create-action"
                                     onClick={() => setIsCreateOpen(true)}
-                                    className="flex flex-col items-center justify-center h-full px-2 active:scale-95 transition-transform"
-                                    style={{ width: '20%', maxWidth: '80px' }}
+                                    className="flex items-center justify-center"
                                 >
-                                    <span className="text-white">
-                                        {getIcon(item)}
-                                    </span>
+                                    <div className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 active:scale-90 transition-transform">
+                                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                                    </div>
                                 </button>
                             );
                         }
@@ -81,23 +81,14 @@ export default function MobileNav({
                             <Link
                                 key={item.path}
                                 href={item.path}
-                                onClick={(e) => {
-                                    if (isActive && item.path === '/') {
-                                        const scrollContainer = document.querySelector('.main-content-area');
-                                        if (scrollContainer) {
-                                            scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
-                                        }
-                                    }
-                                }}
-                                className="flex flex-col items-center justify-center h-full px-2 active:scale-95 transition-transform"
-                                style={{ width: '20%', maxWidth: '80px' }}
+                                className="flex flex-col items-center justify-center gap-0.5 min-w-[60px] active:scale-95 transition-transform"
                             >
-                                <span className={`${isActive ? 'text-white' : 'text-[#aaaaaa]'} transition-colors`}>
+                                <span className={`${isActive ? 'text-white' : 'text-zinc-400'} transition-colors`}>
                                     {getIcon(item)}
                                 </span>
                                 {item.label && (
-                                    <span className={`text-[9px] font-medium uppercase tracking-tight mt-0.5 text-center transition-colors whitespace-nowrap overflow-hidden text-ellipsis ${isActive ? 'text-white' : 'text-[#aaaaaa]'}`} style={{ maxWidth: '100%' }}>
-                                        {item.label.length > 6 ? item.label.slice(0, 6) + '…' : item.label}
+                                    <span className={`text-[10px] ${isActive ? 'font-bold text-white' : 'font-medium text-zinc-400'} transition-colors`}>
+                                        {item.label}
                                     </span>
                                 )}
                             </Link>

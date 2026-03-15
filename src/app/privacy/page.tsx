@@ -29,9 +29,9 @@ export default function PrivacyPage() {
                     </section>
 
                     <section className="pt-10 border-t border-white/5">
-                        <Link href="/signin" className="inline-flex items-center gap-2 text-white font-black hover:text-blue-400 transition-colors uppercase tracking-widest text-sm">
+                        <Link href="/" className="inline-flex items-center gap-2 text-white font-black hover:text-blue-400 transition-colors uppercase tracking-widest text-sm">
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-                            Back to Sign In
+                            Back to Home
                         </Link>
                     </section>
                 </div>

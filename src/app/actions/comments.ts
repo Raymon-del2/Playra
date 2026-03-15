@@ -195,6 +195,27 @@ export async function engageComment(commentId: string, profileId: string, type: 
     }
 }
 
+export async function getBatchCommentCounts(videoIds: string[]) {
+    if (!videoIds.length) return {};
+    try {
+        const placeholders = videoIds.map(() => '?').join(',');
+        const result = await turso.execute({
+            sql: `SELECT video_id, COUNT(*) as count FROM comments WHERE video_id IN (${placeholders}) GROUP BY video_id`,
+            args: videoIds
+        });
+        
+        const counts: Record<string, number> = {};
+        videoIds.forEach(id => counts[id] = 0);
+        result.rows.forEach(r => {
+            counts[r.video_id as string] = Number(r.count);
+        });
+        return counts;
+    } catch (error) {
+        console.error("Error fetching batch comment counts:", error);
+        return {};
+    }
+}
+
 export async function getCommentCount(videoId: string) {
     try {
         const result = await turso.execute({

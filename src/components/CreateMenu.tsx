@@ -31,7 +31,7 @@ export default function CreateMenu({ isOpen, onClose }: CreateMenuProps) {
     return (
         <div
             ref={menuRef}
-            className="absolute top-full mt-2 right-0 w-[180px] bg-[#282828] rounded-xl shadow-2xl z-[100] text-white border border-white/10 py-2 overflow-hidden"
+            className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[180px] bg-[#282828] rounded-xl shadow-2xl z-[9999] text-white border border-white/10 py-2 overflow-hidden"
         >
             <Link
                 href="/studio/content"
@@ -47,7 +47,7 @@ export default function CreateMenu({ isOpen, onClose }: CreateMenuProps) {
             </Link>
 
             <Link
-                href="/studio/content"
+                href="/live/go"
                 onClick={onClose}
                 className="flex items-center gap-4 px-4 py-2.5 hover:bg-white/10 transition-colors group w-full text-left"
             >

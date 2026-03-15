@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getVideos, Video } from '@/lib/supabase';
 import { formatDistanceToNow } from 'date-fns';
-import { getActiveProfile } from '@/app/actions/profile';
+import { getActiveProfile, getBatchProfiles } from '@/app/actions/profile';
 
 const SKELETON_BATCH = Array.from({ length: 8 });
 
@@ -58,159 +58,115 @@ function VideoCard({
   const [computedDuration, setComputedDuration] = useState<string | null>(video.duration || null);
   const [durationSeconds, setDurationSeconds] = useState<number>(parseDurationToSeconds(video.duration));
   const [progressSeconds, setProgressSeconds] = useState<number>(0);
-  const [hoverPct, setHoverPct] = useState<number | null>(null);
+  const [isAnimating, setIsAnimating] = useState(false);
   const progressKey = `watch_progress:${profileId || 'anon'}:${video.id}`;
 
   useEffect(() => {
-    if (localVideoRef.current) {
-      localVideoRef.current.muted = isMuted;
-    }
+    if (localVideoRef.current) localVideoRef.current.muted = isMuted;
   }, [isMuted]);
 
   const handleLoadedMetadata = (e: React.SyntheticEvent<HTMLVideoElement>) => {
     const rawDur = e.currentTarget.duration;
-    const dur = formatDurationFromSeconds(rawDur);
     if (Number.isFinite(rawDur) && rawDur > 0) {
       setDurationSeconds(rawDur);
-    }
-    setComputedDuration(dur);
-  };
-
-  // Load saved progress
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
-      const raw = localStorage.getItem(progressKey);
-      if (raw) {
-        const saved = JSON.parse(raw);
-        if (typeof saved.duration === 'number' && saved.duration > 0) {
-          setDurationSeconds((prev) => (prev > 0 ? prev : saved.duration));
-        }
-        if (typeof saved.current === 'number' && saved.current >= 0) {
-          setProgressSeconds(saved.current);
-        }
-      }
-    } catch {
-      // ignore
-    }
-  }, [progressKey]);
-
-  const persistProgress = (current: number, total: number) => {
-    if (typeof window === 'undefined') return;
-    try {
-      localStorage.setItem(
-        progressKey,
-        JSON.stringify({
-          current,
-          duration: total,
-          updatedAt: Date.now(),
-        })
-      );
-    } catch {
-      // ignore
+      setComputedDuration(formatDurationFromSeconds(rawDur));
     }
   };
 
   return (
     <div
-      suppressHydrationWarning
-      className="group relative flex flex-col w-full bg-[#0f0f0f]"
+      className="group relative flex flex-col w-full"
       onMouseEnter={() => onHoverStart(video.id)}
-      onMouseLeave={() => {
-        setHoverPct(null);
-        onHoverEnd(video.id);
-      }}
+      onMouseLeave={() => onHoverEnd(video.id)}
     >
-      <Link href={`/watch/${video.id}`} className="relative block w-full">
-        <div className="relative w-full overflow-hidden sm:rounded-xl bg-zinc-950 aspect-video shadow-sm">
+      <Link href={video.is_short ? `/styles/${video.id}` : `/watch/${video.id}`} className="relative block w-full mb-3">
+        <div className={`relative w-full overflow-hidden rounded-xl bg-zinc-900 ${video.is_short ? 'aspect-[9/16]' : 'aspect-video'} shadow-md group-hover:rounded-none transition-all duration-300`}>
           <img
             src={video.thumbnail_url}
             alt={video.title}
             className={`w-full h-full object-cover transition-opacity duration-300 ${isPreviewing ? 'opacity-0' : 'opacity-100'}`}
           />
-          <video
+           <video
             ref={(el) => {
               localVideoRef.current = el;
               videoRef(el);
-              if (el && isPreviewing) {
-                // Initialize to saved progress if available
-                const saved = localStorage.getItem(progressKey);
-                if (saved && el.currentTime === 0) {
-                  try {
-                    const parsed = JSON.parse(saved);
-                    if (parsed.current) el.currentTime = parsed.current;
-                  } catch (e) { }
-                }
-              }
             }}
             className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${isPreviewing ? 'opacity-100' : 'opacity-0'}`}
             src={video.video_url}
             muted={isMuted}
             playsInline
             loop
-            onTimeUpdate={(e) => {
-              const t = e.currentTarget.currentTime;
-              setProgressSeconds(t);
-              const dur = durationSeconds || e.currentTarget.duration;
-              const effectiveDur = dur && Number.isFinite(dur) ? dur : 0;
-              if (effectiveDur > 0) {
-                persistProgress(t, effectiveDur);
-              }
-            }}
             onLoadedMetadata={handleLoadedMetadata}
           />
-          <div className={`absolute bottom-1.5 right-1.5 bg-black/80 text-white text-[10px] font-black px-1.5 py-0.5 rounded z-20 transition-opacity duration-300 ${isPreviewing ? 'opacity-0' : 'opacity-100'}`}>
-            {computedDuration || video.duration || '0:00'}
-          </div>
 
-          {/* YouTube-style Mute Button Overlay */}
-          <div
-            className={`absolute top-2 right-2 z-30 transition-opacity duration-300 ${isPreviewing ? 'opacity-100' : 'opacity-0'}`}
-          >
-            <button
+          {/* Red Splash Button Overlay */}
+          {!isPreviewing && (
+            <div 
+              className="absolute inset-0 flex items-center justify-center bg-black/5 group-hover:bg-black/0 transition-colors z-30"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                onToggleMuted(video.id);
+                setIsAnimating(true);
+                setTimeout(() => {
+                  onHoverStart(video.id); // Triggers preview immediately
+                }, 400);
               }}
-              className="bg-black/60 hover:bg-black/80 p-1.5 rounded-full text-white backdrop-blur-sm transition-all active:scale-90"
             >
-              {isMuted ? (
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM19 12c0 2.82-1.49 5.27-3.7 6.6l1.27 1.27C19.31 18.15 21 15.27 21 12s-1.69-6.15-4.43-7.87l-1.27 1.27c2.21 1.33 3.7 3.78 3.7 6.6zM3 9v6h4l5 5V4L7 9H3z" />
-                </svg>
-              ) : (
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM19 12c0 2.82-1.49 5.27-3.7 6.6l1.27 1.27C19.31 18.15 21 15.27 21 12s-1.69-6.15-4.43-7.87l-1.27 1.27c2.21 1.33 3.7 3.78 3.7 6.6z" />
-                </svg>
-              )}
-            </button>
-          </div>
-          <div className="absolute bottom-0 left-0 w-full h-1 bg-white/10">
-            <div
-              className="h-full bg-blue-500 transition-all"
-              style={{
-                width:
-                  durationSeconds > 0
-                    ? `${Math.min(100, Math.max(0, (progressSeconds / durationSeconds) * 100))}%`
-                    : '0%',
-              }}
-            />
-            {hoverPct !== null ? (
-              <div
-                className="absolute top-0 h-full w-0.5 bg-white/60"
-                style={{ left: `${hoverPct}%` }}
-              />
-            ) : null}
-          </div>
+                <div className={`relative transition-all duration-500 ease-out transform 
+                  ${isAnimating ? 'scale-[2.5] opacity-0' : 'scale-100 opacity-100'}`}>
+                  {/* Animation Ripple */}
+                  <div className={`absolute inset-0 bg-white rounded-full transition-all duration-700 ease-out pointer-events-none 
+                    ${isAnimating ? 'scale-[2] opacity-0' : 'scale-0 opacity-0'}`} />
+                  
+                  <svg className="w-12 h-12 overflow-visible" viewBox="0 0 100 100">
+                    <defs>
+                      <linearGradient id="cardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#3B82F6" />
+                        <stop offset="100%" stopColor="#A855F7" />
+                      </linearGradient>
+                    </defs>
+                    <path 
+                      d="M35,25 L75,50 L35,75 Z" 
+                      fill={isAnimating ? "white" : "none"}
+                      stroke={isAnimating ? "white" : "url(#cardGrad)"}
+                      strokeWidth="6" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      className="transition-colors duration-200"
+                      style={{ 
+                        strokeDasharray: 200, 
+                        strokeDashoffset: 200,
+                        animation: 'drawTriCard 1.5s ease-out forwards' 
+                      }}
+                    />
+                    <style>{`
+                      @keyframes drawTriCard {
+                        0% { stroke-dashoffset: 200; }
+                        100% { stroke-dashoffset: 0; }
+                      }
+                    `}</style>
+                  </svg>
+                </div>
+            </div>
+          )}
+          {video.is_short && (
+            <div className="absolute bottom-2 right-2 flex items-center gap-1">
+              <img src="/styles-icon.svg?v=white" className="w-5 h-5 drop-shadow-md" alt="" />
+            </div>
+          )}
+          {!video.is_short && (
+            <div className="absolute bottom-2 right-2 bg-black/80 text-white text-[12px] font-bold px-1.5 py-0.5 rounded-md z-20">
+              {computedDuration || video.duration || '0:00'}
+            </div>
+          )}
         </div>
       </Link>
 
-      <div className="flex gap-3 p-3 md:px-0">
-        <Link href={`/channel/${video.channel_id}`} className="flex-shrink-0 mt-0.5">
-          <div className="w-9 h-9 rounded-full bg-zinc-800 border border-white/5 shadow-md overflow-hidden">
+      <div className="flex gap-3 px-2 sm:px-0">
+        <Link href={`/channel/${video.channel_id}`} className="flex-shrink-0">
+          <div className="w-10 h-10 rounded-full bg-zinc-800 overflow-hidden border border-white/5">
             <img
-              src={video.channel_avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'}
+              src={video.channel_avatar || '/default-avatar.png'}
               alt={video.channel_name}
               className="w-full h-full object-cover"
             />
@@ -218,72 +174,47 @@ function VideoCard({
         </Link>
 
         <div className="flex flex-1 flex-col min-w-0">
-          <div className="flex justify-between items-start gap-2">
-            <Link href={`/watch/${video.id}`} className="flex-1 min-w-0">
-              <h3 className="font-bold text-white text-[15px] leading-tight line-clamp-2 mb-1 group-hover:text-blue-400 transition-colors tracking-tight">
-                {video.title}
-              </h3>
+          <Link href={video.is_short ? `/styles/${video.id}` : `/watch/${video.id}`}>
+            <h3 className="font-bold text-white text-[16px] leading-tight line-clamp-2 mb-1 tracking-tight">
+              {video.title}
+            </h3>
+          </Link>
+          <div className="flex flex-col text-[14px] text-[#aaaaaa] font-medium leading-tight">
+            <Link href={`/channel/${video.channel_id}`} className="hover:text-white transition-colors">
+              {video.channel_name}
             </Link>
-            <button className="p-1.5 -mr-1.5 rounded-full hover:bg-white/10 text-zinc-400 hover:text-white transition-all active:scale-90">
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
-              </svg>
-            </button>
-          </div>
-          <div className="flex items-center text-[12px] text-[#aaaaaa] font-medium truncate">
-            <span>@{video.channel_name.replace(/^@/, '').toLowerCase()}</span>
-            <span className="mx-1">•</span>
-            <span>{video.views.toLocaleString()} views</span>
-            <span className="mx-1">•</span>
-            <span suppressHydrationWarning>{formatDistanceToNow(new Date(video.created_at), { addSuffix: true })}</span>
+            <div className="flex items-center gap-1 mt-0.5">
+              <span>{video.views.toLocaleString()} views</span>
+              <span>•</span>
+              <span suppressHydrationWarning>{formatDistanceToNow(new Date(video.created_at), { addSuffix: true })}</span>
+            </div>
           </div>
         </div>
+
+        <button className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-white/10 text-white opacity-0 group-hover:opacity-100 transition-opacity">
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+          </svg>
+        </button>
       </div>
     </div>
   );
 }
 
 function StyleCard({
-  style,
-  onHoverStart,
-  onHoverEnd,
-  videoRef,
-  isMuted
+  style
 }: {
   style: Video;
-  onHoverStart: (id: string) => void;
-  onHoverEnd: (id: string) => void;
-  videoRef: (el: HTMLVideoElement | null) => void;
-  isMuted: boolean;
 }) {
-  const localRef = useRef<HTMLVideoElement | null>(null);
-
-  useEffect(() => {
-    if (localRef.current) localRef.current.muted = isMuted;
-  }, [isMuted]);
-
   return (
     <Link
       href={`/styles/${style.id}`}
       className="flex-shrink-0 w-44 sm:w-52 group relative"
-      onMouseEnter={() => onHoverStart(style.id)}
-      onMouseLeave={() => onHoverEnd(style.id)}
     >
       <div className="relative aspect-[9/16] rounded-2xl overflow-hidden bg-zinc-800 shadow-xl border border-white/5 group-hover:scale-[1.02] transition-transform">
         <img src={style.thumbnail_url} className="w-full h-full object-cover" alt="" />
-        <video
-          ref={(el) => {
-            localRef.current = el;
-            videoRef(el);
-          }}
-          src={style.video_url}
-          muted={isMuted}
-          playsInline
-          loop
-          className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity"
-        />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-        <div className="absolute bottom-4 left-4 right-4 group-hover:bottom-5 transition-all">
+        <div className="absolute bottom-4 left-4 right-4">
           <h3 className="text-sm font-bold text-white line-clamp-2 leading-tight uppercase tracking-tighter drop-shadow-md">{style.title}</h3>
           <p className="text-[11px] text-zinc-300 mt-2 font-bold shadow-black drop-shadow-sm">{style.views.toLocaleString()} views</p>
         </div>
@@ -294,16 +225,10 @@ function StyleCard({
 
 function StylesShelf({
   styles,
-  onHoverStart,
-  onHoverEnd,
-  videoRefs,
-  isMuted
+  isLoading = false
 }: {
   styles: Video[];
-  onHoverStart: (id: string) => void;
-  onHoverEnd: (id: string) => void;
-  videoRefs: React.MutableRefObject<Record<string, HTMLVideoElement | null>>;
-  isMuted: boolean;
+  isLoading?: boolean;
 }) {
   return (
     <div className="my-8 border-y border-white/5 py-6">
@@ -313,16 +238,18 @@ function StylesShelf({
       </div>
 
       <div className="flex gap-4 overflow-x-auto px-4 sm:px-6 scrollbar-hide pb-4">
-        {styles.map((style) => (
-          <StyleCard
-            key={style.id}
-            style={style}
-            onHoverStart={onHoverStart}
-            onHoverEnd={onHoverEnd}
-            videoRef={(el) => { videoRefs.current[style.id] = el; }}
-            isMuted={isMuted}
-          />
-        ))}
+        {isLoading || styles.length === 0 ? (
+          Array(6).fill(0).map((_, i) => (
+             <div key={i} className="flex-shrink-0 w-44 sm:w-52 aspect-[9/16] bg-zinc-800 rounded-2xl animate-pulse" />
+          ))
+        ) : (
+          styles.map((style) => (
+            <StyleCard
+              key={style.id}
+              style={style}
+            />
+          ))
+        )}
       </div>
     </div>
   );
@@ -359,26 +286,16 @@ export default function Home() {
           return v;
         });
 
-        // Fetch fresh avatars for all channel ids (ensures changes propagate like the profile view)
+        // Fetch fresh avatars for all channel ids in batch
         try {
           const channelIds = Array.from(new Set(hydrated.map((v) => v.channel_id).filter(Boolean)));
-          const avatarEntries = await Promise.all(
-            channelIds.map(async (cid) => {
-              try {
-                const res = await fetch(`/api/channel-avatar/${cid}`);
-                if (!res.ok) return null;
-                const json = await res.json();
-                if (json?.avatar) return [cid, json.avatar] as [string, string];
-              } catch {
-                // ignore per-channel errors
-              }
-              return null;
-            })
-          );
+          const profiles = await getBatchProfiles(channelIds);
+          
           const avatarMap = new Map<string, string>();
-          avatarEntries.forEach((entry) => {
-            if (entry) avatarMap.set(entry[0], entry[1]);
+          profiles.forEach(p => {
+            if (p.avatar) avatarMap.set(p.id, p.avatar);
           });
+
           if (avatarMap.size > 0) {
             hydrated = hydrated.map((v) => {
               const latest = avatarMap.get(v.channel_id);
@@ -429,9 +346,18 @@ export default function Home() {
     window.addEventListener('video-updated', handleVideoUpdate);
     window.addEventListener('storage', handleStorageChange);
 
+    // Refresh when tab becomes visible (user returns from watch page)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchVideos();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
       window.removeEventListener('video-updated', handleVideoUpdate);
       window.removeEventListener('storage', handleStorageChange);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [refreshKey]);
 
@@ -459,19 +385,40 @@ export default function Home() {
   };
 
   const renderSkeleton = () => (
-    <div suppressHydrationWarning className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-4 gap-y-8 p-4">
-      {SKELETON_BATCH.map((_, i) => (
-        <div suppressHydrationWarning key={i} className="animate-pulse space-y-3">
-          <div suppressHydrationWarning className="aspect-video bg-zinc-800 rounded-xl" />
-          <div suppressHydrationWarning className="flex gap-3">
-            <div suppressHydrationWarning className="w-10 h-10 bg-zinc-800 rounded-full" />
-            <div suppressHydrationWarning className="flex-1 space-y-2">
-              <div suppressHydrationWarning className="h-4 bg-zinc-800 rounded w-3/4" />
-              <div suppressHydrationWarning className="h-3 bg-zinc-800 rounded w-1/2" />
+    <div className="flex flex-col">
+      <div suppressHydrationWarning className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-x-6 gap-y-12 px-6 md:px-10 pt-10">
+        {Array(8).fill(0).map((_, i) => (
+          <div suppressHydrationWarning key={i} className="animate-pulse flex flex-col w-full">
+            <div suppressHydrationWarning className="aspect-video bg-zinc-800 rounded-xl mb-3" />
+            <div suppressHydrationWarning className="flex gap-3 px-2 sm:px-0">
+              <div suppressHydrationWarning className="w-10 h-10 bg-zinc-800 rounded-full flex-shrink-0" />
+              <div suppressHydrationWarning className="flex-1 space-y-3 pt-1">
+                <div suppressHydrationWarning className="h-4 bg-zinc-800 rounded w-[90%]" />
+                <div suppressHydrationWarning className="h-3 bg-zinc-800 rounded w-[60%]" />
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
+      
+      {(selectedCategory === 'All' || selectedCategory === 'New to you') && (
+        <StylesShelf styles={[]} isLoading={true} />
+      )}
+
+      <div suppressHydrationWarning className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-x-6 gap-y-12 px-6 md:px-10 pt-10">
+        {Array(8).fill(0).map((_, i) => (
+          <div suppressHydrationWarning key={i+8} className="animate-pulse flex flex-col w-full">
+            <div suppressHydrationWarning className="aspect-video bg-zinc-800 rounded-xl mb-3" />
+            <div suppressHydrationWarning className="flex gap-3 px-2 sm:px-0">
+              <div suppressHydrationWarning className="w-10 h-10 bg-zinc-800 rounded-full flex-shrink-0" />
+              <div suppressHydrationWarning className="flex-1 space-y-3 pt-1">
+                <div suppressHydrationWarning className="h-4 bg-zinc-800 rounded w-[90%]" />
+                <div suppressHydrationWarning className="h-3 bg-zinc-800 rounded w-[60%]" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 
@@ -539,10 +486,6 @@ export default function Home() {
                 {styles.length > 0 && (selectedCategory === 'All' || selectedCategory === 'New to you') && (
                   <StylesShelf
                     styles={styles}
-                    onHoverStart={handleHoverStart}
-                    onHoverEnd={handleHoverEnd}
-                    videoRefs={videoRefs}
-                    isMuted={isMuted}
                   />
                 )}
 

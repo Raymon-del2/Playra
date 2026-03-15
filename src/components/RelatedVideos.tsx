@@ -84,12 +84,12 @@ export default function RelatedVideos({ videoId, category, channelId }: RelatedV
                 {videos.map((video) => (
                     <Link
                         key={video.id}
-                        href={`/watch/${video.id}`}
+                        href={video.is_short ? `/styles/${video.id}` : `/watch/${video.id}`}
                         className="flex gap-2 group p-2 rounded-xl hover:bg-white/5 transition-colors -mx-2"
                     >
                         {/* Thumbnail */}
-                        <div className="relative w-40 flex-shrink-0">
-                            <div className="aspect-video rounded-lg overflow-hidden bg-zinc-800">
+                        <div className={`relative ${video.is_short ? 'w-24' : 'w-40'} flex-shrink-0 transition-all duration-300`}>
+                            <div className={`relative ${video.is_short ? 'aspect-[9/16]' : 'aspect-video'} rounded-lg overflow-hidden bg-zinc-800 border border-white/5`}>
                                 <img
                                     src={video.thumbnail_url}
                                     alt={video.title}

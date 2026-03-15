@@ -31,7 +31,10 @@ export default function WhoIsWatchingOverlay({ profiles, userId, onSelect }: { p
     if (profiles.length === 0) return null;
 
     return (
-        <div className={`fixed inset-0 z-[9000] bg-black transition-all duration-700 flex flex-col items-center justify-center p-6 sm:p-12 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
+        <div
+            suppressHydrationWarning
+            className={`fixed inset-0 z-[9000] bg-black transition-all duration-700 flex flex-col items-center justify-center p-6 sm:p-12 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
+        >
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full animate-pulse" />
             <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/5 blur-[120px] rounded-full animate-pulse delay-1000" />
 

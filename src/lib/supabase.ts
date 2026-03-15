@@ -4,9 +4,51 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = 'https://dyhbrdijbxjrhfthknkw.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR5aGJyZGlqYnhqcmhmdGhrbmt3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkzNjM4MDYsImV4cCI6MjA4NDkzOTgwNn0.RSa6GmEkxO9Zf56JxSI7J9nG8upNY-9XrzAJu2QP5A8';
 
-export const supabase = supabaseUrl && supabaseAnonKey
-    ? createClient(supabaseUrl, supabaseAnonKey)
-    : null;
+// Client-side singleton with proper auth persistence
+let browserClient: ReturnType<typeof createClient> | null = null;
+
+function getSupabaseClient() {
+  if (typeof window === 'undefined') {
+    // Server-side - create new instance without auth persistence
+    return createClient(supabaseUrl, supabaseAnonKey);
+  }
+  
+  // Browser-side - use singleton with localStorage persistence
+  if (!browserClient) {
+    browserClient = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        storageKey: 'playra-auth-token',
+        storage: {
+          getItem: (key) => {
+            try {
+              return localStorage.getItem(key);
+            } catch {
+              return null;
+            }
+          },
+          setItem: (key, value) => {
+            try {
+              localStorage.setItem(key, value);
+            } catch {}
+          },
+          removeItem: (key) => {
+            try {
+              localStorage.removeItem(key);
+            } catch {}
+          }
+        }
+      }
+    });
+  }
+  return browserClient;
+}
+
+export const supabase = typeof window !== 'undefined' 
+  ? getSupabaseClient() 
+  : createClient(supabaseUrl, supabaseAnonKey);
 
 function ensureSupabase() {
     if (!supabase) {
@@ -129,20 +171,39 @@ async function deleteStorageObjectFromPublicUrl(publicUrl?: string | null) {
 
 // Delete a video row by id
 export async function deleteVideo(id: string) {
-    const { error } = await ensureSupabase()
+    const { data, error } = await ensureSupabase()
         .from('videos')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .select();
 
     if (error) throw error;
+
+    // If data is empty but no error, it usually means RLS blocked the delete or the row didn't exist
+    if (!data || data.length === 0) {
+        throw new Error('Video not found or deletion blocked by permission (RLS). Ensure DELETE policy is enabled in Supabase.');
+    }
+
     return true;
 }
 
-// Delete a video and attempt to remove its storage assets
+// Delete a video and attempt to remove its storage assets and related data
 export async function deleteVideoWithAssets(params: { id: string; videoUrl?: string | null; thumbnailUrl?: string | null }) {
     const { id, videoUrl, thumbnailUrl } = params;
+
+    // 1. Storage assets
     await deleteStorageObjectFromPublicUrl(videoUrl);
     await deleteStorageObjectFromPublicUrl(thumbnailUrl);
+
+    // 2. Database cleanup (optional: depends on RLS/Cascade)
+    // Try to delete comments and history first to avoid foreign key violations
+    try {
+        await ensureSupabase().from('comments').delete().eq('video_id', id);
+        await ensureSupabase().from('watch_history').delete().eq('video_id', id);
+    } catch (e) {
+        console.warn('Failed to delete related data', e);
+    }
+
     return deleteVideo(id);
 }
 
@@ -617,6 +678,23 @@ export async function deleteComment(commentId: string, profileId: string) {
 }
 
 // Get comment count for a video
+export async function getBatchCommentCounts(videoIds: string[]) {
+  if (!videoIds.length) return {};
+  const { data, error } = await ensureSupabase()
+    .from('comments')
+    .select('video_id')
+    .in('video_id', videoIds);
+
+  if (error) throw error;
+  
+  const counts: Record<string, number> = {};
+  videoIds.forEach(id => counts[id] = 0);
+  (data || []).forEach((c: any) => {
+    counts[c.video_id] = (counts[c.video_id] || 0) + 1;
+  });
+  return counts;
+}
+
 export async function getCommentCount(videoId: string) {
     const { count, error } = await ensureSupabase()
         .from('comments')

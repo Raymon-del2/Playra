@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useLocation } from '@/hooks/useLocation';
 import ProfileMenu from './ProfileMenu';
 import NotificationsPopup from './NotificationsPopup';
@@ -26,6 +26,7 @@ export default function Navbar({
   activeProfile
 }: NavbarProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const countryCode = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -35,6 +36,7 @@ export default function Navbar({
   const searchCacheRef = useRef<Map<string, { videos: any[]; profiles: any[]; timestamp: number }>>(new Map());
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
   const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
@@ -44,6 +46,9 @@ export default function Navbar({
   const profileContainerRef = useRef<HTMLDivElement>(null);
   const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const recognitionRef = useRef<any>(null);
+
+  // Check if current page should show searchbar (home, styles, or watch pages only)
+  const shouldShowSearchbar = pathname === '/' || pathname?.startsWith('/styles') || pathname?.startsWith('/watch');
 
   const getSpeechRecognition = () => {
     if (typeof window === 'undefined') return null;
@@ -171,7 +176,7 @@ export default function Navbar({
 
   return (
     <>
-      <nav suppressHydrationWarning className="fixed top-0 left-0 right-0 h-14 bg-[#0f0f0f] border-b border-white/5 md:border-b z-50 flex items-center">
+      <nav suppressHydrationWarning className="fixed top-0 left-0 right-0 h-14 bg-[#0f0f0f] border-b border-white/5 md:border-b z-[100] flex items-center">
         {/* Progress line */}
         {isSearching && (
           <div className="absolute top-0 left-0 right-0 h-0.5 bg-blue-500 animate-pulse" />
@@ -197,6 +202,7 @@ export default function Navbar({
               </Link>
             </div>
 
+            {shouldShowSearchbar && (
             <div suppressHydrationWarning className="hidden md:flex flex-1 max-w-2xl mx-4">
               <div suppressHydrationWarning className="flex w-full items-center">
                 <div suppressHydrationWarning className="relative flex-1 group">
@@ -205,13 +211,44 @@ export default function Navbar({
                     placeholder="Search videos or profiles"
                     value={searchQuery}
                     onFocus={() => setIsDropdownOpen(true)}
+                    onBlur={() => {
+                       // Short delay to allow clicks to register
+                       setTimeout(() => {
+                         setIsDropdownOpen(false);
+                         setSelectedIndex(-1);
+                       }, 200);
+                    }}
                     onChange={(event) => {
                       setSearchQuery(event.target.value);
                       setIsDropdownOpen(true);
+                      setSelectedIndex(-1);
                     }}
                     onKeyDown={(event) => {
-                      if (event.key === 'Enter') {
-                        handleSearch();
+                      const totalSuggestions = suggestions.profiles.length + suggestions.videos.length;
+                      
+                      if (event.key === 'ArrowDown') {
+                        event.preventDefault();
+                        setSelectedIndex(prev => (prev < totalSuggestions - 1 ? prev + 1 : prev));
+                      } else if (event.key === 'ArrowUp') {
+                        event.preventDefault();
+                        setSelectedIndex(prev => (prev > 0 ? prev - 1 : prev));
+                      } else if (event.key === 'Enter') {
+                        if (selectedIndex >= 0) {
+                          event.preventDefault();
+                          if (selectedIndex < suggestions.profiles.length) {
+                            const p = suggestions.profiles[selectedIndex];
+                            setIsDropdownOpen(false);
+                            router.push(`/channel/${p.id}`);
+                          } else {
+                            const v = suggestions.videos[selectedIndex - suggestions.profiles.length];
+                            setIsDropdownOpen(false);
+                            router.push(`/watch/${v.id}`);
+                          }
+                        } else {
+                          handleSearch();
+                        }
+                      } else if (event.key === 'Escape') {
+                        setIsDropdownOpen(false);
                       }
                     }}
                     className="w-full bg-zinc-900 text-white pl-5 pr-5 py-2 rounded-l-full border border-zinc-800 focus:outline-none focus:border-blue-500/50 transition-all font-medium"
@@ -235,61 +272,55 @@ export default function Navbar({
                         </button>
                       )}
                       {!isLoadingSuggest && (suggestions.videos.length > 0 || suggestions.profiles.length > 0) && (
-                        <div className="max-h-80 overflow-y-auto divide-y divide-white/5">
-                          {suggestions.profiles.length > 0 && (
-                            <div className="py-2">
-                              <div className="px-4 pb-1 text-[11px] uppercase tracking-[0.18em] text-zinc-500 font-bold">Profiles</div>
-                              {suggestions.profiles.map((p: any) => (
-                                <button
-                                  key={p.id}
-                                  onMouseDown={(e) => e.preventDefault()}
-                                  onClick={() => {
-                                    setIsDropdownOpen(false);
-                                    router.push(`/channel/${p.id}`);
-                                  }}
-                                  className="w-full px-4 py-2 flex items-center gap-3 hover:bg-white/5 text-left"
-                                >
-                                  <div className="w-8 h-8 rounded-full overflow-hidden bg-zinc-800 flex-shrink-0">
-                                    {p.avatar ? (
-                                      <img src={p.avatar} alt={p.name} className="w-full h-full object-cover" />
-                                    ) : (
-                                      <div className="w-full h-full flex items-center justify-center text-xs font-bold text-zinc-400">
-                                        {p.name?.[0]?.toUpperCase() || '?'}
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="flex flex-col min-w-0">
-                                    <span className="text-sm text-white font-semibold truncate">{p.name}</span>
-                                    <span className="text-xs text-zinc-500 truncate">@{p.name?.replace(/^@+/, '').replace(/\s+/g, '').toLowerCase()}</span>
-                                  </div>
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                          {suggestions.videos.length > 0 && (
-                            <div className="py-2">
-                              <div className="px-4 pb-1 text-[11px] uppercase tracking-[0.18em] text-zinc-500 font-bold">Videos</div>
-                              {suggestions.videos.map((v: any) => (
-                                <button
-                                  key={v.id}
-                                  onMouseDown={(e) => e.preventDefault()}
-                                  onClick={() => {
-                                    setIsDropdownOpen(false);
-                                    router.push(`/watch/${v.id}`);
-                                  }}
-                                  className="w-full px-4 py-2 flex items-center gap-3 hover:bg-white/5 text-left"
-                                >
-                                  <div className="w-12 h-7 rounded-md overflow-hidden bg-zinc-800 flex-shrink-0">
-                                    <img src={v.thumbnail_url} alt={v.title} className="w-full h-full object-cover" />
-                                  </div>
-                                  <div className="flex flex-col min-w-0">
-                                    <span className="text-sm text-white font-semibold truncate">{v.title}</span>
-                                    <span className="text-xs text-zinc-500 truncate">{v.channel_name}</span>
-                                  </div>
-                                </button>
-                              ))}
-                            </div>
-                          )}
+                        <div className="py-2 max-h-[80vh] overflow-y-auto">
+                           {suggestions.profiles.map((p: any, idx) => (
+                            <button
+                               key={p.id}
+                               onMouseEnter={() => setSelectedIndex(idx)}
+                               onMouseDown={(e) => e.preventDefault()}
+                               onClick={() => {
+                                 setIsDropdownOpen(false);
+                                 router.push(`/channel/${p.id}`);
+                               }}
+                               className={`w-full px-4 py-2 flex items-center gap-4 transition-colors text-left group ${selectedIndex === idx ? 'bg-zinc-800' : 'hover:bg-zinc-800'}`}
+                             >
+                               <svg className={`w-4 h-4 flex-shrink-0 ${selectedIndex === idx ? 'text-white' : 'text-zinc-400 group-hover:text-white'}`} fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                               <div className="w-8 h-8 rounded-full overflow-hidden bg-zinc-800 flex-shrink-0 border border-white/5">
+                                 {p.avatar ? (
+                                   <img src={p.avatar} alt={p.name} className="w-full h-full object-cover" />
+                                 ) : (
+                                   <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-zinc-400">
+                                     {p.name?.[0]?.toUpperCase() || '?'}
+                                   </div>
+                                 )}
+                               </div>
+                               <div className="flex flex-col min-w-0">
+                                 <span className="text-[15px] text-zinc-100 font-medium truncate">{p.name}</span>
+                                 <span className="text-[12px] text-zinc-500 truncate">@{p.name?.replace(/^@+/, '').replace(/\s+/g, '').toLowerCase()} • Profile</span>
+                               </div>
+                             </button>
+                           ))}
+                           {suggestions.videos.map((v: any, idx) => {
+                             const realIdx = idx + suggestions.profiles.length;
+                             return (
+                             <button
+                               key={v.id}
+                               onMouseEnter={() => setSelectedIndex(realIdx)}
+                               onMouseDown={(e) => e.preventDefault()}
+                               onClick={() => {
+                                 setIsDropdownOpen(false);
+                                 router.push(`/watch/${v.id}`);
+                               }}
+                               className={`w-full px-4 py-2 flex items-center gap-4 transition-colors text-left group ${selectedIndex === realIdx ? 'bg-zinc-800' : 'hover:bg-zinc-800'}`}
+                             >
+                               <svg className={`w-4 h-4 flex-shrink-0 ${selectedIndex === realIdx ? 'text-white' : 'text-zinc-400 group-hover:text-white'}`} fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                               <div className="flex flex-col min-w-0">
+                                 <span className="text-[15px] text-zinc-100 font-medium truncate">{v.title}</span>
+                                 <span className="text-[12px] text-zinc-500 truncate">{v.channel_name} • Video</span>
+                               </div>
+                             </button>
+                             );
+                           })}
                         </div>
                       )}
                     </div>
@@ -312,6 +343,7 @@ export default function Navbar({
                 </button>
               </div>
             </div>
+            )}
 
             <div suppressHydrationWarning className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
 
@@ -364,6 +396,7 @@ export default function Navbar({
                     if (count > 0) setHasUnreadNotifications(true);
                     else setHasUnreadNotifications(false);
                   }}
+                  activeProfile={activeProfile}
                 />
               </div>
 
@@ -415,7 +448,8 @@ export default function Navbar({
         </div>
       </nav>
 
-      {/* Mobile Search Bar - separate row below navbar */}
+      {/* Mobile Search Bar - separate row below navbar - only on specific pages */}
+      {shouldShowSearchbar && (
       <div suppressHydrationWarning className="fixed top-14 left-0 right-0 h-12 bg-[#0f0f0f] border-b border-white/5 z-[60] flex items-center px-4 md:hidden">
         <div suppressHydrationWarning className="relative w-full z-[70]">
           <input
@@ -524,7 +558,7 @@ export default function Navbar({
           )}
         </div>
       </div>
+      )}
     </>
   );
-}
-
+} 

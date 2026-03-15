@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { getTrendingVideos, Video } from '@/lib/supabase';
 import { formatDistanceToNow } from 'date-fns';
 
-type TrendingCategory = 'now' | 'music' | 'gaming' | 'movies';
+type TrendingCategory = 'now' | 'music';
 
 export default function TrendingPage() {
     const [videos, setVideos] = useState<Video[]>([]);
@@ -31,25 +31,6 @@ export default function TrendingPage() {
                 </svg>
             ),
         },
-        {
-            id: 'gaming',
-            label: 'Gaming',
-            icon: (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-            ),
-        },
-        {
-            id: 'movies',
-            label: 'Movies',
-            icon: (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
-                </svg>
-            ),
-        },
     ];
 
     useEffect(() => {
@@ -64,9 +45,6 @@ export default function TrendingPage() {
             // Filter by category if needed
             if (activeCategory === 'music') {
                 data = data.filter(v => v.category === 'music');
-            } else if (activeCategory === 'gaming') {
-                // Gaming uses title search since it's not a defined category
-                data = data.filter(v => v.title.toLowerCase().includes('game') || v.title.toLowerCase().includes('gaming'));
             }
 
             setVideos(data);
@@ -135,7 +113,36 @@ export default function TrendingPage() {
 
             {/* Videos List */}
             <div className="px-4 md:px-6 max-w-5xl">
-                {isLoading ? (
+                {activeCategory === 'music' ? (
+                    <div className="text-center py-20">
+                        <div className="relative w-full max-w-md mx-auto h-48 rounded-2xl overflow-hidden mb-6">
+                            <img 
+                                src="https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=800&q=80" 
+                                alt="Music Coming Soon" 
+                                className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/50 to-transparent" />
+                            <div className="absolute bottom-4 left-4 right-4">
+                                <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-full text-sm font-medium text-white border border-white/20">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                                    </svg>
+                                    Coming Soon
+                                </span>
+                            </div>
+                        </div>
+                        <h2 className="text-2xl font-bold text-white mb-3">Music is Coming Soon</h2>
+                        <p className="text-zinc-400 max-w-md mx-auto mb-6">
+                            Get ready for a dedicated music experience on Playra. Discover trending songs, artists, and music videos all in one place.
+                        </p>
+                        <button 
+                            onClick={() => setActiveCategory('now')}
+                            className="px-6 py-2.5 bg-white text-black font-semibold rounded-xl hover:bg-zinc-200 transition-colors"
+                        >
+                            Browse Trending Now
+                        </button>
+                    </div>
+                ) : isLoading ? (
                     <div className="space-y-4">
                         {[1, 2, 3, 4, 5].map((i) => (
                             <div key={i} className="flex gap-4 animate-pulse">

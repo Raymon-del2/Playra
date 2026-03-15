@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Playra TV</string>
+    <string name="browse_title">Playra</string>
+    
+    <!-- Navigation -->
+    <string name="home">Home</string>
+    <string name="trending">Trending</string>
+    <string name="subscriptions">Subscriptions</string>
+    <string name="library">Library</string>
+    <string name="settings">Settings</string>
+    
+    <!-- Actions -->
+    <string name="play">Play</string>
+    <string name="pause">Pause</string>
+    <string name="search">Search</string>
+    <string name="watch_now">Watch Now</string>
+    <string name="add_to_library">Add to Library</string>
+    <string name="subscribe">Subscribe</string>
+    
+    <!-- Error Messages -->
+    <string name="error_loading">Error loading videos</string>
+    <string name="no_internet">No internet connection</string>
+    <string name="video_not_available">Video not available</string>
+    
+    <!-- Descriptions -->
+    <string name="video_thumbnail_desc">Video thumbnail</string>
+    <string name="app_icon_desc">Playra app icon</string>
+</resources>

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { getVideoById, recordWatch, isHistoryPaused, incrementViews, Video, updateChannelAvatarInVideos } from '@/lib/supabase';
 import { formatDistanceToNow } from 'date-fns';
 import { getActiveProfile } from '@/app/actions/profile';
+import { toggleLikeVideo, toggleDislikeVideo, fetchVideoEngagement } from '@/app/actions/engagement';
 import Comments from '@/components/Comments';
 import RelatedVideos from '@/components/RelatedVideos';
 import SubscribeButton from '@/components/SubscribeButton';
@@ -29,9 +30,15 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
   const [saveError, setSaveError] = useState<string | null>(null);
   const [watchLaterSaved, setWatchLaterSaved] = useState(false);
   const [playlists, setPlaylists] = useState<{ id: string; name: string; hasVideo: boolean }[]>([]);
+  const [isCreatingPlaylist, setIsCreatingPlaylist] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState('');
+  const [newPlaylistVisibility, setNewPlaylistVisibility] = useState<'private' | 'public'>('private');
   const [isSavingAction, setIsSavingAction] = useState(false);
   const [toast, setToast] = useState<{ message: string; kind: 'success' | 'error' } | null>(null);
+  const [videoLoaded, setVideoLoaded] = useState(false);
+  const [thumbnailLoaded, setThumbnailLoaded] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
+  const [isAnimatingPlay, setIsAnimatingPlay] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const showToast = (message: string, kind: 'success' | 'error' = 'success') => {
@@ -124,8 +131,7 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
           // Use stored duration if present
           const parsed = parseDurationToSeconds(merged.duration);
           if (parsed > 0) setDuration(parsed);
-          // Randomize likes for mock-up feel
-          setLikes(Math.floor(Math.random() * 50000));
+
           // Increment views once when loaded
           if (shouldIncrementView(merged.id)) {
             try {
@@ -134,6 +140,16 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
               markViewIncremented(merged.id);
             } catch (viewErr) {
               console.warn('Failed to increment views', viewErr);
+            }
+          }
+
+          // Load engagement data
+          if (profile?.id && merged.id) {
+            const engagement = await fetchVideoEngagement(merged.id, profile.id, merged.channel_id);
+            if (engagement.success && 'likes' in engagement) {
+              setLikes(engagement.likes);
+              setIsLiked(engagement.userLiked);
+              setIsDisliked(engagement.userDisliked);
             }
           }
 
@@ -186,81 +202,91 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
 
   const toggleWatchLater = async () => {
     if (!videoId) return;
-    setIsSavingAction(true);
+    
+    // Optimistic update - show immediately
+    const newSaved = !watchLaterSaved;
+    setWatchLaterSaved(newSaved);
+    showToast(newSaved ? 'Saved to Watch later' : 'Video was unsaved');
+    
+    // Close modal if open
+    setIsSaveOpen(false);
+    
+    // Save to DB in background (silent)
     try {
-      const target = watchLaterSaved ? 'DELETE' : 'POST';
-      const url = `/api/engagement/save?videoId=${encodeURIComponent(videoId)}&target=watch_later`;
-      const res = await fetch(url, { method: target });
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || 'Failed to update');
-      }
-      setWatchLaterSaved(!watchLaterSaved);
-      showToast(!watchLaterSaved ? 'Saved to Watch later' : 'Removed from Watch later');
-    } catch (err: any) {
-      setSaveError(err?.message || 'Failed to update');
-      showToast(err?.message || 'Failed to update', 'error');
-    } finally {
-      setIsSavingAction(false);
+      const target = !newSaved ? 'DELETE' : 'POST';
+      const res = await fetch(`/api/engagement/save`, {
+        method: target,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoId, target: 'watch_later' })
+      });
+      if (!res.ok) throw new Error('Failed');
+    } catch {
+      // Silent fail - user already saw the update
     }
   };
 
   const togglePlaylist = async (pid: string, hasVideo: boolean) => {
     if (!videoId) return;
-    setIsSavingAction(true);
+    
+    // Optimistic update - show immediately
+    setPlaylists((prev) =>
+      prev.map((p) => (p.id === pid ? { ...p, hasVideo: !hasVideo } : p)),
+    );
+    showToast(!hasVideo ? 'Saved to playlist' : 'Removed from playlist');
+    
+    // Close modal
+    setIsSaveOpen(false);
+    
+    // Save to DB in background (silent)
     try {
       const method = hasVideo ? 'DELETE' : 'POST';
-      const url =
-        method === 'POST'
-          ? `/api/engagement/save`
-          : `/api/engagement/save?videoId=${encodeURIComponent(videoId)}&target=playlist&playlistId=${encodeURIComponent(pid)}`;
-      const body =
-        method === 'POST'
-          ? { videoId, target: 'playlist', playlistId: pid }
-          : undefined;
-      const res = await fetch(url, {
+      const res = await fetch('/api/engagement/save', {
         method,
-        headers: method === 'POST' ? { 'Content-Type': 'application/json' } : undefined,
-        body: method === 'POST' ? JSON.stringify(body) : undefined,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoId, target: 'playlist', playlistId: pid })
       });
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || 'Failed to update playlist');
-      }
-      setPlaylists((prev) =>
-        prev.map((p) => (p.id === pid ? { ...p, hasVideo: !hasVideo } : p)),
-      );
-      showToast(!hasVideo ? 'Saved to playlist' : 'Removed from playlist');
-    } catch (err: any) {
-      setSaveError(err?.message || 'Failed to update playlist');
-      showToast(err?.message || 'Failed to update playlist', 'error');
-    } finally {
-      setIsSavingAction(false);
+      if (!res.ok) throw new Error('Failed');
+    } catch {
+      // Silent fail - user already saw the update
     }
   };
 
   const createPlaylist = async () => {
     if (!videoId || !newPlaylistName.trim()) return;
-    setIsSavingAction(true);
+    
+    const name = newPlaylistName.trim();
+    const tempId = `temp-${Date.now()}`;
+    
+    // Optimistic update - add to list immediately with video saved
+    const newPlaylist = { 
+      id: tempId, 
+      name, 
+      hasVideo: true,
+      isPrivate: newPlaylistVisibility === 'private'
+    };
+    setPlaylists(prev => [newPlaylist, ...prev]);
+    setNewPlaylistName('');
+    setIsCreatingPlaylist(false); // Just hide the form, keep modal open
+    setNewPlaylistVisibility('private');
+    showToast(`Created playlist "${name}" and saved video`);
+    
+    // Save to DB in background (silent)
     try {
-      setSaveError(null);
       const res = await fetch('/api/engagement/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ videoId, target: 'playlist', name: newPlaylistName.trim() }),
+        body: JSON.stringify({ 
+          videoId, 
+          target: 'playlist', 
+          name, 
+          isPrivate: newPlaylistVisibility === 'private'
+        })
       });
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || 'Failed to create playlist');
-      }
-      setNewPlaylistName('');
-      await refreshSaveStatus(videoId, activeProfileId || '');
-      showToast('Saved to new playlist');
-    } catch (err: any) {
-      setSaveError(err?.message || 'Failed to create playlist');
-      showToast(err?.message || 'Failed to create playlist', 'error');
-    } finally {
-      setIsSavingAction(false);
+      if (!res.ok) throw new Error('Failed');
+      // Refresh playlists silently to get real ID
+      if (activeProfileId) refreshSaveStatus(videoId, activeProfileId);
+    } catch {
+      // Silent fail
     }
   };
 
@@ -323,273 +349,515 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
     }
   }, [videoId, activeProfileId]);
 
-  const handleLike = () => {
+  const handleLike = async () => {
+    if (!activeProfileId || !videoId) {
+      showToast('Please sign in to like videos', 'error');
+      return;
+    }
+    
+    // If already liked, unlike it
     if (isLiked) {
-      setLikes(likes - 1);
       setIsLiked(false);
-    } else {
-      if (isDisliked) {
-        setDislikes(dislikes - 1);
-        setIsDisliked(false);
-      }
-      setLikes(likes + 1);
-      setIsLiked(true);
+      setLikes(Math.max(0, likes - 1));
+      toggleLikeVideo(videoId, activeProfileId, true).catch(() => {});
+      return;
     }
+    
+    // Like the video (and remove dislike if present)
+    setIsLiked(true);
+    setIsDisliked(false); // Always clear dislike when liking
+    setLikes(likes + 1);
+    
+    // Save to DB in background (silent)
+    toggleLikeVideo(videoId, activeProfileId, false).catch(() => {});
   };
 
-  const handleDislike = () => {
+  const handleDislike = async () => {
+    if (!activeProfileId || !videoId) {
+      showToast('Please sign in to dislike videos', 'error');
+      return;
+    }
+    
+    // If already disliked, remove dislike
     if (isDisliked) {
-      setDislikes(dislikes - 1);
       setIsDisliked(false);
-    } else {
-      if (isLiked) {
-        setLikes(likes - 1);
-        setIsLiked(false);
-      }
-      setDislikes(dislikes + 1);
-      setIsDisliked(true);
+      toggleDislikeVideo(videoId, activeProfileId, true).catch(() => {});
+      return;
     }
+    
+    // Dislike the video (and remove like if present)
+    setIsDisliked(true);
+    if (isLiked) {
+      setIsLiked(false); // Always clear like when disliking
+      setLikes(Math.max(0, likes - 1));
+    }
+    
+    // Save to DB in background (silent)
+    toggleDislikeVideo(videoId, activeProfileId, false).catch(() => {});
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <div className="w-12 h-12 border-4 border-white/10 border-t-white rounded-full animate-spin"></div>
-      </div>
-    );
-  }
+  const handleStartPlay = () => {
+    if (isAnimatingPlay || hasStarted) return;
+    setIsAnimatingPlay(true);
+    // Complete animation then start video
+    setTimeout(() => {
+      setHasStarted(true);
+      if (videoRef.current) {
+        videoRef.current.play().catch(err => console.warn('Play error:', err));
+      }
+    }, 400);
+  };
 
-  const videoTitle = video ? video.title : 'Building a Full Stack App with Next.js and TypeScript';
-  const videoSrc = video ? video.video_url : 'https://www.w3schools.com/html/mov_bbb.mp4';
-  const channelName = video ? video.channel_name : 'Tech Master';
-  const channelAvatar = video ? video.channel_avatar : 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop';
-  const videoViews = video ? `${Math.max(1, video.views ?? 0).toLocaleString()} views` : '125K views';
-  const videoDate = video ? formatDistanceToNow(new Date(video.created_at), { addSuffix: true }) : '2 days ago';
-  const videoDescription = video ? video.description : "In this comprehensive tutorial, we'll build a full-stack application using Next.js 14, TypeScript, and modern web development best practices. Learn how to set up your project, implement authentication, create API routes, and deploy your app to production.";
+  const videoTitle = video?.title || "";
+  const videoSrc = video?.video_url || "";
+  const channelName = video?.channel_name || "Loading...";
+  const channelAvatar = video?.channel_avatar || "";
+  const videoViews = video ? `${Math.max(1, video.views ?? 0).toLocaleString()} views` : "";
+  const videoDate = video ? formatDistanceToNow(new Date(video.created_at), { addSuffix: true }) : "";
+  const videoDescription = video?.description || "";  return (
+    <div className="flex flex-col lg:flex-row gap-6 p-0 lg:p-6 bg-[#0f0f0f] min-h-screen">
+      <div className="flex-1 lg:max-w-[calc(100vw-450px)]">
+        {/* Video Player Section */}
+        <div 
+          className="aspect-video bg-zinc-900 sm:rounded-xl overflow-hidden mb-4 relative shadow-2xl group/player cursor-pointer"
+          onClick={() => !hasStarted && handleStartPlay()}
+        >
+          {/* Splash Screen / Play Button overlay */}
+          {!hasStarted && video && (
+            <div className="absolute inset-0 z-30 flex items-center justify-center bg-transparent group/player">
+              {/* Animation Background Ripple */}
+              <div className={`absolute inset-0 bg-white rounded-full transition-all duration-700 ease-out pointer-events-none 
+                ${isAnimatingPlay ? 'scale-[4] opacity-0' : 'scale-0 opacity-0'}`} />
 
-  return (
-    <div className="flex flex-col lg:flex-row gap-6 p-0 sm:p-6 bg-gray-900 min-h-screen">
-      <div className="flex-1">
-        <div className="aspect-video bg-black sm:rounded-lg overflow-hidden mb-4 relative">
-          <video
-            ref={videoRef}
-            className="w-full h-full"
-            controls
-            autoPlay
-            poster={video?.thumbnail_url || "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=1280&h=720&fit=crop"}
-            onLoadedMetadata={(e) => {
-              const d = e.currentTarget.duration;
-              if (d && !Number.isNaN(d)) setDuration(d);
-              else if (resolvedDuration > 0) setDuration(resolvedDuration);
-            }}
-            onTimeUpdate={(e) => {
-              const t = e.currentTarget.currentTime;
-              setCurrentTime(t);
-              const effectiveDuration = duration > 0 ? duration : resolvedDuration;
-              if (videoId && effectiveDuration > 0) {
-                persistProgress(videoId, t, effectiveDuration);
-              }
-            }}
-          >
-            <source src={videoSrc} type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
+              {/* Animated Splash Triangle Loader */}
+              <div className={`relative transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) transform 
+                ${isAnimatingPlay ? 'scale-[2] opacity-0' : 'scale-100 opacity-100 hover:scale-110 active:scale-95'}`}
+              >
+                <svg className="w-24 h-24 overflow-visible" viewBox="0 0 100 100">
+                  <defs>
+                    <linearGradient id="playGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#3B82F6" />
+                      <stop offset="100%" stopColor="#A855F7" />
+                    </linearGradient>
+                  </defs>
+                  {/* Outer Glow */}
+                  <path 
+                    d="M35,25 L75,50 L35,75 Z" 
+                    fill="none" 
+                    stroke="url(#playGrad)" 
+                    strokeWidth="4" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                    className="opacity-30 blur-sm"
+                  />
+                  {/* Drawing Path */}
+                  <path 
+                    d="M35,25 L75,50 L35,75 Z" 
+                    fill={isAnimatingPlay ? "white" : "none"}
+                    stroke={isAnimatingPlay ? "white" : "url(#playGrad)"}
+                    strokeWidth="3.5" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    className="transition-colors duration-200"
+                    style={{ 
+                      strokeDasharray: 200, 
+                      strokeDashoffset: 200,
+                      animation: 'drawTri 1.5s ease-out forwards' 
+                    }}
+                  />
+                  <style>{`
+                    @keyframes drawTri {
+                      0% { stroke-dashoffset: 200; }
+                      100% { stroke-dashoffset: 0; }
+                    }
+                  `}</style>
+                </svg>
+              </div>
+              
+              {/* Optional Thumbnail overlay if video not yet visible */}
+              {!videoLoaded && video.thumbnail_url && (
+                <img 
+                  src={video.thumbnail_url} 
+                  alt="" 
+                  className="absolute inset-0 w-full h-full object-cover -z-10"
+                />
+              )}
+            </div>
+          )}
+
+          {(!videoLoaded || !video) && !hasStarted && (
+            <div className="absolute inset-0 bg-zinc-900 flex items-center justify-center pointer-events-none">
+              {video?.thumbnail_url ? (
+                <img 
+                  src={video.thumbnail_url} 
+                  alt=""
+                  className="w-full h-full object-cover opacity-50"
+                />
+              ) : (
+                <div className="w-full h-full bg-zinc-800" />
+              )}
+              <div className="absolute inset-0 bg-black/20 animate-pulse" />
+            </div>
+          )}
+          {videoSrc && (
+            <video
+              ref={videoRef}
+              key={videoSrc}
+              className={`w-full h-full ${videoLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500`}
+              controls={hasStarted && videoLoaded}
+              autoPlay={false}
+              poster={video?.thumbnail_url}
+              onLoadedData={() => setVideoLoaded(true)}
+              onLoadedMetadata={(e) => {
+                const d = e.currentTarget.duration;
+                if (d && !Number.isNaN(d)) setDuration(d);
+                else if (resolvedDuration > 0) setDuration(resolvedDuration);
+              }}
+              onTimeUpdate={(e) => {
+                const t = e.currentTarget.currentTime;
+                setCurrentTime(t);
+                const effectiveDuration = duration > 0 ? duration : resolvedDuration;
+                if (videoId && effectiveDuration > 0) {
+                  persistProgress(videoId, t, effectiveDuration);
+                }
+              }}
+            >
+              <source src={videoSrc} type="video/mp4" />
+            </video>
+          )}
         </div>
 
-        <div className="flex flex-col gap-4 mb-6 px-4 sm:px-0">
-          <div className="flex flex-col gap-2">
-            <h1 className="text-[19px] font-black leading-tight tracking-tight uppercase">
+        {/* Video Info Section */}
+        <div className="px-4 lg:px-0">
+          {video ? (
+            <h1 className="text-xl lg:text-2xl font-bold leading-tight mb-2 text-white tracking-tight">
               {videoTitle}
             </h1>
-            <div className="flex items-center gap-2 text-[13px] text-gray-400 font-bold mb-1">
-              <span>{videoViews}</span>
-              <span className="opacity-30">•</span>
-              <span>{videoDate}</span>
-              <span className="text-gray-200 ml-1">...more</span>
-            </div>
-          </div>
+          ) : (
+            <div className="h-7 w-3/4 bg-zinc-800 rounded-lg animate-pulse mb-3" />
+          )}
 
           <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Link href={`/channel/${video?.channel_id || 'techmaster'}`} className="flex-shrink-0">
-                  <img
-                    src={channelAvatar}
-                    alt={channelName}
-                    className="w-10 h-10 rounded-full border border-white/5 shadow-md object-cover"
-                  />
-                </Link>
-                <div className="flex flex-col">
-                  <h3 className="font-black text-[15px] leading-tight flex items-center gap-1 uppercase tracking-tighter">
-                    {channelName}
-                    <svg className="w-3.5 h-3.5 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-                  </h3>
-                  <p className="text-[12.5px] text-gray-400 font-bold">0 subs</p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-2">
+              {/* Channel Info & Subscribe */}
+              <div className="flex items-center justify-between sm:justify-start gap-4">
+                <div className="flex items-center gap-3">
+                  <Link href={`/channel/${video?.channel_id || '#'}`} className="flex-shrink-0">
+                    {channelAvatar ? (
+                      <img
+                        src={channelAvatar}
+                        alt={channelName}
+                        className="w-10 h-10 rounded-full object-cover border border-white/5"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-zinc-800 border border-white/5 animate-pulse" />
+                    )}
+                  </Link>
+                  <div className="flex flex-col min-w-0">
+                    {video ? (
+                      <>
+                        <h3 className="font-bold text-[16px] leading-tight truncate flex items-center gap-1">
+                          {channelName}
+                          <svg className="w-3.5 h-3.5 text-zinc-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                        </h3>
+                        <p className="text-[12px] text-zinc-400 font-medium">1.2M subscribers</p>
+                      </>
+                    ) : (
+                      <>
+                        <div className="h-4 w-24 bg-zinc-800 rounded animate-pulse mb-1" />
+                        <div className="h-3 w-16 bg-zinc-800 rounded animate-pulse" />
+                      </>
+                    )}
+                  </div>
                 </div>
+                {video && (
+                  <SubscribeButton
+                    channelId={video?.channel_id || ''}
+                    channelName={channelName}
+                    profileId={activeProfileId}
+                    showCount={false}
+                  />
+                )}
               </div>
-              <SubscribeButton
-                channelId={video?.channel_id || ''}
-                channelName={channelName}
+
+              {/* Engagement Actions */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                <div className="flex items-center bg-white/10 rounded-full h-9 flex-shrink-0 border border-white/5">
+                  <button
+                    onClick={handleLike}
+                    disabled={!video}
+                    className={`flex items-center gap-2 px-4 py-1.5 hover:bg-white/10 transition-colors rounded-l-full border-r border-white/10 ${isLiked ? 'text-white' : 'text-zinc-200'} ${!video ? 'opacity-50' : ''}`}
+                  >
+                    <svg className="w-5 h-5" fill={isLiked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" /></svg>
+                    <span className="text-sm font-bold">{video ? likes.toLocaleString() : "..."}</span>
+                  </button>
+                  <button
+                    onClick={handleDislike}
+                    disabled={!video}
+                    className={`flex items-center px-4 py-1.5 hover:bg-white/10 transition-colors rounded-r-full ${isDisliked ? 'text-white' : 'text-zinc-200'} ${!video ? 'opacity-50' : ''}`}
+                  >
+                    <svg className="w-5 h-5 rotate-180" fill={isDisliked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" /></svg>
+                  </button>
+                </div>
+
+                <button disabled={!video} className={`flex items-center gap-2 h-9 px-4 bg-white/10 hover:bg-white/20 rounded-full transition-colors flex-shrink-0 text-white border border-white/5 ${!video ? 'opacity-50' : ''}`}>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" /></svg>
+                  <span className="text-sm font-bold">Share</span>
+                </button>
+
+                <button
+                  onClick={() => setIsSaveOpen(true)}
+                  disabled={!video}
+                  className={`flex items-center gap-2 h-9 px-4 rounded-full transition-colors flex-shrink-0 border border-white/5 font-bold text-sm ${!video ? 'opacity-50' : isSavedAnywhere ? 'bg-white text-black' : 'bg-white/10 hover:bg-white/20 text-white'}`}
+                >
+                  <svg className="w-5 h-5" fill={isSavedAnywhere ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                  <span>{isSavedAnywhere ? 'Saved' : 'Save'}</span>
+                </button>
+                
+                <button disabled={!video} className={`p-2 h-9 w-9 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full transition-colors text-white border border-white/5 flex-shrink-0 ${!video ? 'opacity-50' : ''}`}>
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" /></svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Description Box */}
+            <div className="bg-white/5 hover:bg-white/10 rounded-xl p-3 transition-colors cursor-pointer group mb-6 min-h-[100px]">
+              {video ? (
+                <>
+                  <div className="flex items-center gap-3 text-[14px] font-bold mb-1 text-white">
+                    <span>{videoViews}</span>
+                    <span>{videoDate}</span>
+                  </div>
+                  <p className="text-[14px] text-zinc-200 leading-relaxed whitespace-pre-wrap line-clamp-2 group-hover:line-clamp-none transition-all">
+                    {videoDescription}
+                  </p>
+                  <button className="text-[14px] font-bold text-zinc-400 mt-2">...more</button>
+                </>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <div className="h-4 w-32 bg-zinc-800 rounded animate-pulse" />
+                  <div className="h-4 w-full bg-zinc-800 rounded animate-pulse" />
+                  <div className="h-4 w-2/3 bg-zinc-800 rounded animate-pulse" />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Comments Section */}
+          <div className="pb-8">
+            {video ? (
+              <Comments
+                videoId={watchId}
                 profileId={activeProfileId}
-                showCount={true}
+                profileName={activeProfileName}
+                profileAvatar={activeProfileAvatar}
               />
-            </div>
-
-            {/* Engagement - Like and Save only */}
-            <div className="flex items-center gap-2 flex-wrap">
-              {/* Like/Dislike Pill */}
-              <div className="flex items-center bg-white/10 backdrop-blur-xl rounded-full border border-white/5 h-9">
-                <button
-                  onClick={handleLike}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-l-full hover:bg-white/10 transition-all active:scale-95 ${isLiked ? 'text-blue-400' : 'text-white'}`}
-                >
-                  <svg className="w-5 h-5" fill={isLiked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" /></svg>
-                  <span className="font-semibold text-sm">{likes.toLocaleString()}</span>
-                </button>
-                <div className="w-px h-5 bg-white/20" />
-                <button
-                  onClick={handleDislike}
-                  className={`flex items-center px-3 py-1.5 rounded-r-full hover:bg-white/10 transition-all active:scale-95 ${isDisliked ? 'text-blue-400' : 'text-white'}`}
-                >
-                  <svg className="w-5 h-5 rotate-180" fill={isDisliked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" /></svg>
-                </button>
-              </div>
-
-              {/* Save Button */}
-              <button
-                onClick={() => setIsSaveOpen(true)}
-                className={`flex items-center gap-1.5 h-9 px-4 rounded-full transition-all active:scale-95 border border-white/5 font-semibold text-sm ${isSavedAnywhere
-                  ? 'bg-white text-black'
-                  : 'bg-white/10 hover:bg-white/15 text-white'
-                  }`}
-              >
-                <svg className="w-5 h-5" fill={isSavedAnywhere ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" /></svg>
-                <span>{isSavedAnywhere ? 'Saved' : 'Save'}</span>
-              </button>
-            </div>
+            ) : (
+              <div className="h-[200px] w-full bg-zinc-900/50 rounded-xl" />
+            )}
           </div>
-        </div>
-
-        <div className="bg-gray-800 rounded-xl p-4 mt-4">
-          <div className="flex items-center gap-2 text-[13px] text-gray-300 font-bold mb-3">
-            <span>{videoViews}</span>
-            <span className="opacity-30">•</span>
-            <span>{videoDate}</span>
-          </div>
-          <p className="text-[14px] text-gray-200 leading-relaxed whitespace-pre-wrap">
-            {videoDescription}
-          </p>
-        </div>
-
-        {/* Comments Section */}
-        <div className="px-4 sm:px-0 mt-6">
-          <Comments
-            videoId={watchId}
-            profileId={activeProfileId}
-            profileName={activeProfileName}
-            profileAvatar={activeProfileAvatar}
-          />
         </div>
       </div>
 
       {/* Related Videos Sidebar */}
-      <div className="lg:w-96 px-4 sm:px-0">
+      <div className="lg:w-96 flex flex-col gap-3 px-4 lg:px-0">
         <RelatedVideos
           videoId={watchId}
           category={video?.category}
           channelId={video?.channel_id}
         />
       </div>
-
       {isSaveOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-          <div className="bg-[#1f1f1f] w-full max-w-sm rounded-3xl border border-white/10 shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+          <div className="bg-[#1f1f1f] w-full max-w-sm rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
               <h3 className="text-white font-semibold text-lg">Save to...</h3>
               <button
                 onClick={() => setIsSaveOpen(false)}
-                className="text-white/70 hover:text-white p-2 rounded-full hover:bg-white/10"
+                className="text-white/70 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors"
               >
-                ✕
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
 
-            <div className="border-t border-white/10">
-              <div className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition">
-                <div className="w-12 h-7 rounded-md overflow-hidden bg-zinc-800 flex-shrink-0">
+            {/* Content */}
+            <div className="max-h-[60vh] overflow-y-auto">
+              {/* Watch Later */}
+              <div className="flex items-center gap-3 px-5 py-3 hover:bg-white/5 transition-colors cursor-pointer group">
+                <div className="w-16 h-10 rounded-md overflow-hidden bg-zinc-800 flex-shrink-0">
                   <img
                     src={video?.thumbnail_url || '/logo.png'}
                     alt="thumb"
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <div className="flex-1">
-                  <div className="text-white text-sm font-semibold">{watchLaterSaved ? 'Saved' : 'Watch later'}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-white text-sm font-medium truncate">Watch later</div>
                   <div className="text-xs text-white/50">Private</div>
                 </div>
                 <button
                   onClick={toggleWatchLater}
                   disabled={isSavingAction}
-                  className="p-2 rounded-full hover:bg-white/10 text-white"
+                  className="p-2 rounded-full hover:bg-white/10 text-white transition-colors"
                   title={watchLaterSaved ? 'Remove from Watch later' : 'Save to Watch later'}
                 >
-                  <svg className="w-5 h-5" fill={watchLaterSaved ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2.4} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" /></svg>
+                  <svg 
+                    className="w-5 h-5" 
+                    fill={watchLaterSaved ? 'currentColor' : 'none'} 
+                    stroke="currentColor" 
+                    strokeWidth={watchLaterSaved ? 0 : 2} 
+                    viewBox="0 0 24 24"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" 
+                    />
+                  </svg>
                 </button>
               </div>
 
-              <div className="px-4 py-2 text-xs uppercase tracking-[0.2em] text-white/50 font-bold">Playlists</div>
-              <div className="max-h-[40vh] overflow-y-auto">
-                {saveError && <div className="text-sm text-red-400 px-4 pb-2">{saveError}</div>}
-                {saveLoading ? (
-                  <div className="text-sm text-white/70 px-4 pb-2">Loading...</div>
-                ) : (
-                  <>
-                    {playlists.length === 0 && (
-                      <div className="text-sm text-white/60 px-4 pb-2">No playlists yet.</div>
-                    )}
-                    {playlists.map((p) => (
-                      <div
-                        key={p.id}
-                        className="flex items-center gap-3 px-4 py-2 hover:bg-white/5 transition"
-                      >
-                        <div className="w-10 h-10 rounded-md bg-white/10 flex items-center justify-center text-white/60 text-xs font-bold">
-                          PL
-                        </div>
-                        <div className="flex-1">
-                          <div className="text-white text-sm font-semibold">{p.name}</div>
-                          <div className="text-xs text-white/50">Private</div>
-                        </div>
-                        <button
-                          onClick={() => togglePlaylist(p.id, p.hasVideo)}
-                          disabled={isSavingAction}
-                          className="p-2 rounded-full hover:bg-white/10 text-white"
-                          title={p.hasVideo ? 'Remove from playlist' : 'Save to playlist'}
-                        >
-                          {p.hasVideo ? '✔' : '+'}
-                        </button>
-                      </div>
-                    ))}
-                  </>
-                )}
+              {/* Divider */}
+              <div className="h-px bg-white/10 mx-5 my-2" />
+
+              {/* Playlists Header */}
+              <div className="px-5 py-2 text-xs text-white/40 font-medium uppercase tracking-wider">
+                Your Playlists
               </div>
 
-              <div className="px-4 py-3 border-t border-white/10">
-                <div className="flex items-center gap-2 bg-white/5 rounded-full px-3 py-2.5">
-                  <input
-                    value={newPlaylistName}
-                    onChange={(e) => setNewPlaylistName(e.target.value)}
-                    placeholder="New playlist"
-                    className="flex-1 bg-transparent text-white text-sm focus:outline-none"
-                  />
-                  <button
-                    onClick={createPlaylist}
-                    disabled={!newPlaylistName.trim() || isSavingAction}
-                    className="text-white font-semibold disabled:opacity-50"
+              {/* Playlists */}
+              {saveLoading ? (
+                <div className="px-5 py-3 text-sm text-white/60">Loading playlists...</div>
+              ) : playlists.length === 0 ? (
+                <div className="px-5 py-3 text-sm text-white/60">No playlists yet.</div>
+              ) : (
+                playlists.map((p) => (
+                  <div
+                    key={p.id}
+                    className="flex items-center gap-3 px-5 py-3 hover:bg-white/5 transition-colors cursor-pointer group"
                   >
-                    + New
-                  </button>
+                    <div className="w-16 h-10 rounded-md bg-zinc-800 flex items-center justify-center text-white/40 text-xs font-bold flex-shrink-0 overflow-hidden">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 10h16M4 14h16M4 18h12" />
+                      </svg>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-white text-sm font-medium truncate">{p.name}</div>
+                      <div className="text-xs text-white/50">{('isPrivate' in p && p.isPrivate) || !('isPrivate' in p) ? 'Private' : 'Public'}</div>
+                    </div>
+                    <button
+                      onClick={() => togglePlaylist(p.id, p.hasVideo)}
+                      disabled={isSavingAction}
+                      className="p-2 rounded-full hover:bg-white/10 text-white transition-colors"
+                      title={p.hasVideo ? 'Remove from playlist' : 'Save to playlist'}
+                    >
+                      <svg 
+                        className="w-5 h-5" 
+                        fill={p.hasVideo ? 'currentColor' : 'none'} 
+                        stroke="currentColor" 
+                        strokeWidth={p.hasVideo ? 0 : 2} 
+                        viewBox="0 0 24 24"
+                      >
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" 
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                ))
+              )}
+
+              {saveError && (
+                <div className="px-5 py-2 text-sm text-red-400">{saveError}</div>
+              )}
+            </div>
+
+            {/* New Playlist Button */}
+            <div className="px-4 py-3 border-t border-white/10">
+              {!isCreatingPlaylist ? (
+                <button
+                  onClick={() => setIsCreatingPlaylist(true)}
+                  className="flex items-center gap-2 w-full px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-white text-sm font-medium transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  New playlist
+                </button>
+              ) : (
+                <div className="space-y-3">
+                  {/* Playlist Name Input */}
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={newPlaylistName}
+                      onChange={(e) => setNewPlaylistName(e.target.value)}
+                      placeholder="Enter playlist name"
+                      className="w-full bg-zinc-800 text-white text-sm px-3 py-2.5 rounded-lg border border-zinc-700 focus:border-blue-500 focus:outline-none"
+                      autoFocus
+                    />
+                    {newPlaylistName && (
+                      <button
+                        onClick={() => setNewPlaylistName('')}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Visibility Toggle */}
+                  <div className="flex items-center gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="visibility"
+                        checked={newPlaylistVisibility === 'private'}
+                        onChange={() => setNewPlaylistVisibility('private')}
+                        className="w-4 h-4 accent-blue-500"
+                      />
+                      <span className="text-sm text-white">Private</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="visibility"
+                        checked={newPlaylistVisibility === 'public'}
+                        onChange={() => setNewPlaylistVisibility('public')}
+                        className="w-4 h-4 accent-blue-500"
+                      />
+                      <span className="text-sm text-white">Public</span>
+                    </label>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex items-center gap-2 pt-2">
+                    <button
+                      onClick={() => {
+                        setIsCreatingPlaylist(false);
+                        setNewPlaylistName('');
+                        setNewPlaylistVisibility('private');
+                      }}
+                      className="flex-1 px-4 py-2 text-sm font-medium text-zinc-400 hover:text-white transition-colors rounded-lg"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={createPlaylist}
+                      disabled={!newPlaylistName.trim()}
+                      className="flex-1 px-4 py-2 bg-white text-black text-sm font-semibold rounded-lg disabled:opacity-50 transition-colors"
+                    >
+                      Create
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>

@@ -142,7 +142,7 @@ export default function LayoutShell({ children, activeProfile }: LayoutShellProp
   const sidebarWidth = isSidebarCollapsed ? (typeof window !== 'undefined' && window.innerWidth < 768 ? '0px' : '80px') : '256px';
   const mobileSidebarWidth = '0px';
 
-  const isAuthPage = pathname === '/signin' || pathname === '/set-account' || pathname === '/select-profile' || pathname === '/privacy' || pathname === '/terms' || pathname === '/help';
+  const isAuthPage = pathname === '/signin' || pathname === '/set-account' || pathname === '/select-profile';
 
   if (!isOnline) {
     return (
@@ -206,7 +206,7 @@ export default function LayoutShell({ children, activeProfile }: LayoutShellProp
         <Sidebar isCollapsed={isSidebarCollapsed} isSignedIn={isSignedIn} activeProfile={activeProfile} />
 
         <main
-          className={`flex-1 min-w-0 main-content-area transition-all duration-300 ${isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'
+          className={`flex-1 min-w-0 transition-all duration-300 ${isStylesPage ? 'h-screen overflow-hidden' : 'main-content-area'} ${isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'
             }`}
         >
           {children}
