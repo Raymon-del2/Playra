@@ -152,18 +152,6 @@ export default function ChannelContent() {
             }
 
             // 2. Save to Database
-            const contentTypeMap: Record<string, string> = {
-                'Videos': 'video',
-                'Styles': 'style',
-                'Live': 'live',
-                'Posts': 'post',
-                'Music': 'music',
-                'Podcasts': 'podcast',
-                'Promotions': 'promotion',
-                'Collaborations': 'collaboration',
-                'Playlists': 'playlist'
-            };
-
             await uploadVideo({
                 title: videoTitle,
                 description: videoDescription,
@@ -176,8 +164,7 @@ export default function ChannelContent() {
                 is_live: activeTab === 'Live',
                 is_short: activeTab === 'Styles',
                 is_post: activeTab === 'Posts',
-                category: activeTab === 'Music' ? 'music' : selectedCategory,
-                content_type: contentTypeMap[activeTab] || 'video'
+                category: activeTab === 'Music' ? 'music' : selectedCategory
             });
 
             setUploadProgress(100);
