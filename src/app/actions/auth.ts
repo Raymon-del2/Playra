@@ -28,17 +28,27 @@ export async function syncUserToDb(userData: {
             args: [id, email, username || null, account_type]
         });
 
-        // Also create a default channel for the user if they don't have one
-        const channelId = `ch_${id}`;
-        const channelName = username || email.split('@')[0];
-
-        await turso.execute({
-            sql: `
-                INSERT OR REPLACE INTO channels (id, user_id, name, account_type)
-                VALUES (?, ?, ?, 'general')
-            `,
-            args: [channelId, id, channelName]
+        // Only create a default channel if the user doesn't have any profiles
+        const existingChannels = await turso.execute({
+            sql: "SELECT COUNT(*) as count FROM channels WHERE user_id = ?",
+            args: [id]
         });
+        
+        const hasProfiles = (existingChannels.rows[0]?.count as number || 0) > 0;
+        
+        if (!hasProfiles) {
+            // User has no profiles, create a default one
+            const channelId = `ch_${id}`;
+            const channelName = username || email.split('@')[0];
+
+            await turso.execute({
+                sql: `
+                    INSERT INTO channels (id, user_id, name, account_type)
+                    VALUES (?, ?, ?, 'general')
+                `,
+                args: [channelId, id, channelName]
+            });
+        }
 
         return { success: true };
     } catch (error) {

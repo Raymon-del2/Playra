@@ -35,7 +35,8 @@ export default function CreateStylePage() {
     const [customThumbnail, setCustomThumbnail] = useState<File | null>(null);
     const [customThumbnailUrl, setCustomThumbnailUrl] = useState<string | null>(null);
     const thumbnailInputRef = useRef<HTMLInputElement>(null);
-    const [isPublishingSuccess, setIsPublishingSuccess] = useState(false);
+    const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'posted' | 'error'>('idle');
+    const [uploadError, setUploadError] = useState<string | null>(null);
 
     const handleThumbnailSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -126,6 +127,7 @@ export default function CreateStylePage() {
         currentTime,
         duration,
         isPlaying,
+        mergedBlobUrl,
         setVideoRef: setEditorVideoRef,
         addAudioLayer,
         removeAudioLayer,
@@ -181,8 +183,17 @@ export default function CreateStylePage() {
     const handlePublish = async () => {
         if (!finalizedBlob || !activeProfile || !title.trim()) return;
 
+        // Optimistic UI - show posted immediately
+        setUploadStatus('posted');
+        
+        // Navigate to studio content immediately (optimistic)
+        setTimeout(() => {
+            router.push('/studio/content?type=short');
+        }, 1500);
+
+        // Upload in background
         try {
-            setIsUploading(true);
+            setUploadStatus('uploading');
 
             // 1. Upload Video
             const videoFileName = `${activeProfile.id}/${Date.now()}_style.webm`;
@@ -228,17 +239,26 @@ export default function CreateStylePage() {
                 category: 'general',
             });
 
-            // Redirect to Studio Content
-            // router.push('/studio/content?type=short');
-            setIsPublishingSuccess(true);
-            setTimeout(() => {
-                router.push('/studio/content?type=short');
-            }, 2500);
+            console.log('Style uploaded successfully!');
+            setUploadStatus('posted');
 
-        } catch (err) {
-            console.error('Failed to upload style:', err);
-            alert('Failed to upload. Please try again.');
-            setIsUploading(false);
+        } catch (err: any) {
+            // Better error logging
+            const errorDetails = {
+                message: err?.message || 'Unknown error',
+                name: err?.name,
+                code: err?.code,
+                stack: err?.stack,
+                response: err?.response?.data,
+                fullError: err,
+            };
+            console.error('Failed to upload style:', JSON.stringify(errorDetails, null, 2));
+            
+            setUploadStatus('error');
+            setUploadError(errorDetails.message);
+            
+            // Show error toast/alert but don't block the user since we already navigated
+            // The user will see their video in studio once refresh
         }
     };
 
@@ -317,15 +337,32 @@ export default function CreateStylePage() {
     if (mode === 'details') {
         return (
             <div className="fixed inset-0 bg-black flex flex-col z-50">
-                {isPublishingSuccess && (
+                {uploadStatus === 'posted' && (
                     <div className="absolute inset-0 z-[60] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in duration-300">
                         <div className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mb-6 shadow-[0_0_40px_rgba(34,197,94,0.3)] animate-in zoom-in duration-500">
                             <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                             </svg>
                         </div>
-                        <h2 className="text-3xl font-bold text-white mb-2">Thanks for uploading!</h2>
-                        <p className="text-zinc-400 text-lg">Your video will be out in a sec...</p>
+                        <h2 className="text-3xl font-bold text-white mb-2">Posted!</h2>
+                        <p className="text-zinc-400 text-lg">Your video is uploading in the background...</p>
+                    </div>
+                )}
+                {uploadStatus === 'error' && (
+                    <div className="absolute inset-0 z-[60] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in duration-300">
+                        <div className="w-24 h-24 bg-red-500/20 rounded-full flex items-center justify-center mb-6">
+                            <svg className="w-12 h-12 text-red-500" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </div>
+                        <h2 className="text-2xl font-bold text-white mb-2">Upload Failed</h2>
+                        <p className="text-zinc-400 text-sm mb-4 max-w-xs text-center">{uploadError || 'Something went wrong'}</p>
+                        <button 
+                            onClick={() => setUploadStatus('idle')}
+                            className="px-6 py-3 bg-blue-600 rounded-full text-white font-semibold"
+                        >
+                            Try Again
+                        </button>
                     </div>
                 )}
                 <div className="flex items-center justify-between p-4 border-b border-white/10">
@@ -406,14 +443,21 @@ export default function CreateStylePage() {
                 <div className="mt-auto p-6 border-t border-white/10 shrink-0">
                     <button
                         onClick={handlePublish}
-                        disabled={isUploading || !title.trim()}
-                        className={`w-full py-4 rounded-full font-bold text-lg flex items-center justify-center gap-2 ${isUploading || !title.trim() ? 'bg-zinc-800 text-zinc-500' : 'bg-blue-600 text-white hover:bg-blue-500'
+                        disabled={uploadStatus !== 'idle' || !title.trim()}
+                        className={`w-full py-4 rounded-full font-bold text-lg flex items-center justify-center gap-2 ${uploadStatus !== 'idle' || !title.trim() ? 'bg-zinc-800 text-zinc-500' : 'bg-blue-600 text-white hover:bg-blue-500'
                             }`}
                     >
-                        {isUploading ? (
+                        {uploadStatus === 'uploading' ? (
                             <>
                                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                                 <span>Uploading...</span>
+                            </>
+                        ) : uploadStatus === 'posted' ? (
+                            <>
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span>Posted!</span>
                             </>
                         ) : (
                             'Post Style'
@@ -459,11 +503,11 @@ export default function CreateStylePage() {
                     onPointerUp={handlePreviewPointerUp}
                     onPointerLeave={handlePreviewPointerUp}
                 >
-                    {previewUrl ? (
+                    {mergedBlobUrl ? (
                         <>
                             <video
                                 ref={setEditorVideoRef}
-                                // src managed by useStyleEditor hook for multi-segment playback
+                                src={mergedBlobUrl}
                                 className="max-h-full max-w-full object-contain"
                                 style={{ filter: getEffectFilter() }}
                                 playsInline
@@ -687,7 +731,13 @@ export default function CreateStylePage() {
             {/* Top Controls */}
             <div className="absolute top-4 left-0 right-0 z-20 flex items-center justify-between px-4 bg-gradient-to-b from-black/40 to-transparent pt-4">
                 <button
-                    onClick={() => router.back()}
+                    onClick={() => {
+                        // Stop camera before navigating away
+                        if (stream) {
+                            stream.getTracks().forEach(track => track.stop());
+                        }
+                        router.back();
+                    }}
                     className="p-2 rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors"
                 >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">

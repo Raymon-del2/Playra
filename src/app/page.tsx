@@ -80,7 +80,7 @@ function VideoCard({
       onMouseLeave={() => onHoverEnd(video.id)}
     >
       <Link href={video.is_short ? `/styles/${video.id}` : `/watch/${video.id}`} className="relative block w-full mb-3">
-        <div className={`relative w-full overflow-hidden rounded-xl bg-zinc-900 ${video.is_short ? 'aspect-[9/16]' : 'aspect-video'} shadow-md group-hover:rounded-none transition-all duration-300`}>
+        <div className={`relative w-full overflow-hidden rounded-xl bg-zinc-900 ${video.is_short ? 'aspect-[9/16]' : 'aspect-video'} shadow-md transition-all duration-300`}>
           <img
             src={video.thumbnail_url}
             alt={video.title}
@@ -154,6 +154,16 @@ function VideoCard({
               <img src="/styles-icon.svg?v=white" className="w-5 h-5 drop-shadow-md" alt="" />
             </div>
           )}
+          {/* Progress Bar */}
+          {isPreviewing && (
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20 z-30">
+              <div 
+                className="h-full bg-red-600 transition-all duration-300"
+                style={{ width: `${(progressSeconds / durationSeconds) * 100}%` }}
+              />
+            </div>
+          )}
+
           {!video.is_short && (
             <div className="absolute bottom-2 right-2 bg-black/80 text-white text-[12px] font-bold px-1.5 py-0.5 rounded-md z-20">
               {computedDuration || video.duration || '0:00'}
@@ -164,7 +174,7 @@ function VideoCard({
 
       <div className="flex gap-3 px-2 sm:px-0">
         <Link href={`/channel/${video.channel_id}`} className="flex-shrink-0">
-          <div className="w-10 h-10 rounded-full bg-zinc-800 overflow-hidden border border-white/5">
+          <div className="w-9 h-9 rounded-full bg-zinc-800 overflow-hidden">
             <img
               src={video.channel_avatar || '/default-avatar.png'}
               alt={video.channel_name}
@@ -175,23 +185,21 @@ function VideoCard({
 
         <div className="flex flex-1 flex-col min-w-0">
           <Link href={video.is_short ? `/styles/${video.id}` : `/watch/${video.id}`}>
-            <h3 className="font-bold text-white text-[16px] leading-tight line-clamp-2 mb-1 tracking-tight">
+            <h3 className="font-semibold text-white text-[15px] leading-snug line-clamp-2 mb-1">
               {video.title}
             </h3>
           </Link>
-          <div className="flex flex-col text-[14px] text-[#aaaaaa] font-medium leading-tight">
-            <Link href={`/channel/${video.channel_id}`} className="hover:text-white transition-colors">
-              {video.channel_name}
-            </Link>
-            <div className="flex items-center gap-1 mt-0.5">
-              <span>{video.views.toLocaleString()} views</span>
-              <span>•</span>
-              <span suppressHydrationWarning>{formatDistanceToNow(new Date(video.created_at), { addSuffix: true })}</span>
-            </div>
+          <Link href={`/channel/${video.channel_id}`} className="text-[13px] text-[#aaaaaa] hover:text-white transition-colors">
+            {video.channel_name}
+          </Link>
+          <div className="flex items-center gap-1 text-[13px] text-[#aaaaaa]">
+            <span>{video.views.toLocaleString()} views</span>
+            <span>•</span>
+            <span suppressHydrationWarning>{formatDistanceToNow(new Date(video.created_at), { addSuffix: true }).replace(/^about /, '')}</span>
           </div>
         </div>
 
-        <button className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-white/10 text-white opacity-0 group-hover:opacity-100 transition-opacity">
+        <button className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-white/10 text-white opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 -mr-2">
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
           </svg>

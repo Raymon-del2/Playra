@@ -215,7 +215,7 @@ export default function LayoutShell({ children, activeProfile }: LayoutShellProp
 
       <MobileNav
         isSignedIn={isSignedIn}
-        userAvatar={user?.photoURL || ""}
+        userAvatar={activeProfile?.avatar || ""}
       />
 
       <MobileDrawer

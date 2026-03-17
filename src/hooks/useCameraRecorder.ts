@@ -364,20 +364,46 @@ export function useCameraRecorder(options: UseCameraRecorderOptions = {}) {
         return mergedBlob;
     }, [state.segments, onRecordingComplete]);
 
-    // Cleanup on unmount
+    // Cleanup on unmount - more comprehensive
     useEffect(() => {
-        return () => {
+        // Handle page visibility change (user switches tabs)
+        const handleVisibilityChange = () => {
+            if (document.hidden && state.stream) {
+                state.stream.getTracks().forEach(track => track.stop());
+            }
+        };
+
+        // Handle beforeunload (user navigates away)
+        const handleBeforeUnload = () => {
             if (state.stream) {
                 state.stream.getTracks().forEach(track => track.stop());
             }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('beforeunload', handleBeforeUnload);
+
+        return () => {
+            // Cleanup all tracks
+            if (state.stream) {
+                state.stream.getTracks().forEach(track => track.stop());
+            }
+            // Cleanup intervals
             if (progressIntervalRef.current) {
                 clearInterval(progressIntervalRef.current);
             }
             if (timerIntervalRef.current) {
                 clearInterval(timerIntervalRef.current);
             }
+            // Cleanup video element
+            if (videoRef.current) {
+                videoRef.current.srcObject = null;
+            }
+            // Remove listeners
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.removeEventListener('beforeunload', handleBeforeUnload);
         };
-    }, []);
+    }, [state.stream]);
 
     return {
         ...state,

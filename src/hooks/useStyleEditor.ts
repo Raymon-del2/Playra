@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { RecordingSegment } from './useCameraRecorder';
 
 export interface AudioLayer {
@@ -38,8 +38,25 @@ export function useStyleEditor({ segments, initialDuration }: UseStyleEditorOpti
     const calculatedDuration = segments.reduce((acc, s) => acc + s.duration, 0);
     const [duration, setDuration] = useState(initialDuration || calculatedDuration);
 
-    // Playback State
-    const [currentSegmentIndex, setCurrentSegmentIndex] = useState(0);
+    // Merge all segments into a single blob for seamless playback
+    const mergedBlobUrl = useMemo(() => {
+        console.log('useStyleEditor: Creating merged blob from', segments.length, 'segments');
+        if (segments.length === 0) return null;
+        const allBlobs = segments.map(s => s.blob);
+        const mergedBlob = new Blob(allBlobs, { type: 'video/webm' });
+        const url = URL.createObjectURL(mergedBlob);
+        console.log('useStyleEditor: Created merged blob URL:', url, 'size:', mergedBlob.size);
+        return url;
+    }, [segments]);
+
+    // Cleanup merged blob URL on unmount or when segments change
+    useEffect(() => {
+        return () => {
+            if (mergedBlobUrl) {
+                URL.revokeObjectURL(mergedBlobUrl);
+            }
+        };
+    }, [mergedBlobUrl]);
 
     // Use callback ref pattern to handle conditional rendering of video element
     const [videoElement, setVideoElement] = useState<HTMLVideoElement | null>(null);
@@ -51,28 +68,12 @@ export function useStyleEditor({ segments, initialDuration }: UseStyleEditorOpti
         setDuration(initialDuration || calculatedDuration);
     }, [segments, initialDuration, calculatedDuration]);
 
-    // Handle Segment switching
+    // Set merged video source when video element is available
     useEffect(() => {
-        if (segments.length > 0 && videoElement) {
-            const segment = segments[currentSegmentIndex];
-            if (segment) {
-                const url = URL.createObjectURL(segment.blob);
-                videoElement.src = url;
-
-                // If we were playing, auto-play next segment
-                if (isPlaying) {
-                    const playPromise = videoElement.play();
-                    if (playPromise !== undefined) {
-                        playPromise.catch(error => {
-                            if (error.name !== 'AbortError') console.error('Video auto-play error:', error);
-                        });
-                    }
-                }
-
-                return () => URL.revokeObjectURL(url);
-            }
+        if (videoElement && mergedBlobUrl) {
+            videoElement.src = mergedBlobUrl;
         }
-    }, [currentSegmentIndex, segments, videoElement]); // dependency on videoElement is key
+    }, [videoElement, mergedBlobUrl]);
 
     // Initialize audio element for a layer
     const createAudioElement = useCallback((layer: AudioLayer) => {
@@ -168,30 +169,9 @@ export function useStyleEditor({ segments, initialDuration }: UseStyleEditorOpti
     }, [segments]);
 
     const seek = useCallback((time: number) => {
-        const startTimes = getSegmentStartTimes();
-        let segmentIndex = 0;
-        let localTime = 0;
-
-        for (let i = 0; i < startTimes.length; i++) {
-            const start = startTimes[i];
-            const end = start + segments[i].duration;
-            if (time >= start && time < end) {
-                segmentIndex = i;
-                localTime = time - start;
-                break;
-            } else if (i === startTimes.length - 1 && time >= end) {
-                // End of last segment
-                segmentIndex = i;
-                localTime = segments[i].duration;
-            }
-        }
-
-        setCurrentSegmentIndex(segmentIndex);
-
         if (videoElement) {
-            videoElement.currentTime = localTime;
+            videoElement.currentTime = time;
         }
-
         setCurrentTime(time);
 
         // Sync audio
@@ -211,38 +191,26 @@ export function useStyleEditor({ segments, initialDuration }: UseStyleEditorOpti
                 }
             }
         });
+    }, [audioLayers, isPlaying, videoElement]);
 
-    }, [audioLayers, isPlaying, segments, getSegmentStartTimes, currentSegmentIndex, videoElement]);
-
-    // Helpers to handle segment transition (gapless playback attempt)
-    const handleSegmentEnd = useCallback(() => {
-        if (currentSegmentIndex < segments.length - 1) {
-            setCurrentSegmentIndex(prev => prev + 1);
-        } else {
-            setIsPlaying(false);
-            setCurrentTime(0);
-            setCurrentSegmentIndex(0);
-        }
-    }, [currentSegmentIndex, segments.length]);
+    // Handle video ended - just update state, don't reset video position
+    const handleEnded = useCallback(() => {
+        console.log('Video ended, currentTime:', videoElement?.currentTime, 'duration:', videoElement?.duration);
+        setIsPlaying(false);
+    }, [videoElement]);
 
     // Sync Loop (runs on timeupdate from video)
     const handleTimeUpdate = useCallback(() => {
         if (videoElement) {
-            const localTime = videoElement.currentTime;
-
-            // Calculate global time
-            const startTimes = getSegmentStartTimes();
-            const segmentStartTime = startTimes[currentSegmentIndex] || 0;
-            const globalTime = segmentStartTime + localTime;
-
-            setCurrentTime(globalTime);
+            const currentTime = videoElement.currentTime;
+            setCurrentTime(currentTime);
 
             // Audio Sync
             if (isPlaying) {
                 audioElementsRef.current.forEach((audio, id) => {
                     const layer = audioLayers.find(l => l.id === id);
                     if (layer) {
-                        const audioTime = globalTime - layer.startTime;
+                        const audioTime = currentTime - layer.startTime;
                         if (audioTime >= 0 && audioTime < layer.duration) {
                             if (audio.paused) {
                                 audio.currentTime = audioTime;
@@ -259,15 +227,11 @@ export function useStyleEditor({ segments, initialDuration }: UseStyleEditorOpti
                 });
             }
         }
-    }, [audioLayers, isPlaying, currentSegmentIndex, getSegmentStartTimes, videoElement]);
+    }, [audioLayers, isPlaying, videoElement]);
 
     const handleLoadedMetadata = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
         // Just for reference, not setting global duration here anymore
     }, []);
-
-    const handleEnded = useCallback(() => {
-        handleSegmentEnd();
-    }, [handleSegmentEnd]);
 
     return {
         audioLayers,
@@ -276,6 +240,7 @@ export function useStyleEditor({ segments, initialDuration }: UseStyleEditorOpti
         duration,
         isPlaying,
         videoElement,
+        mergedBlobUrl,
         setVideoRef: setVideoElement,
         addAudioLayer,
         removeAudioLayer,

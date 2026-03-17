@@ -128,6 +128,7 @@ export interface Video {
     is_short: boolean;
     is_post?: boolean;
     category?: 'adults' | 'family' | 'kids' | 'advert' | 'general' | 'music';
+    content_type?: 'video' | 'style' | 'post' | 'live' | 'music' | 'podcast' | 'promotion' | 'collaboration' | 'playlist';
 }
 
 // Video upload function

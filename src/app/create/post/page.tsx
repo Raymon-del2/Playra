@@ -182,6 +182,7 @@ export default function CreatePostPage() {
                 is_post: true,
                 duration: '',
                 category: 'general' as const,
+                content_type: 'post' as const,
             };
 
             await uploadVideo(postData);

@@ -327,12 +327,12 @@ export default function SelectProfilePage() {
                 <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleEditFileChange} />
                 <input type="file" ref={editFileInputRef} className="hidden" accept="image/*" onChange={handleEditFileChange} />
 
-                <div className="flex flex-wrap items-start justify-center gap-10 sm:gap-14 w-full">
+                <div className="flex flex-wrap items-start justify-center gap-6 sm:gap-10 md:gap-14 w-full px-2">
                     {profiles.map((profile) => (
-                        <div key={profile.id} className="flex flex-col items-center gap-3 max-w-[140px]">
+                        <div key={profile.id} className="flex flex-col items-center gap-2 sm:gap-3 w-[100px] sm:w-[120px] md:max-w-[140px]">
                             {/* Profile Avatar - No hover effects */}
                             <div
-                                className="w-28 h-28 sm:w-36 sm:h-36 rounded-full p-[3px] bg-zinc-800 cursor-pointer"
+                                className="w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full p-[3px] bg-zinc-800 cursor-pointer flex-shrink-0"
                                 onClick={() => handleSelect(profile.id)}
                             >
                                 <div className="w-full h-full rounded-full overflow-hidden border-4 border-zinc-900 relative">
@@ -370,14 +370,14 @@ export default function SelectProfilePage() {
                     ))}
 
                     {profiles.length < 4 && (
-                        <div className="group flex flex-col items-center gap-5 cursor-pointer" onClick={() => setShowCreate(true)}>
-                            <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-zinc-900/50 border-2 border-dashed border-zinc-700/50 flex items-center justify-center group-hover:border-white/20 group-hover:bg-zinc-800/80 transition-all duration-300">
-                                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <div className="group flex flex-col items-center gap-3 sm:gap-5 cursor-pointer w-[100px] sm:w-[120px] md:w-auto" onClick={() => setShowCreate(true)}>
+                            <div className="w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full bg-zinc-900/50 border-2 border-dashed border-zinc-700/50 flex items-center justify-center group-hover:border-white/20 group-hover:bg-zinc-800/80 transition-all duration-300 flex-shrink-0">
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/5 flex items-center justify-center group-hover:scale-110 transition-transform">
                                     <svg className="w-8 h-8 text-zinc-500 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4.5v15m7.5-7.5h-15" /></svg>
                                 </div>
                             </div>
                             <div className="flex flex-col items-center">
-                                <span className="text-zinc-500 font-bold text-sm sm:text-base tracking-widest uppercase group-hover:text-zinc-300 transition-colors">Add Profile</span>
+                                <span className="text-zinc-500 font-bold text-xs sm:text-sm md:text-base tracking-widest uppercase group-hover:text-zinc-300 transition-colors text-center">Add Profile</span>
                                 <div className="h-5" />
                             </div>
                         </div>

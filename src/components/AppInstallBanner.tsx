@@ -81,13 +81,13 @@ export default function AppInstallBanner() {
     return (
         <div
             suppressHydrationWarning
-            className="fixed z-[99] lg:hidden animate-slide-in-up"
-            style={{ bottom: 'calc(70px + env(safe-area-inset-bottom, 0px))', left: '1rem', right: '1rem' }}
+            className="fixed z-[100] lg:hidden animate-slide-in-up"
+            style={{ bottom: 'calc(90px + env(safe-area-inset-bottom, 0px))', right: '0.5rem', left: 'auto', maxWidth: '300px' }}
         >
             <div className="bg-zinc-900 border border-white/10 rounded-2xl p-4 shadow-2xl">
                 <div className="flex items-start gap-3">
                     {/* App Icon */}
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg">
+                    <div className="w-12 h-12 rounded-xl bg-zinc-800 flex items-center justify-center flex-shrink-0 shadow-lg">
                         <img src="/Playra.png" alt="Playra" className="w-8 h-8" />
                     </div>
 

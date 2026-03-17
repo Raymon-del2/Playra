@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useMemo, use } from 'react';
 import Link from 'next/link';
 import { getVideoById, recordWatch, isHistoryPaused, incrementViews, Video, updateChannelAvatarInVideos } from '@/lib/supabase';
+import { getSubscriberCount } from '@/app/actions/subscription';
 import { formatDistanceToNow } from 'date-fns';
 import { getActiveProfile } from '@/app/actions/profile';
 import { toggleLikeVideo, toggleDislikeVideo, fetchVideoEngagement } from '@/app/actions/engagement';
@@ -14,8 +15,8 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
   const { id: watchId } = use(params);
   const [video, setVideo] = useState<Video | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [likes, setLikes] = useState(12500);
-  const [dislikes, setDislikes] = useState(234);
+  const [likes, setLikes] = useState<number | null>(null);
+  const [dislikes, setDislikes] = useState<number | null>(null);
   const [isLiked, setIsLiked] = useState(false);
   const [isDisliked, setIsDisliked] = useState(false);
   const [duration, setDuration] = useState(0);
@@ -39,6 +40,7 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
   const [thumbnailLoaded, setThumbnailLoaded] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
   const [isAnimatingPlay, setIsAnimatingPlay] = useState(false);
+  const [subscriberCount, setSubscriberCount] = useState<number | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const showToast = (message: string, kind: 'success' | 'error' = 'success') => {
@@ -150,6 +152,17 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
               setLikes(engagement.likes);
               setIsLiked(engagement.userLiked);
               setIsDisliked(engagement.userDisliked);
+            }
+          }
+
+          // Load subscriber count
+          if (merged.channel_id) {
+            try {
+              const count = await getSubscriberCount(merged.channel_id);
+              console.log('Subscriber count for', merged.channel_id, ':', count);
+              setSubscriberCount(count);
+            } catch (err: any) {
+              console.error('Failed to load subscriber count:', err?.message || err);
             }
           }
 
@@ -560,7 +573,7 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                           {channelName}
                           <svg className="w-3.5 h-3.5 text-zinc-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
                         </h3>
-                        <p className="text-[12px] text-zinc-400 font-medium">1.2M subscribers</p>
+                        <p className="text-[12px] text-zinc-400 font-medium">{subscriberCount !== null ? `${subscriberCount.toLocaleString()} subscribers` : '...'}</p>
                       </>
                     ) : (
                       <>
@@ -589,7 +602,7 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                     className={`flex items-center gap-2 px-4 py-1.5 hover:bg-white/10 transition-colors rounded-l-full border-r border-white/10 ${isLiked ? 'text-white' : 'text-zinc-200'} ${!video ? 'opacity-50' : ''}`}
                   >
                     <svg className="w-5 h-5" fill={isLiked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" /></svg>
-                    <span className="text-sm font-bold">{video ? likes.toLocaleString() : "..."}</span>
+                    <span className="text-sm font-bold">{video ? (likes !== null ? likes.toLocaleString() : '--') : "..."}</span>
                   </button>
                   <button
                     onClick={handleDislike}

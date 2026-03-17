@@ -152,11 +152,23 @@ export default function ChannelContent() {
             }
 
             // 2. Save to Database
+            const contentTypeMap: Record<string, string> = {
+                'Videos': 'video',
+                'Styles': 'style',
+                'Live': 'live',
+                'Posts': 'post',
+                'Music': 'music',
+                'Podcasts': 'podcast',
+                'Promotions': 'promotion',
+                'Collaborations': 'collaboration',
+                'Playlists': 'playlist'
+            };
+
             await uploadVideo({
                 title: videoTitle,
                 description: videoDescription,
                 video_url: videoUrl,
-                thumbnail_url: thumbnailUrl || 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=400&h=225&fit=crop', // Placeholder fallback
+                thumbnail_url: thumbnailUrl || 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=400&h=225&fit=crop',
                 channel_id: activeProfile.id,
                 channel_name: activeProfile.name,
                 channel_avatar: activeProfile.avatar || '',
@@ -164,7 +176,8 @@ export default function ChannelContent() {
                 is_live: activeTab === 'Live',
                 is_short: activeTab === 'Styles',
                 is_post: activeTab === 'Posts',
-                category: activeTab === 'Music' ? 'music' : selectedCategory
+                category: activeTab === 'Music' ? 'music' : selectedCategory,
+                content_type: contentTypeMap[activeTab] || 'video'
             });
 
             setUploadProgress(100);

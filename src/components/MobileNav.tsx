@@ -30,15 +30,16 @@ export default function MobileNav({
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3L4 10V21H9V15H15V21H20V10L12 3L4 10Z" /></svg>
             ),
             shorts: (
-                <svg className="w-6 h-6" fill={isActive ? "currentColor" : "none"} stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-                    <path d="M17.65,10.15L12,5l-5.65,5.15V21h11.3V10.15z" />
-                    <path d="M10,13l4,2-4,2V13z" fill="currentColor" />
-                </svg>
+                <img 
+                    src="/styles-icon.svg" 
+                    alt="Style" 
+                    className={`w-6 h-6 ${isActive ? 'opacity-100' : 'opacity-70'}`}
+                />
             ),
-            subscriptions: isActive ? (
-                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 18H14V20H10V18ZM17 18V20H19V18H17ZM5 18V20H7V18H5ZM20 6H4V16H20V6ZM22 4V18H2V4H22Z" /></svg>
-            ) : (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 18H14V20H10V18ZM17 18V20H19V18H17ZM5 18V20H7V18H5ZM20 6H4V16H20V6ZM22 4V18H2V4H22Z" /></svg>
+            subscriptions: (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
             ),
             you: (
                 <div className={`w-7 h-7 rounded-full overflow-hidden border-2 transition-all ${isActive ? 'border-white' : 'border-white/20'}`}>

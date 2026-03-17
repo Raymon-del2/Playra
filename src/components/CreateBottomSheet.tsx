@@ -64,7 +64,7 @@ export default function CreateBottomSheet({ isOpen, onClose }: CreateBottomSheet
             ),
             label: 'Upload a video',
             description: 'Share from your gallery',
-            action: () => handleNavigate('/studio/content'),
+            action: () => handleNavigate('/upload'),
         },
         {
             icon: (
