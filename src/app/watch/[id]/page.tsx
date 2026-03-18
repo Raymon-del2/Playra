@@ -371,7 +371,7 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
     // If already liked, unlike it
     if (isLiked) {
       setIsLiked(false);
-      setLikes(Math.max(0, likes - 1));
+      setLikes(Math.max(0, (likes ?? 0) - 1));
       toggleLikeVideo(videoId, activeProfileId, true).catch(() => {});
       return;
     }
@@ -379,7 +379,7 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
     // Like the video (and remove dislike if present)
     setIsLiked(true);
     setIsDisliked(false); // Always clear dislike when liking
-    setLikes(likes + 1);
+    setLikes((likes ?? 0) + 1);
     
     // Save to DB in background (silent)
     toggleLikeVideo(videoId, activeProfileId, false).catch(() => {});
@@ -402,7 +402,7 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
     setIsDisliked(true);
     if (isLiked) {
       setIsLiked(false); // Always clear like when disliking
-      setLikes(Math.max(0, likes - 1));
+      setLikes(Math.max(0, (likes ?? 0) - 1));
     }
     
     // Save to DB in background (silent)
