@@ -3,12 +3,14 @@ import { NextResponse } from 'next/server';
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
+  
   const { error } = await supabase
     .from('videos')
     .delete()
-    .eq('id', params.id);
+    .eq('id', id);
 
   if (error) {
     console.error('Delete post error:', error);
