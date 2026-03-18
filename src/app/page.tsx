@@ -394,7 +394,7 @@ export default function Home() {
 
   const renderSkeleton = () => (
     <div className="flex flex-col">
-      <div suppressHydrationWarning className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-x-6 gap-y-12 px-6 md:px-10 pt-10">
+      <div suppressHydrationWarning className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 4xl:grid-cols-6 gap-x-6 gap-y-12 px-6 md:px-10 pt-10">
         {Array(8).fill(0).map((_, i) => (
           <div suppressHydrationWarning key={i} className="animate-pulse flex flex-col w-full">
             <div suppressHydrationWarning className="aspect-video bg-zinc-800 rounded-xl mb-3" />
@@ -413,7 +413,7 @@ export default function Home() {
         <StylesShelf styles={[]} isLoading={true} />
       )}
 
-      <div suppressHydrationWarning className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-x-6 gap-y-12 px-6 md:px-10 pt-10">
+      <div suppressHydrationWarning className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 4xl:grid-cols-6 gap-x-6 gap-y-12 px-6 md:px-10 pt-10">
         {Array(8).fill(0).map((_, i) => (
           <div suppressHydrationWarning key={i+8} className="animate-pulse flex flex-col w-full">
             <div suppressHydrationWarning className="aspect-video bg-zinc-800 rounded-xl mb-3" />
@@ -474,7 +474,7 @@ export default function Home() {
             return (
               <div className="pb-20">
                 {/* Initial Grid of Regular Videos */}
-                <div className="relative z-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-x-6 gap-y-12 px-6 md:px-10 pt-4 mt-1">
+                <div className="relative z-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 4xl:grid-cols-6 gap-x-6 gap-y-12 px-6 md:px-10 pt-4 mt-1">
                   {displayVideos.slice(0, 8).map((video) => (
                     <VideoCard
                       key={video.id}
@@ -499,7 +499,7 @@ export default function Home() {
 
                 {/* Remaining Grid of Regular Videos */}
                 {displayVideos.length > 8 && (
-                  <div className="relative z-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-x-6 gap-y-12 px-6 md:px-10 pt-10">
+                  <div className="relative z-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 4xl:grid-cols-6 gap-x-6 gap-y-12 px-6 md:px-10 pt-10">
                     {displayVideos.slice(8).map((video) => (
                       <VideoCard
                         key={video.id}
