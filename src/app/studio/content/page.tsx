@@ -67,13 +67,70 @@ export default function ChannelContent() {
             const profile = await getActiveProfile();
             setActiveProfile(profile);
             if (profile) {
-                fetchVideos(profile.id);
+                await fetchVideos(profile.id);
+                
+                // Check for publish data from /publish page
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('publish') === 'true') {
+                    await handlePublishFlow(profile);
+                }
             } else {
                 setIsLoadingList(false);
             }
         };
         fetchProfileData();
     }, []);
+    
+    // Handle publish flow from /publish page
+    const handlePublishFlow = async (profile: any) => {
+        try {
+            const publishDataStr = sessionStorage.getItem('publishData');
+            if (!publishDataStr) return;
+            
+            const publishData = JSON.parse(publishDataStr);
+            const videoData = (window as any).__tempVideoData;
+            const thumbnail = (window as any).__tempThumbnail || publishData.thumbnail;
+            
+            if (!videoData) {
+                console.error('No video data found');
+                return;
+            }
+            
+            // Convert base64 video to File
+            const videoFile = await base64ToFile(videoData, 'uploaded-video.mp4');
+            
+            // Process the upload
+            setIsUploadModalOpen(true);
+            setUploadStep('details');
+            setSelectedFile(videoFile);
+            setVideoTitle(publishData.title || 'Untitled');
+            setVideoDescription(publishData.description || '');
+            if (thumbnail) {
+                setThumbnailData(thumbnail);
+            }
+            
+            // Clear the publish data
+            sessionStorage.removeItem('publishData');
+            sessionStorage.removeItem('uploadVideo');
+            delete (window as any).__tempVideoData;
+            delete (window as any).__tempThumbnail;
+            
+            // Remove publish param from URL
+            const url = new URL(window.location.href);
+            url.searchParams.delete('publish');
+            window.history.replaceState({}, '', url.toString());
+            
+        } catch (error) {
+            console.error('Error handling publish flow:', error);
+        }
+    };
+    
+    // Helper to convert base64 to File
+    const base64ToFile = async (base64String: string, filename: string): Promise<File> => {
+        const response = await fetch(base64String);
+        const blob = await response.blob();
+        return new File([blob], filename, { type: blob.type || 'video/mp4' });
+    };
 
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
@@ -173,6 +230,10 @@ export default function ChannelContent() {
             if (activeProfile) {
                 fetchVideos(activeProfile.id);
             }
+            // Dispatch event to refresh home page
+            localStorage.setItem('video-updated', Date.now().toString());
+            window.dispatchEvent(new CustomEvent('video-updated'));
+            console.log('Video uploaded, event dispatched');
         } catch (error: any) {
             console.error('Upload failed:', error);
             alert(`Upload failed: ${error.message || 'Unknown error'}. Check that your 'videos' bucket and table exist in Supabase.`);

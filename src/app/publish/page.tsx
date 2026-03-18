@@ -47,12 +47,44 @@ export default function PublishPage() {
         setIsPublishing(true);
         
         // Store publish data for studio content page
-        sessionStorage.setItem('publishData', JSON.stringify({
-            title: title.trim(),
-            description: description.trim(),
-            thumbnail,
-            videoData
-        }));
+        // Note: videoData is passed via URL or stored separately since it's too large for localStorage
+        try {
+            // Only store metadata in sessionStorage (thumbnail + text is usually under quota)
+            const publishData = {
+                title: title.trim(),
+                description: description.trim(),
+                thumbnail,
+                hasVideoData: true // Flag to indicate video exists
+            };
+            
+            const dataString = JSON.stringify(publishData);
+            
+            // Check size before storing (rough estimate: 1 char ≈ 2 bytes in UTF-16)
+            if (dataString.length > 2000000) { // ~4MB limit with buffer
+                throw new Error('Data too large for storage');
+            }
+            
+            sessionStorage.setItem('publishData', dataString);
+            
+            // Store video data separately or pass via state
+            // For large videos, we use a temporary approach - store in a global window var
+            if (typeof window !== 'undefined') {
+                (window as any).__tempVideoData = videoData;
+            }
+        } catch (e) {
+            console.warn('Failed to store in sessionStorage, using fallback:', e);
+            // Fallback: store minimal data and pass video via window object
+            sessionStorage.setItem('publishData', JSON.stringify({
+                title: title.trim(),
+                description: description.trim(),
+                hasVideoData: true,
+                useFallback: true
+            }));
+            if (typeof window !== 'undefined') {
+                (window as any).__tempVideoData = videoData;
+                (window as any).__tempThumbnail = thumbnail;
+            }
+        }
         
         // Navigate to studio content for final processing
         router.push('/studio/content?publish=true');
