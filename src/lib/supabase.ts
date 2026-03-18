@@ -52,16 +52,16 @@ export const supabase = typeof window !== 'undefined'
 
 export async function ensurePostsTables() {
   try {
-    // Create posts storage bucket if it doesn't exist
-    const { error: storageError } = await supabase.storage.getBucket('posts');
-    if (storageError && storageError.statusCode === 404) {
-      // Bucket doesn't exist, create it
-      const { error: createError } = await supabase.storage.createBucket('posts', {
-        public: true,
-        allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg'],
-        fileSizeLimit: 52428800, // 50MB per file
-      });
-      if (createError) throw createError;
+    // Try to create posts storage bucket - ignore error if it already exists
+    const { error: createError } = await supabase.storage.createBucket('posts', {
+      public: true,
+      allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg'],
+      fileSizeLimit: 52428800, // 50MB per file
+    });
+    
+    // Ignore error if bucket already exists
+    if (createError && !createError.message?.includes('already exists')) {
+      console.error('Error creating posts bucket:', createError);
     }
     
     console.log('Posts storage bucket verified');
