@@ -53,7 +53,7 @@ export async function getUserComments(profileId: string): Promise<UserCommentWit
             videoMap.set(v.id, {
                 title: v.title,
                 thumbnail: v.thumbnail_url,
-                channel_name: v.channels?.name || 'Unknown',
+                channel_name: v.channels?.[0]?.name || 'Unknown',
                 is_short: v.is_short || false
             });
         });
