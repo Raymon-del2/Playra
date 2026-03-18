@@ -64,74 +64,10 @@ export async function ensurePostsTables() {
       if (createError) throw createError;
     }
     
-    // Check if videos table has the required columns for posts
-    const { error: tableError } = await supabase
-      .from('videos')
-      .select('id')
-      .limit(1);
-    
-    if (tableError && tableError.details?.message?.includes('column "post_type" does not exist')) {
-      // Add post_type column if it doesn't exist
-      const { error: alterError } = await supabase
-        .from('videos')
-        .alter('table', {
-          addColumn: {
-          name: 'post_type',
-          type: 'text',
-          default: 'text',
-          notNull: true
-          comment: 'Type of post (text, poll, quiz, image)'
-        }})
-        });
-      if (alterError) throw alterError;
-    }
-    
-    // Check if content column exists and is JSONB type
-    const { error: contentError } = await supabase
-      .from('videos')
-      .select('content')
-      .limit(1);
-    
-    if (contentError && contentError.details?.message?.includes('column "content" of type "jsonb" does not exist')) {
-      // Add content column as JSONB if it doesn't exist
-      const { error: alterError } = await supabase
-        .from('videos')
-        .alter('table', {
-          addColumn: {
-            name: 'content',
-            type: 'jsonb',
-            default: '{}',
-            comment: 'JSON data for post content'
-          })
-        });
-      if (alterError) throw alterError;
-    }
-    
-    // Check if visibility column exists
-    const { error: visibilityError } = await supabase
-      .from('videos')
-      .select('visibility')
-      .limit(1);
-    
-    if (visibilityError && visibilityError.details?.message?.includes('column "visibility" does not exist')) {
-      // Add visibility column if it doesn't exist
-      const { error: alterError } = await supabase
-        .from('videos')
-        .alter('table', {
-          addColumn: {
-            name: 'visibility',
-            type: 'text',
-            default: 'public',
-            comment: 'Post visibility (public or members only)'
-          })
-        });
-      if (alterError) throw alterError;
-    }
-    
-    console.log('Posts tables verified');
+    console.log('Posts storage bucket verified');
   } catch (error) {
     console.error('Error ensuring posts tables:', error);
-    throw error;
+    // Don't throw - allow app to continue even if bucket creation fails
   }
 }
 
