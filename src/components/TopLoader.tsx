@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import NProgress from 'nprogress';
 
@@ -14,9 +14,27 @@ NProgress.configure({
 export default function TopLoader() {
     const pathname = usePathname();
     const searchParams = useSearchParams();
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
+        // Clear any existing timeout
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+        }
+        
+        // Stop NProgress immediately when route changes
         NProgress.done();
+        
+        // Safety timeout - ensure progress bar is always removed after 2 seconds
+        timeoutRef.current = setTimeout(() => {
+            NProgress.done();
+        }, 2000);
+        
+        return () => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
+        };
     }, [pathname, searchParams]);
 
     useEffect(() => {
