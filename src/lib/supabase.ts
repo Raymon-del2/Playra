@@ -50,6 +50,13 @@ export const supabase = typeof window !== 'undefined'
   ? getSupabaseClient() 
   : createClient(supabaseUrl, supabaseAnonKey);
 
+function ensureSupabase() {
+  if (!supabase) {
+    throw new Error('Supabase is not configured. Please add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to your .env.local file.');
+  }
+  return supabase;
+}
+
 export async function ensurePostsTables() {
   try {
     // Try to create posts storage bucket - ignore error if it already exists
