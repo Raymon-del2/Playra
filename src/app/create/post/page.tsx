@@ -121,6 +121,12 @@ export default function CreatePostPage() {
         }
     };
 
+    const handleAddQuizAnswer = () => {
+        if (quizAnswers.length < 4) {
+            setQuizAnswers([...quizAnswers, { id: Date.now().toString(), text: '', isCorrect: false }]);
+        }
+    };
+
     const handleSetCorrectAnswer = (id: string) => {
         setQuizAnswers(quizAnswers.map(a => ({ ...a, isCorrect: a.id === id })));
     };
