@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { getActiveProfile } from '@/app/actions/profile';
+import { getPeakViewingTime, getViewTimeDistribution } from '@/app/actions/views';
 import { supabase, type Video } from '@/lib/supabase';
 
 export default function StudioAnalyticsPage() {
@@ -11,17 +12,11 @@ export default function StudioAnalyticsPage() {
   const [activeProfile, setActiveProfile] = useState<any>(null);
   const [contentItems, setContentItems] = useState<Video[]>([]);
   const [isLoadingContent, setIsLoadingContent] = useState(true);
+  const [peakTime, setPeakTime] = useState<string>('Loading...');
+  const [viewDistribution, setViewDistribution] = useState({ morning: 0, afternoon: 0, evening: 0, night: 0 });
 
   // Real stats calculated from actual content
   const totalViews = useMemo(() => contentItems.reduce((sum, item) => sum + (item.views ?? 0), 0), [contentItems]);
-  const totalWatchTime = useMemo(() => {
-    // Estimate watch time: views * average duration (assuming 60% watch rate)
-    return contentItems.reduce((sum, item) => {
-      const views = item.views ?? 0;
-      const duration = item.duration ?? 0;
-      return sum + (views * duration * 0.6 / 3600); // Convert to hours
-    }, 0).toFixed(1);
-  }, [contentItems]);
 
   useEffect(() => {
     const load = async () => {
@@ -29,7 +24,8 @@ export default function StudioAnalyticsPage() {
         const profile = await getActiveProfile();
         setActiveProfile(profile);
 
-        if (profile && supabase) {
+        if (profile) {
+          // Load videos
           const { data, error } = await supabase
             .from('videos')
             .select('*')
@@ -38,6 +34,14 @@ export default function StudioAnalyticsPage() {
 
           if (error) throw error;
           setContentItems(data || []);
+
+          // Load peak viewing time
+          const peak = await getPeakViewingTime(profile.id);
+          setPeakTime(peak);
+
+          // Load view distribution
+          const distribution = await getViewTimeDistribution(profile.id);
+          setViewDistribution(distribution);
         }
       } catch (err) {
         console.error('Error loading analytics content', err);
@@ -75,8 +79,13 @@ export default function StudioAnalyticsPage() {
           <p className="text-2xl sm:text-3xl font-bold">{totalViews.toLocaleString()}</p>
         </div>
         <div className="bg-[#1a1a1a] rounded-xl border border-white/5 p-4 sm:p-6">
-          <p className="text-xs text-zinc-400 mb-1">Watch time (hours)</p>
-          <p className="text-2xl sm:text-3xl font-bold">{totalWatchTime}</p>
+          <p className="text-xs text-zinc-400 mb-1">Peak viewing time</p>
+          <p className="text-2xl sm:text-3xl font-bold">{peakTime}</p>
+          {viewDistribution.morning + viewDistribution.afternoon + viewDistribution.evening + viewDistribution.night > 0 && (
+            <p className="text-xs text-zinc-500 mt-1">
+              M: {viewDistribution.morning} · A: {viewDistribution.afternoon} · E: {viewDistribution.evening} · N: {viewDistribution.night}
+            </p>
+          )}
         </div>
         <div className="bg-[#1a1a1a] rounded-xl border border-white/5 p-4 sm:p-6">
           <p className="text-xs text-zinc-400 mb-1">Total content</p>

@@ -278,15 +278,13 @@ export default function ChannelContent() {
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                         </svg>
                         <span className="hidden sm:inline">
-                            {activeTab === 'Live'
-                                ? 'Coming Soon'
-                                : activeTab === 'Styles'
-                                    ? 'Upload'
-                                    : activeTab === 'Posts'
-                                        ? 'Create'
-                                        : activeTab === 'Music'
-                                            ? 'Upload'
-                                            : 'Create'}
+                            {activeTab === 'Styles'
+                                ? 'Upload'
+                                : activeTab === 'Posts'
+                                    ? 'Create'
+                                    : activeTab === 'Music'
+                                        ? 'Upload'
+                                        : 'Create'}
                         </span>
                     </button>
                     <div className="w-8 h-8 rounded-full overflow-hidden bg-zinc-700 flex-shrink-0">
@@ -550,7 +548,7 @@ export default function ChannelContent() {
                                 </div>
                             </div>
                             <p className="text-zinc-500 text-sm mb-6">
-                                {activeTab === 'Live' ? 'Live streaming is coming soon!' : `No ${activeTab.toLowerCase()} content available`}
+                                {activeTab === 'Live' ? 'No live streams yet' : `No ${activeTab.toLowerCase()} content available`}
                             </p>
                             <button
                                 onClick={() => {
@@ -564,7 +562,7 @@ export default function ChannelContent() {
                                     : 'bg-white text-black hover:bg-zinc-200'
                                     }`}
                             >
-                                {activeTab === 'Live' ? 'Coming Soon' : activeTab === 'Styles' ? 'Upload Styles' : activeTab === 'Posts' ? 'Create Post' : 'Upload videos'}
+                                {activeTab === 'Live' ? 'Start Live Stream' : activeTab === 'Styles' ? 'Upload Styles' : activeTab === 'Posts' ? 'Create Post' : 'Upload videos'}
                             </button>
                         </div>
                     )}

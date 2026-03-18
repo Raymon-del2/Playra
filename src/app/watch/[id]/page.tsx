@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo, use } from 'react';
 import Link from 'next/link';
 import { getVideoById, recordWatch, isHistoryPaused, incrementViews, Video, updateChannelAvatarInVideos } from '@/lib/supabase';
 import { getSubscriberCount } from '@/app/actions/subscription';
+import { trackVideoView } from '@/app/actions/views';
 import { formatDistanceToNow } from 'date-fns';
 import { getActiveProfile } from '@/app/actions/profile';
 import { toggleLikeVideo, toggleDislikeVideo, fetchVideoEngagement } from '@/app/actions/engagement';
@@ -412,6 +413,14 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
   const handleStartPlay = () => {
     if (isAnimatingPlay || hasStarted) return;
     setIsAnimatingPlay(true);
+    
+    // Track the view with timestamp
+    if (videoId && activeProfileId) {
+      trackVideoView(videoId, activeProfileId).catch(() => {});
+    } else if (videoId) {
+      trackVideoView(videoId).catch(() => {});
+    }
+    
     // Complete animation then start video
     setTimeout(() => {
       setHasStarted(true);
