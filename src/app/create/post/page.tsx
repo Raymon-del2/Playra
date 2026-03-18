@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { getActiveProfile } from '@/app/actions/profile';
-import { uploadVideo, uploadThumbnail } from '@/lib/supabase';
+import { uploadPostImages } from '@/lib/post-upload';
 
 type PostMode = 'text' | 'poll' | 'quiz' | 'image';
 
@@ -52,7 +52,9 @@ export default function CreatePostPage() {
     ]);
 
     // Image state
-    const [images, setImages] = useState<string[]>([]);
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+    const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+    const [isUploading, setIsUploading] = useState(false);
 
     // Load auth
     useEffect(() => {
@@ -82,25 +84,29 @@ export default function CreatePostPage() {
     }, [text]);
 
     const handleModeChange = (newMode: PostMode) => {
-        if (newMode !== mode) {
-            // Warn about data loss
-            if (mode === 'poll' && pollOptions.some(o => o.text.trim())) {
-                if (!confirm('Switching modes will clear your poll. Continue?')) return;
-            }
-            if (mode === 'quiz' && (quizQuestion.trim() || quizAnswers.some(a => a.text.trim()))) {
-                if (!confirm('Switching modes will clear your quiz. Continue?')) return;
-            }
-            if (mode === 'image' && images.length > 0) {
-                if (!confirm('Switching modes will clear your images. Continue?')) return;
-            }
-
-            setMode(newMode);
-            // Reset mode-specific state
-            setPollOptions([{ id: '1', text: '' }, { id: '2', text: '' }]);
-            setQuizQuestion('');
-            setQuizAnswers([{ id: '1', text: '', isCorrect: false }, { id: '2', text: '', isCorrect: false }]);
-            setImages([]);
+        setMode(newMode);
+        if (newMode === 'image' && fileInputRef.current) {
+            fileInputRef.current.click();
         }
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            const filesArray = Array.from(e.target.files).slice(0, 5);
+            setSelectedFiles(filesArray);
+            
+            // Generate previews
+            const previews = filesArray.map(file => URL.createObjectURL(file));
+            setImagePreviews(previews);
+        }
+    };
+
+    const handleRemoveImage = (index: number) => {
+        setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+        setImagePreviews(prev => {
+            URL.revokeObjectURL(prev[index]);
+            return prev.filter((_, i) => i !== index);
+        });
     };
 
     const handleAddPollOption = () => {
@@ -121,38 +127,11 @@ export default function CreatePostPage() {
         }
     };
 
-    const handleSetCorrectAnswer = (id: string) => {
-        setQuizAnswers(quizAnswers.map(a => ({ ...a, isCorrect: a.id === id })));
-    };
-
-    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files;
-        if (!files) return;
-
-        const newImages: string[] = [];
-        for (let i = 0; i < Math.min(files.length, 5 - images.length); i++) {
-            const file = files[i];
-            const reader = new FileReader();
-            await new Promise<void>((resolve) => {
-                reader.onload = (ev) => {
-                    newImages.push(ev.target?.result as string);
-                    resolve();
-                };
-                reader.readAsDataURL(file);
-            });
-        }
-        setImages([...images, ...newImages].slice(0, 5));
-    };
-
-    const handleRemoveImage = (index: number) => {
-        setImages(images.filter((_, i) => i !== index));
-    };
-
     const isPostValid = () => {
         if (mode === 'text') return text.trim().length > 0;
         if (mode === 'poll') return pollOptions.filter(o => o.text.trim()).length >= 2;
         if (mode === 'quiz') return quizQuestion.trim() && quizAnswers.filter(a => a.text.trim()).length >= 2 && quizAnswers.some(a => a.isCorrect);
-        if (mode === 'image') return images.length > 0 || text.trim().length > 0;
+        if (mode === 'image') return selectedFiles.length > 0 || text.trim().length > 0;
         return false;
     };
 
@@ -160,38 +139,72 @@ export default function CreatePostPage() {
         if (!isPostValid() || !profile) return;
 
         setIsSubmitting(true);
+        setIsUploading(true);
+        
         try {
-            // Create the post in Supabase as a "video" with is_post: true
-            const postData = {
-                title: text.substring(0, 100) || 'Community Post',
-                description: JSON.stringify({
-                    mode,
-                    text,
-                    pollOptions: mode === 'poll' ? pollOptions : undefined,
-                    quizQuestion: mode === 'quiz' ? quizQuestion : undefined,
-                    quizAnswers: mode === 'quiz' ? quizAnswers : undefined,
-                    images: mode === 'image' ? images : undefined,
-                }),
-                video_url: '',
-                thumbnail_url: images[0] || profile.avatar || '',
-                channel_id: profile.id,
-                channel_name: profile.name,
-                channel_avatar: profile.avatar || '',
-                is_live: false,
-                is_short: false,
-                is_post: true,
-                duration: '',
-                category: 'general' as const,
-                content_type: 'post' as const,
-            };
+            let imageUrls: string[] = [];
 
-            await uploadVideo(postData);
+            // 1. Upload images first if there are any
+            if (selectedFiles.length > 0) {
+                imageUrls = await uploadPostImages(selectedFiles, profile.id);
+            }
+
+            // 2. Prepare content based on mode
+            let content: any = {};
+            
+            switch (mode) {
+                case 'text':
+                    content = { text: text.trim() };
+                    break;
+                case 'poll':
+                    content = {
+                        question: text.trim() || 'Poll',
+                        options: pollOptions.filter(o => o.text.trim()).map(o => o.text.trim()),
+                    };
+                    break;
+                case 'quiz':
+                    const correctIndex = quizAnswers.findIndex(a => a.isCorrect);
+                    content = {
+                        question: quizQuestion.trim(),
+                        options: quizAnswers.filter(a => a.text.trim()).map(a => a.text.trim()),
+                        correct_index: correctIndex,
+                    };
+                    break;
+                case 'image':
+                    content = {
+                        text: text.trim(),
+                        images: imageUrls,
+                    };
+                    break;
+            }
+
+            // 3. Send to API
+            const response = await fetch('/api/posts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    post_type: mode,
+                    visibility: visibility,
+                    content: content,
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to create post');
+            }
+
+            // Clear previews
+            imagePreviews.forEach(url => URL.revokeObjectURL(url));
+            
+            // Redirect to home
             router.push('/');
+            
         } catch (error) {
             console.error('Failed to create post:', error);
             alert('Failed to create post. Please try again.');
         } finally {
             setIsSubmitting(false);
+            setIsUploading(false);
         }
     };
 
@@ -228,16 +241,15 @@ export default function CreatePostPage() {
                             <option value="members">Members</option>
                         </select>
 
-                        {/* Post button */}
                         <button
                             onClick={handleSubmit}
-                            disabled={!isPostValid() || isSubmitting}
-                            className={`px-5 py-2 rounded-full font-bold text-sm transition-all ${isPostValid() && !isSubmitting
+                            disabled={!isPostValid() || isSubmitting || isUploading}
+                            className={`px-5 py-2 rounded-full font-bold text-sm transition-all ${isPostValid() && !isSubmitting && !isUploading
                                     ? 'bg-blue-600 text-white hover:bg-blue-500 active:scale-95'
                                     : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
                                 }`}
                         >
-                            {isSubmitting ? 'Posting...' : 'Post'}
+                            {isUploading ? 'Uploading...' : isSubmitting ? 'Posting...' : 'Post'}
                         </button>
                     </div>
                 </div>
@@ -374,9 +386,9 @@ export default function CreatePostPage() {
                     </div>
                 )}
 
-                {mode === 'image' && images.length > 0 && (
+                {mode === 'image' && imagePreviews.length > 0 && (
                     <div className="mt-6 grid grid-cols-2 gap-2">
-                        {images.map((img, index) => (
+                        {imagePreviews.map((img, index) => (
                             <div key={index} className="relative aspect-square rounded-2xl overflow-hidden bg-zinc-900">
                                 <img src={img} alt="" className="w-full h-full object-cover" />
                                 <button
@@ -389,7 +401,7 @@ export default function CreatePostPage() {
                                 </button>
                             </div>
                         ))}
-                        {images.length < 5 && (
+                        {imagePreviews.length < 5 && (
                             <button
                                 onClick={() => fileInputRef.current?.click()}
                                 className="aspect-square rounded-2xl border-2 border-dashed border-zinc-700 flex items-center justify-center text-zinc-500 hover:border-zinc-500 hover:text-zinc-400 transition-colors"
@@ -458,7 +470,7 @@ export default function CreatePostPage() {
                 accept="image/*"
                 multiple
                 className="hidden"
-                onChange={handleImageUpload}
+                onChange={handleFileChange}
             />
         </div>
     );
