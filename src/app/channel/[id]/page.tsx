@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getActiveProfile } from '@/app/actions/profile';
 import { fetchUserPlaylists } from '@/app/actions/playlists';
+import { getSubscriberCount } from '@/app/actions/subscription';
 import { supabase, Video } from '@/lib/supabase';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -56,6 +57,7 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
   const [showCustomize, setShowCustomize] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
   const [savingBanner, setSavingBanner] = useState(false);
+  const [subscriberCount, setSubscriberCount] = useState(0);
 
 
 
@@ -90,6 +92,15 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
           console.error('Error fetching channel videos', error);
         } else {
           setVideos(data || []);
+        }
+
+        // Fetch subscriber count
+        try {
+          const count = await getSubscriberCount(channelId);
+          console.log('Channel subscriber count:', count);
+          setSubscriberCount(count);
+        } catch (err) {
+          console.error('Error fetching subscriber count:', err);
         }
       } catch (err) {
         console.error(err);
@@ -214,7 +225,7 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
             <div className="flex flex-wrap justify-center sm:justify-start items-center gap-x-2 text-[14px] text-zinc-400 font-medium mb-3">
               <span className="text-white font-bold">{handle}</span>
               <span>•</span>
-              <span>No subscribers</span>
+              <span>{subscriberCount === 1 ? '1 subscriber' : `${subscriberCount} subscribers`}</span>
               <span>•</span>
               <span>{videos.length} videos</span>
             </div>

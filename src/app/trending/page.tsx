@@ -71,6 +71,8 @@ export default function TrendingPage() {
             <div className="relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-red-600/20 via-orange-500/10 to-transparent" />
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-orange-500/20 via-transparent to-transparent" />
+                {/* Bottom fade to blend into content */}
+                <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-gray-900 to-transparent" />
 
                 <div className="relative px-6 py-12 md:py-16">
                     <div className="flex items-center gap-4 mb-6">

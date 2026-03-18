@@ -242,24 +242,24 @@ export default function ChannelContent() {
     return (
         <div className="min-h-screen bg-[#0f0f0f] text-white w-full max-w-full overflow-x-hidden pb-24 lg:pb-0">
             {/* Header / Search Area */}
-            <div className="h-14 border-b border-white/10 flex items-center justify-between px-6 bg-[#0f0f0f] sticky top-0 z-20">
-                <div className="relative">
+            <div className="h-14 border-b border-white/10 flex items-center justify-between px-4 sm:px-6 bg-[#0f0f0f] sticky top-0 z-20 gap-2">
+                <div className="relative flex-1 max-w-[200px] sm:max-w-[400px]">
                     <input
                         type="text"
-                        placeholder="Search across your channel"
-                        className="w-[400px] h-9 bg-[#121212] border border-white/10 rounded-full px-10 text-sm focus:border-white/30 outline-none transition-colors"
+                        placeholder="Search..."
+                        className="w-full h-9 bg-[#121212] border border-white/10 rounded-full px-9 text-sm focus:border-white/30 outline-none transition-colors"
                     />
-                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                 </div>
-                <div className="flex items-center gap-4">
-                    <button className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                <div className="flex items-center gap-1 sm:gap-4 flex-shrink-0">
+                    <button className="p-2 hover:bg-white/10 rounded-full transition-colors hidden sm:block">
                         <svg className="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
                         </svg>
                     </button>
-                    <button className="p-2 hover:bg-white/10 rounded-full transition-colors relative">
+                    <button className="p-2 hover:bg-white/10 rounded-full transition-colors relative hidden sm:block">
                         <svg className="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
                         </svg>
@@ -271,23 +271,25 @@ export default function ChannelContent() {
                             }
                         }}
                         disabled={activeTab === 'Live'}
-                        className={`flex items-center gap-2 px-4 py-1.5 rounded text-sm font-medium transition-colors border border-white/10 ${activeTab === 'Live' ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed' : 'bg-white/10 hover:bg-white/15 text-white'
+                        className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded text-sm font-medium transition-colors border border-white/10 whitespace-nowrap ${activeTab === 'Live' ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed' : 'bg-white/10 hover:bg-white/15 text-white'
                             }`}
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                         </svg>
-                        {activeTab === 'Live'
-                            ? 'Coming Soon'
-                            : activeTab === 'Styles'
-                                ? 'Upload Style'
-                                : activeTab === 'Posts'
-                                    ? 'Create Post'
-                                    : activeTab === 'Music'
-                                        ? 'Upload Music'
-                                        : 'Create'}
+                        <span className="hidden sm:inline">
+                            {activeTab === 'Live'
+                                ? 'Coming Soon'
+                                : activeTab === 'Styles'
+                                    ? 'Upload'
+                                    : activeTab === 'Posts'
+                                        ? 'Create'
+                                        : activeTab === 'Music'
+                                            ? 'Upload'
+                                            : 'Create'}
+                        </span>
                     </button>
-                    <div className="w-8 h-8 rounded-full overflow-hidden bg-zinc-700">
+                    <div className="w-8 h-8 rounded-full overflow-hidden bg-zinc-700 flex-shrink-0">
                         {activeProfile?.avatar ? (
                             <img src={activeProfile.avatar} alt="" className="w-full h-full object-cover" />
                         ) : (
@@ -380,16 +382,16 @@ export default function ChannelContent() {
                 </div>
             </div>
 
-            <div className="p-8">
-                <h1 className="text-2xl font-bold mb-6">Channel content</h1>
+            <div className="p-4 sm:p-8 w-full max-w-full overflow-x-hidden">
+                <h1 className="text-xl sm:text-2xl font-bold mb-6">Channel content</h1>
 
                 {/* Tabs */}
-                <div className="flex items-center gap-8 border-b border-white/10 mb-4 overflow-x-auto no-scrollbar">
+                <div className="flex flex-wrap items-center gap-4 sm:gap-8 border-b border-white/10 mb-4">
                     {tabs.map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
-                            className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === tab ? 'text-white' : 'text-zinc-400 hover:text-white'
+                            className={`pb-3 text-sm font-medium transition-colors relative whitespace-nowrap ${activeTab === tab ? 'text-white' : 'text-zinc-400 hover:text-white'
                                 }`}
                         >
                             {tab}
@@ -410,111 +412,163 @@ export default function ChannelContent() {
                     </button>
                 </div>
 
-                {/* Table Header */}
-                <div className="grid grid-cols-[1fr_repeat(5,120px)_110px] gap-4 px-4 py-2 border-b border-white/5 text-[12px] font-bold text-zinc-400 uppercase tracking-wider">
-                    <div className="flex items-center gap-4">
-                        <input type="checkbox" className="rounded border-zinc-600 bg-transparent" />
-                        <span>Video</span>
-                    </div>
-                    <span>Visibility</span>
-                    <span>Restrictions</span>
-                    <span className="flex items-center gap-1">
-                        Date
-                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5H7z" /></svg>
-                    </span>
-                    <span>Views</span>
-                    <span>Comments</span>
-                    <span>Actions</span>
-                </div>
-
-                {/* Content List / Empty State */}
-                {isLoadingList ? (
-                    <div className="flex flex-col items-center justify-center py-24">
-                        <div className="w-10 h-10 border-4 border-white/10 border-t-white rounded-full animate-spin"></div>
-                    </div>
-                ) : filteredVideos.length > 0 ? (
-                    <div className="space-y-0">
-                        {filteredVideos.map((video) => (
-                            <div key={video.id} className="grid grid-cols-[1fr_repeat(5,120px)_110px] gap-4 px-4 py-4 border-b border-white/5 hover:bg-white/5 transition-colors group items-center">
-                                <div className="flex items-center gap-4 min-w-0">
-                                    <input type="checkbox" className="rounded border-zinc-600 bg-transparent flex-shrink-0" />
-                                    <Link href={video.is_short ? `/styles/${video.id}` : `/watch/${video.id}`} className="flex gap-4 items-center min-w-0 flex-1">
-                                        <div className="w-32 aspect-video bg-zinc-800 rounded overflow-hidden flex-shrink-0 relative">
-                                            <img src={video.thumbnail_url} className="w-full h-full object-cover" alt="" />
-                                            <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
+                {/* Mobile Content List */}
+                <div className="sm:hidden space-y-3">
+                    {isLoadingList ? (
+                        <div className="flex flex-col items-center justify-center py-12">
+                            <div className="w-10 h-10 border-4 border-white/10 border-t-white rounded-full animate-spin"></div>
+                        </div>
+                    ) : filteredVideos.length > 0 ? (
+                        filteredVideos.map((video) => (
+                            <div key={video.id} className="bg-zinc-900 rounded-lg p-3 border border-white/5 min-w-0">
+                                <Link href={video.is_short ? `/styles/${video.id}` : `/watch/${video.id}`} className="flex gap-3 min-w-0">
+                                    <div className="w-20 h-14 bg-zinc-800 rounded overflow-hidden flex-shrink-0">
+                                        <img src={video.thumbnail_url} className="w-full h-full object-cover" alt="" />
+                                    </div>
+                                    <div className="flex-1 min-w-0 overflow-hidden">
+                                        <h3 className="text-sm font-medium text-white truncate">{video.title}</h3>
+                                        <p className="text-xs text-zinc-500 mt-0.5">{new Date(video.created_at).toLocaleDateString()} · {video.views || 0} views</p>
+                                        <div className="flex items-center gap-1 mt-0.5">
+                                            <svg className="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                            </svg>
+                                            <span className="text-xs text-zinc-400">Public</span>
                                         </div>
-                                        <div className="min-w-0">
-                                            <h3 className="text-sm font-medium text-white truncate group-hover:text-blue-400 transition-colors uppercase tracking-tight">{video.title}</h3>
-                                            <p className="text-[12px] text-zinc-500 line-clamp-1 mt-1">{video.description || 'Add description'}</p>
-                                        </div>
-                                    </Link>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm text-zinc-300">
-                                    <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-                                    Public
-                                </div>
-                                <div className="text-sm text-zinc-400">None</div>
-                                <div className="text-sm text-zinc-400">
-                                    {new Date(video.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                    <div className="text-[11px] text-zinc-500 uppercase tracking-tighter">Published</div>
-                                </div>
-                                <div className="text-sm text-zinc-400">{video.views || 0}</div>
-                                <div className="text-sm text-zinc-400">0</div>
-                                <div className="flex items-center gap-2">
+                                    </div>
+                                </Link>
+                                <div className="flex items-center justify-end gap-2 mt-2 pt-2 border-t border-white/5">
                                     <button
                                         onClick={() => {
                                             setEditTarget(video);
                                             setEditTitle(video.title);
                                         }}
-                                        className="px-3 py-1.5 text-sm font-semibold rounded-full bg-blue-500/10 text-blue-200 hover:bg-blue-500/20 border border-blue-500/30 transition-colors"
+                                        className="px-3 py-1 text-xs font-semibold rounded-full bg-blue-500/10 text-blue-200 hover:bg-blue-500/20 border border-blue-500/30 transition-colors"
                                     >
                                         Edit
                                     </button>
                                     <button
                                         onClick={() => setDeleteTarget(video)}
-                                        className="px-3 py-1.5 text-sm font-semibold rounded-full bg-red-500/10 text-red-200 hover:bg-red-500/20 border border-red-500/30 transition-colors"
+                                        className="px-3 py-1 text-xs font-semibold rounded-full bg-red-500/10 text-red-200 hover:bg-red-500/20 border border-red-500/30 transition-colors"
                                     >
                                         Delete
                                     </button>
                                 </div>
                             </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="flex flex-col items-center justify-center py-24">
-                        <div className="relative w-48 h-48 mb-8 flex items-center justify-center">
-                            <div className={`absolute inset-0 rounded-full blur-3xl ${activeTab === 'Live' ? 'bg-red-500/10' : 'bg-teal-500/10'}`} />
-                            {/* Custom Cartoon Illustration for empty state */}
-                            <div className={`relative z-10 w-40 h-40 rounded-2xl border-4 flex items-center justify-center overflow-hidden ${activeTab === 'Live' ? 'bg-red-400/20 border-red-400/30' : 'bg-teal-400/20 border-teal-400/30'
-                                }`}>
-                                <svg className={`w-24 h-24 ${activeTab === 'Live' ? 'text-red-400' : 'text-teal-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    {activeTab === 'Live' ? (
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                    ) : (
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                    )}
-                                </svg>
-                            </div>
+                        ))
+                    ) : (
+                        <div className="flex flex-col items-center justify-center py-12">
+                            <p className="text-zinc-500 text-sm">No content available</p>
                         </div>
-                        <p className="text-zinc-500 text-sm mb-6">
-                            {activeTab === 'Live' ? 'Live streaming is coming soon!' : `No ${activeTab.toLowerCase()} content available`}
-                        </p>
-                        <button
-                            onClick={() => {
-                                if (activeTab !== 'Live') {
-                                    setIsUploadModalOpen(true);
-                                }
-                            }}
-                            disabled={activeTab === 'Live'}
-                            className={`px-6 py-2 rounded-full text-sm font-bold transition-colors ${activeTab === 'Live'
-                                ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
-                                : 'bg-white text-black hover:bg-zinc-200'
-                                }`}
-                        >
-                            {activeTab === 'Live' ? 'Coming Soon' : activeTab === 'Styles' ? 'Upload Styles' : activeTab === 'Posts' ? 'Create Post' : 'Upload videos'}
-                        </button>
+                    )}
+                </div>
+
+                {/* Desktop Table */}
+                <div className="hidden sm:block">
+                    {/* Table Header */}
+                    <div className="grid grid-cols-[1fr_repeat(5,120px)_110px] gap-4 px-4 py-2 border-b border-white/5 text-[12px] font-bold text-zinc-400 uppercase tracking-wider">
+                        <div className="flex items-center gap-4">
+                            <input type="checkbox" className="rounded border-zinc-600 bg-transparent" />
+                            <span>Video</span>
+                        </div>
+                        <span>Visibility</span>
+                        <span>Restrictions</span>
+                        <span className="flex items-center gap-1">
+                            Date
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5H7z" /></svg>
+                        </span>
+                        <span>Views</span>
+                        <span>Comments</span>
+                        <span>Actions</span>
                     </div>
-                )}
+
+                    {/* Content List */}
+                    {isLoadingList ? (
+                        <div className="flex flex-col items-center justify-center py-24">
+                            <div className="w-10 h-10 border-4 border-white/10 border-t-white rounded-full animate-spin"></div>
+                        </div>
+                    ) : filteredVideos.length > 0 ? (
+                        <div className="space-y-0">
+                            {filteredVideos.map((video) => (
+                                <div key={video.id} className="grid grid-cols-[1fr_repeat(5,120px)_110px] gap-4 px-4 py-4 border-b border-white/5 hover:bg-white/5 transition-colors group items-center">
+                                    <div className="flex items-center gap-4 min-w-0">
+                                        <input type="checkbox" className="rounded border-zinc-600 bg-transparent flex-shrink-0" />
+                                        <Link href={video.is_short ? `/styles/${video.id}` : `/watch/${video.id}`} className="flex gap-4 items-center min-w-0 flex-1">
+                                            <div className="w-32 aspect-video bg-zinc-800 rounded overflow-hidden flex-shrink-0 relative">
+                                                <img src={video.thumbnail_url} className="w-full h-full object-cover" alt="" />
+                                                <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
+                                            </div>
+                                            <div className="min-w-0">
+                                                <h3 className="text-sm font-medium text-white truncate group-hover:text-blue-400 transition-colors uppercase tracking-tight">{video.title}</h3>
+                                                <p className="text-[12px] text-zinc-500 line-clamp-1 mt-1">{video.description || 'Add description'}</p>
+                                            </div>
+                                        </Link>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-sm text-zinc-300">
+                                        <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                                        Public
+                                    </div>
+                                    <div className="text-sm text-zinc-400">None</div>
+                                    <div className="text-sm text-zinc-400">
+                                        {new Date(video.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                        <div className="text-[11px] text-zinc-500 uppercase tracking-tighter">Published</div>
+                                    </div>
+                                    <div className="text-sm text-zinc-400">{video.views || 0}</div>
+                                    <div className="text-sm text-zinc-400">0</div>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => {
+                                                setEditTarget(video);
+                                                setEditTitle(video.title);
+                                            }}
+                                            className="px-3 py-1.5 text-sm font-semibold rounded-full bg-blue-500/10 text-blue-200 hover:bg-blue-500/20 border border-blue-500/30 transition-colors"
+                                        >
+                                            Edit
+                                        </button>
+                                        <button
+                                            onClick={() => setDeleteTarget(video)}
+                                            className="px-3 py-1.5 text-sm font-semibold rounded-full bg-red-500/10 text-red-200 hover:bg-red-500/20 border border-red-500/30 transition-colors"
+                                        >
+                                            Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center py-24">
+                            <div className="relative w-48 h-48 mb-8 flex items-center justify-center">
+                                <div className={`absolute inset-0 rounded-full blur-3xl ${activeTab === 'Live' ? 'bg-red-500/10' : 'bg-teal-500/10'}`} />
+                                <div className={`relative z-10 w-40 h-40 rounded-2xl border-4 flex items-center justify-center overflow-hidden ${activeTab === 'Live' ? 'bg-red-400/20 border-red-400/30' : 'bg-teal-400/20 border-teal-400/30'
+                                    }`}>
+                                    <svg className={`w-24 h-24 ${activeTab === 'Live' ? 'text-red-400' : 'text-teal-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        {activeTab === 'Live' ? (
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                        ) : (
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                        )}
+                                    </svg>
+                                </div>
+                            </div>
+                            <p className="text-zinc-500 text-sm mb-6">
+                                {activeTab === 'Live' ? 'Live streaming is coming soon!' : `No ${activeTab.toLowerCase()} content available`}
+                            </p>
+                            <button
+                                onClick={() => {
+                                    if (activeTab !== 'Live') {
+                                        setIsUploadModalOpen(true);
+                                    }
+                                }}
+                                disabled={activeTab === 'Live'}
+                                className={`px-6 py-2 rounded-full text-sm font-bold transition-colors ${activeTab === 'Live'
+                                    ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
+                                    : 'bg-white text-black hover:bg-zinc-200'
+                                    }`}
+                            >
+                                {activeTab === 'Live' ? 'Coming Soon' : activeTab === 'Styles' ? 'Upload Styles' : activeTab === 'Posts' ? 'Create Post' : 'Upload videos'}
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Upload Modal */}

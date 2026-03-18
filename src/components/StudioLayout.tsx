@@ -13,8 +13,19 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
     const pathname = usePathname();
     const [activeProfile, setActiveProfile] = useState<any>(null);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
     const [popoverMessage, setPopoverMessage] = useState<string | null>(null);
     const popoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -23,6 +34,14 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
         };
         fetchProfile();
     }, []);
+
+    const handleMenuClick = () => {
+        if (isMobile) {
+            setIsMobileSidebarOpen(!isMobileSidebarOpen);
+        } else {
+            setIsSidebarCollapsed(!isSidebarCollapsed);
+        }
+    };
 
     const menuItems = [
         { icon: 'dashboard', label: 'Dashboard', path: '/studio' },
@@ -64,34 +83,66 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
 
     return (
         <div className="min-h-screen bg-[#0f0f0f] text-white flex">
-            {/* Sidebar */}
-            <aside className={`fixed left-0 top-0 h-screen bg-[#0f0f0f] border-r border-white/10 flex flex-col transition-all duration-300 z-50 ${isSidebarCollapsed ? 'w-16' : 'w-56'}`}>
-                {/* Header */}
-                <div className="h-14 flex items-center gap-3 px-4 border-b border-white/10">
+            {/* Mobile Header - Always visible */}
+            {isMobile && (
+                <div className="fixed top-0 left-0 right-0 h-14 bg-[#0f0f0f] border-b border-white/10 flex items-center gap-3 px-4 z-50">
                     <button
-                        onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                        onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
                         className="p-2 hover:bg-white/10 rounded-full transition-colors"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
                         </svg>
                     </button>
-                    {!isSidebarCollapsed && (
-                        <Link href="/studio" className="flex items-center gap-2">
-                            <img
-                                src="/Playra.png"
-                                alt="Playra"
-                                className="h-5 w-auto"
-                            />
-                            <span className="font-bold text-[15px]">Studio</span>
-                        </Link>
-                    )}
+                    <Link href="/studio" className="flex items-center gap-2">
+                        <img src="/Playra.png" alt="Playra" className="h-5 w-auto" />
+                        <span className="font-bold text-[15px]">Studio</span>
+                    </Link>
                 </div>
+            )}
+
+            {/* Overlay for mobile when sidebar is open - outside sidebar */}
+            {isMobile && isMobileSidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-40"
+                    onClick={() => setIsMobileSidebarOpen(false)}
+                />
+            )}
+
+            {/* Sidebar */}
+            <aside className={`fixed left-0 h-screen bg-[#0f0f0f] border-r border-white/10 flex flex-col transition-all duration-300 z-50 ${
+                isMobile
+                    ? isMobileSidebarOpen
+                        ? 'w-56 translate-x-0 top-14'
+                        : '-translate-x-full w-56 top-14'
+                    : isSidebarCollapsed
+                        ? 'w-16 top-0'
+                        : 'w-56 top-0'
+            }`}>
+                {/* Header - Only on desktop */}
+                {!isMobile && (
+                    <div className="h-14 flex items-center gap-3 px-4 border-b border-white/10">
+                        <button
+                            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                            className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                            </svg>
+                        </button>
+                        {!isSidebarCollapsed && (
+                            <Link href="/studio" className="flex items-center gap-2">
+                                <img src="/Playra.png" alt="Playra" className="h-5 w-auto" />
+                                <span className="font-bold text-[15px]">Studio</span>
+                            </Link>
+                        )}
+                    </div>
+                )}
 
                 {/* Profile */}
-                <div className={`py-4 border-b border-white/10 ${isSidebarCollapsed ? 'px-2' : 'px-4'}`}>
-                    <div className={`flex ${isSidebarCollapsed ? 'justify-center' : 'flex-col items-center'}`}>
-                        <div className={`${isSidebarCollapsed ? 'w-10 h-10' : 'w-24 h-24'} rounded-full overflow-hidden bg-zinc-800`}>
+                <div className={`py-4 border-b border-white/10 ${(isMobile ? !isMobileSidebarOpen : isSidebarCollapsed) ? 'px-2' : 'px-4'}`}>
+                    <div className={`flex ${(isMobile ? !isMobileSidebarOpen : isSidebarCollapsed) ? 'justify-center' : 'flex-col items-center'}`}>
+                        <div className={`${(isMobile ? !isMobileSidebarOpen : isSidebarCollapsed) ? 'w-10 h-10' : 'w-24 h-24'} rounded-full overflow-hidden bg-zinc-800`}>
                             {activeProfile?.avatar ? (
                                 <img src={activeProfile.avatar} alt="" className="w-full h-full object-cover" />
                             ) : (
@@ -100,7 +151,7 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
                                 </div>
                             )}
                         </div>
-                        {!isSidebarCollapsed && (
+                        {!(isMobile ? !isMobileSidebarOpen : isSidebarCollapsed) && (
                             <>
                                 <p className="mt-3 text-[13px] font-medium">Your channel</p>
                                 <p className="text-[12px] text-zinc-500">{activeProfile?.name || 'Unknown'}</p>
@@ -126,10 +177,10 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
                                 className={`relative flex items-center gap-4 px-4 py-2.5 transition-colors ${pathname === item.path
                                         ? 'bg-white/10 text-white'
                                         : 'text-zinc-400 hover:bg-white/5 hover:text-white'
-                                    } ${isSidebarCollapsed ? 'justify-center' : ''}`}
+                                    } ${(isMobile ? !isMobileSidebarOpen : isSidebarCollapsed) ? 'justify-center' : ''}`}
                             >
                                 {getIcon(item.icon)}
-                                {!isSidebarCollapsed && <span className="text-[13px] font-medium">{item.label}</span>}
+                                {!(isMobile ? !isMobileSidebarOpen : isSidebarCollapsed) && <span className="text-[13px] font-medium">{item.label}</span>}
                             </Link>
                         );
                     })}
@@ -149,10 +200,10 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
                                         showComingSoon(item.label);
                                     }
                                 }}
-                                className={`flex items-center gap-4 px-4 py-2.5 text-zinc-400 hover:bg-white/5 hover:text-white transition-colors ${isSidebarCollapsed ? 'justify-center' : ''}`}
+                                className={`flex items-center gap-4 px-4 py-2.5 text-zinc-400 hover:bg-white/5 hover:text-white transition-colors ${(isMobile ? !isMobileSidebarOpen : isSidebarCollapsed) ? 'justify-center' : ''}`}
                             >
                                 {getIcon(item.icon)}
-                                {!isSidebarCollapsed && <span className="text-[13px] font-medium">{item.label}</span>}
+                                {!(isMobile ? !isMobileSidebarOpen : isSidebarCollapsed) && <span className="text-[13px] font-medium">{item.label}</span>}
                             </Link>
                         );
                     })}
@@ -160,7 +211,13 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
             </aside>
 
             {/* Main Content */}
-            <main className={`flex-1 transition-all duration-300 ${isSidebarCollapsed ? 'ml-16' : 'ml-56'}`}>
+            <main className={`flex-1 w-full min-w-0 transition-all duration-300 ${
+                isMobile
+                    ? 'ml-0 pt-14'
+                    : isSidebarCollapsed
+                        ? 'ml-16'
+                        : 'ml-56'
+            }`}>
                 {children}
             </main>
 

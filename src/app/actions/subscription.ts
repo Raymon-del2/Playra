@@ -145,11 +145,17 @@ export async function getSuggestedCreators(subscriberId: string) {
 
 export async function getSubscriberCount(channelId: string) {
     try {
+        console.log('Getting subscriber count for channel:', channelId);
         const result = await turso.execute({
             sql: "SELECT COUNT(*) as count FROM subscriptions WHERE channel_id = ?",
             args: [channelId]
         });
-        return Number(result.rows[0].count);
+        console.log('Turso result:', result);
+        console.log('Rows:', result.rows);
+        console.log('First row:', result.rows[0]);
+        const count = result.rows[0]?.count ?? result.rows[0]?.[0] ?? 0;
+        console.log('Parsed count:', count);
+        return Number(count);
     } catch (error) {
         console.error("Error getting subscriber count:", error);
         return 0;

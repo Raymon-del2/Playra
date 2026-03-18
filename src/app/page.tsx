@@ -474,27 +474,37 @@ export default function Home() {
             return (
               <div className="pb-20">
                 {/* Initial Grid of Regular Videos */}
-                <div className="relative z-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 4xl:grid-cols-6 gap-x-6 gap-y-12 px-6 md:px-10 pt-4 mt-1">
-                  {displayVideos.slice(0, 8).map((video) => (
-                    <VideoCard
-                      key={video.id}
-                      video={video}
-                      isHovered={hoveredId === video.id}
-                      isPreviewing={previewingId === video.id}
-                      isMuted={isMuted}
-                      onHoverStart={handleHoverStart}
-                      onHoverEnd={handleHoverEnd}
-                      onToggleMuted={() => setIsMuted(!isMuted)}
-                      videoRef={(el) => { videoRefs.current[video.id] = el; }}
-                    />
-                  ))}
-                </div>
+                {displayVideos.length > 0 ? (
+                  <div className="relative z-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 4xl:grid-cols-6 gap-x-6 gap-y-12 px-6 md:px-10 pt-4 mt-1">
+                    {displayVideos.slice(0, 8).map((video) => (
+                      <VideoCard
+                        key={video.id}
+                        video={video}
+                        isHovered={hoveredId === video.id}
+                        isPreviewing={previewingId === video.id}
+                        isMuted={isMuted}
+                        onHoverStart={handleHoverStart}
+                        onHoverEnd={handleHoverEnd}
+                        onToggleMuted={() => setIsMuted(!isMuted)}
+                        videoRef={(el) => { videoRefs.current[video.id] = el; }}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="px-6 md:px-10 pt-8 pb-4">
+                    <p className="text-zinc-500 text-sm">Videos do not exist yet</p>
+                  </div>
+                )}
 
                 {/* Styles Shelf - Only show on All or if something matches */}
-                {styles.length > 0 && (selectedCategory === 'All' || selectedCategory === 'New to you') && (
-                  <StylesShelf
-                    styles={styles}
-                  />
+                {(selectedCategory === 'All' || selectedCategory === 'New to you') && (
+                  styles.length > 0 ? (
+                    <StylesShelf styles={styles} />
+                  ) : (
+                    <div className="px-6 md:px-10 pt-6 pb-2">
+                      <p className="text-zinc-500 text-sm">Styles do not exist yet</p>
+                    </div>
+                  )
                 )}
 
                 {/* Remaining Grid of Regular Videos */}

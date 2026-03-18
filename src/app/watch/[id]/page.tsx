@@ -516,10 +516,11 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
             <video
               ref={videoRef}
               key={videoSrc}
-              className={`w-full h-full ${videoLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500`}
-              controls={hasStarted && videoLoaded}
+              className={`w-full h-full ${videoLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500 [&::-webkit-media-controls-timeline]:hidden [&::-webkit-media-controls-current-time-display]:hidden [&::-webkit-media-controls-time-remaining-display]:hidden`}
+              controls={hasStarted && videoLoaded && duration > 0}
               autoPlay={false}
               poster={video?.thumbnail_url}
+              preload="metadata"
               onLoadedData={() => setVideoLoaded(true)}
               onLoadedMetadata={(e) => {
                 const d = e.currentTarget.duration;
