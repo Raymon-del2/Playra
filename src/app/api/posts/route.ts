@@ -54,20 +54,17 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Invalid post type' }, { status: 400 });
     }
 
-    // Get user profile info
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', session.user.id)
-      .single();
+    // Get user profile info - for now we'll use a placeholder since auth is disabled
+    // In production, you'd get this from the session
+    const profile = { id: 'anonymous', name: 'Anonymous', avatar: null };
 
     // 4. Insert into Supabase
     const { data, error } = await supabase
       .from('videos')
       .insert({
-        channel_id: session.user.id,
-        channel_name: profile?.name || 'Anonymous',
-        channel_avatar: profile?.avatar || '',
+        channel_id: 'anonymous', // profile.id,
+        channel_name: profile.name,
+        channel_avatar: profile.avatar || '',
         post_type,
         visibility: visibility || 'public',
         content: finalContent,
@@ -76,7 +73,7 @@ export async function POST(request: Request) {
         title: content.text?.substring(0, 100) || 'Community Post',
         description: JSON.stringify(finalContent),
         video_url: '',
-        thumbnail_url: content.images?.[0] || profile?.avatar || '',
+        thumbnail_url: content.images?.[0] || '',
         is_live: false,
         is_short: false,
         duration: '',
@@ -98,8 +95,6 @@ export async function POST(request: Request) {
 
 // GET endpoint to fetch posts
 export async function GET(request: Request) {
-  const supabase = createRouteHandlerClient({ cookies });
-  
   const { searchParams } = new URL(request.url);
   const authorId = searchParams.get('authorId');
   const limit = parseInt(searchParams.get('limit') || '20');

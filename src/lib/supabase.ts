@@ -50,11 +50,89 @@ export const supabase = typeof window !== 'undefined'
   ? getSupabaseClient() 
   : createClient(supabaseUrl, supabaseAnonKey);
 
-function ensureSupabase() {
-    if (!supabase) {
-        throw new Error('Supabase is not configured. Please add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to your .env.local file.');
+export async function ensurePostsTables() {
+  try {
+    // Create posts storage bucket if it doesn't exist
+    const { error: storageError } = await supabase.storage.getBucket('posts');
+    if (storageError && storageError.statusCode === 404) {
+      // Bucket doesn't exist, create it
+      const { error: createError } = await supabase.storage.createBucket('posts', {
+        public: true,
+        allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg'],
+        fileSizeLimit: 52428800, // 50MB per file
+      });
+      if (createError) throw createError;
     }
-    return supabase;
+    
+    // Check if videos table has the required columns for posts
+    const { error: tableError } = await supabase
+      .from('videos')
+      .select('id')
+      .limit(1);
+    
+    if (tableError && tableError.details?.message?.includes('column "post_type" does not exist')) {
+      // Add post_type column if it doesn't exist
+      const { error: alterError } = await supabase
+        .from('videos')
+        .alter('table', {
+          addColumn: {
+          name: 'post_type',
+          type: 'text',
+          default: 'text',
+          notNull: true
+          comment: 'Type of post (text, poll, quiz, image)'
+        }})
+        });
+      if (alterError) throw alterError;
+    }
+    
+    // Check if content column exists and is JSONB type
+    const { error: contentError } = await supabase
+      .from('videos')
+      .select('content')
+      .limit(1);
+    
+    if (contentError && contentError.details?.message?.includes('column "content" of type "jsonb" does not exist')) {
+      // Add content column as JSONB if it doesn't exist
+      const { error: alterError } = await supabase
+        .from('videos')
+        .alter('table', {
+          addColumn: {
+            name: 'content',
+            type: 'jsonb',
+            default: '{}',
+            comment: 'JSON data for post content'
+          })
+        });
+      if (alterError) throw alterError;
+    }
+    
+    // Check if visibility column exists
+    const { error: visibilityError } = await supabase
+      .from('videos')
+      .select('visibility')
+      .limit(1);
+    
+    if (visibilityError && visibilityError.details?.message?.includes('column "visibility" does not exist')) {
+      // Add visibility column if it doesn't exist
+      const { error: alterError } = await supabase
+        .from('videos')
+        .alter('table', {
+          addColumn: {
+            name: 'visibility',
+            type: 'text',
+            default: 'public',
+            comment: 'Post visibility (public or members only)'
+          })
+        });
+      if (alterError) throw alterError;
+    }
+    
+    console.log('Posts tables verified');
+  } catch (error) {
+    console.error('Error ensuring posts tables:', error);
+    throw error;
+  }
 }
 
 export async function getWatchHistoryRaw(profileId: string, limit = 1000) {
