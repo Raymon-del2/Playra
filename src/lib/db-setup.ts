@@ -12,9 +12,23 @@ export async function initDatabase() {
                 username TEXT UNIQUE,
                 account_type TEXT DEFAULT 'adult', -- adult | family | kid | advertiser
                 parent_id TEXT,
+                join_order INTEGER, -- Auto-assigned order for First 50 badge
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (parent_id) REFERENCES users(id)
             );
+        `);
+
+        // Join order counter table for auto-increment
+        await turso.execute(`
+            CREATE TABLE IF NOT EXISTS join_order_counter (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                last_order INTEGER DEFAULT 0
+            );
+        `);
+        
+        // Initialize counter if not exists
+        await turso.execute(`
+            INSERT OR IGNORE INTO join_order_counter (id, last_order) VALUES (1, 0);
         `);
 
         // Channels Table

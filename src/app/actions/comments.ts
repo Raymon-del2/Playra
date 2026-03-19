@@ -14,6 +14,7 @@ export type Comment = {
     created_at: string;
     profile_name?: string;
     profile_avatar?: string;
+    profile_join_order?: number | null;
     replies?: Comment[];
     user_liked?: boolean;
     user_disliked?: boolean;
@@ -45,7 +46,10 @@ export async function getVideoComments(videoId: string, profileId?: string) {
         if (profileIds.length > 0) {
             const placeholders = profileIds.map(() => '?').join(',');
             const profileRes = await turso.execute({
-                sql: `SELECT id, name, avatar FROM channels WHERE id IN (${placeholders})`,
+                sql: `SELECT c.id, c.name, c.avatar, u.join_order 
+                      FROM channels c 
+                      LEFT JOIN users u ON c.user_id = u.id 
+                      WHERE c.id IN (${placeholders})`,
                 args: profileIds
             });
 
@@ -59,6 +63,7 @@ export async function getVideoComments(videoId: string, profileId?: string) {
                 if (p) {
                     c.profile_name = p.name;
                     c.profile_avatar = p.avatar;
+                    c.profile_join_order = p.join_order;
                 }
             });
         }

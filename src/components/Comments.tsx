@@ -11,6 +11,7 @@ import {
     deleteComment,
     getCommentCount,
 } from '@/app/actions/comments';
+import FounderBadge from './FounderBadge';
 
 interface CommentsProps {
     videoId: string;
@@ -78,6 +79,7 @@ const CommentItemComponent = ({
                     <Link href={`/channel/${comment.profile_id}`} className="text-[13px] font-bold text-white hover:text-blue-400 transition-colors">
                         {comment.profile_name?.startsWith('@') ? comment.profile_name : `@${comment.profile_name?.replace(/\s+/g, '').toLowerCase()}`}
                     </Link>
+                    <FounderBadge joinOrder={comment.profile_join_order} size="sm" />
                     <span className="text-xs text-zinc-500">
                         {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
                     </span>

@@ -15,17 +15,25 @@ export async function syncUserToDb(userData: {
 
         const { id, email, username, account_type = 'adult' } = userData;
 
+        // Get and increment join_order atomically
+        const counterResult = await turso.execute({
+            sql: `UPDATE join_order_counter SET last_order = last_order + 1 WHERE id = 1 RETURNING last_order`,
+            args: []
+        });
+        
+        const joinOrder = counterResult.rows[0]?.last_order as number || 0;
+
         // Use an UPSERT pattern to create or update user
         await turso.execute({
             sql: `
-                INSERT INTO users (id, email, username, account_type)
-                VALUES (?, ?, ?, ?)
+                INSERT INTO users (id, email, username, account_type, join_order)
+                VALUES (?, ?, ?, ?, ?)
                 ON CONFLICT(id) DO UPDATE SET
                     email = excluded.email,
                     username = COALESCE(excluded.username, users.username),
                     account_type = COALESCE(excluded.account_type, users.account_type)
             `,
-            args: [id, email, username || null, account_type]
+            args: [id, email, username || null, account_type, joinOrder]
         });
 
         // Only create a default channel if the user doesn't have any profiles

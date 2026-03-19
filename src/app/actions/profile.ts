@@ -26,7 +26,10 @@ export async function getBatchProfiles(profileIds: string[]) {
 export async function getUserProfiles(userId: string) {
     try {
         const result = await turso.execute({
-            sql: "SELECT * FROM channels WHERE user_id = ?",
+            sql: `SELECT c.*, u.join_order 
+                  FROM channels c 
+                  LEFT JOIN users u ON c.user_id = u.id 
+                  WHERE c.user_id = ?`,
             args: [userId]
         });
         return result.rows.map(row => ({
@@ -37,6 +40,7 @@ export async function getUserProfiles(userId: string) {
             avatar: row.avatar as string | null,
             verified: Boolean(row.verified),
             account_type: row.account_type as string || 'general',
+            join_order: row.join_order as number | null,
             created_at: String(row.created_at)
         }));
     } catch (error) {
