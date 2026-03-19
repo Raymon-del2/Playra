@@ -52,6 +52,38 @@ export async function getVideoComments(videoId: string, profileId?: string) {
 
         if (comments.length === 0) return [];
 
+        // Fetch profiles for comments with error handling
+        const profileIds = Array.from(new Set(comments.map(c => c.profile_id)));
+        if (profileIds.length > 0) {
+            try {
+                const placeholders = profileIds.map(() => '?').join(',');
+                const profileRes = await turso.execute({
+                    sql: `SELECT c.id, c.name, c.avatar, u.join_order 
+                          FROM channels c 
+                          LEFT JOIN users u ON c.user_id = u.id 
+                          WHERE c.id IN (${placeholders})`,
+                    args: profileIds
+                });
+
+                const profileMap = new Map();
+                profileRes.rows.forEach(r => {
+                    profileMap.set(r.id, r);
+                });
+
+                comments.forEach(c => {
+                    const p = profileMap.get(c.profile_id);
+                    if (p) {
+                        c.profile_name = p.name;
+                        c.profile_avatar = p.avatar;
+                        c.profile_join_order = p.join_order;
+                    }
+                });
+            } catch (profileError) {
+                console.error('Failed to fetch profiles:', profileError);
+                // Keep default values if profile fetch fails
+            }
+        }
+
         // Build hierarchy - only root comments for now
         const rootComments: Comment[] = [];
         const commentMap = new Map<string, Comment>();
