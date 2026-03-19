@@ -30,7 +30,9 @@ export async function getVideoComments(videoId: string, profileId?: string) {
         });
         
         console.log('Raw query result:', result.rows.length, 'rows');
-        console.log('Sample row:', result.rows[0]);
+        if (result.rows.length > 0) {
+            console.log('Sample row:', result.rows[0]);
+        }
 
         const comments: Comment[] = result.rows.map(row => ({
             id: row.id as string,
@@ -123,7 +125,7 @@ export async function getVideoComments(videoId: string, profileId?: string) {
 
     } catch (error) {
         console.error("Error fetching comments:", error);
-        return [];
+        throw new Error(`Failed to fetch comments: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 }
 
