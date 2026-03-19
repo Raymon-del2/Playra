@@ -22,11 +22,15 @@ export type Comment = {
 
 export async function getVideoComments(videoId: string, profileId?: string) {
     try {
+        console.log('Querying comments for videoId:', videoId);
         // Fetch all comments for the video
         const result = await turso.execute({
             sql: "SELECT * FROM comments WHERE video_id = ? ORDER BY created_at DESC",
             args: [videoId]
         });
+        
+        console.log('Raw query result:', result.rows.length, 'rows');
+        console.log('Sample row:', result.rows[0]);
 
         const comments: Comment[] = result.rows.map(row => ({
             id: row.id as string,
@@ -38,6 +42,8 @@ export async function getVideoComments(videoId: string, profileId?: string) {
             dislikes: Number(row.dislikes),
             created_at: row.created_at as string,
         }));
+
+        console.log('Mapped comments:', comments.length);
 
         if (comments.length === 0) return [];
 
