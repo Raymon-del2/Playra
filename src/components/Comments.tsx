@@ -238,15 +238,26 @@ function Comments({ videoId, profileId, profileName, profileAvatar }: CommentsPr
         try {
             setIsLoading(true);
             console.log('Loading comments for video:', videoId);
+            
             const [commentsData, count] = await Promise.all([
-                getVideoComments(videoId, profileId || undefined),
-                getCommentCount(videoId),
+                getVideoComments(videoId, profileId || undefined).catch(err => {
+                    console.error('getVideoComments error:', err);
+                    return [];
+                }),
+                getCommentCount(videoId).catch(err => {
+                    console.error('getCommentCount error:', err);
+                    return 0;
+                }),
             ]);
+            
             console.log('Comments loaded:', commentsData.length, 'Count:', count);
+            console.log('Comments data:', commentsData);
             setComments(commentsData);
             setCommentCount(count);
         } catch (error) {
             console.error('Failed to load comments:', error);
+            setComments([]);
+            setCommentCount(0);
         } finally {
             setIsLoading(false);
         }
