@@ -1,36 +1,31 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#0f0f0f"/>
-      <stop offset="50%" style="stop-color:#1a1a2e"/>
-      <stop offset="100%" style="stop-color:#0f0f0f"/>
+      <stop offset="0%" stop-color="#0f0f0f"/>
+      <stop offset="50%" stop-color="#1a1a2e"/>
+      <stop offset="100%" stop-color="#0f0f0f"/>
     </linearGradient>
     <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#3b82f6"/>
-      <stop offset="50%" style="stop-color:#8b5cf6"/>
-      <stop offset="100%" style="stop-color:#ec4899"/>
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="50%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#ec4899"/>
     </linearGradient>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
   </defs>
   
-  <!-- Background -->
   <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="100" cy="100" r="300" fill="#3b82f6" opacity="0.08"/>
+  <circle cx="1100" cy="530" r="400" fill="#8b5cf6" opacity="0.08"/>
   
-  <!-- Decorative circles -->
-  <circle cx="150" cy="150" r="200" fill="#3b82f6" opacity="0.1"/>
-  <circle cx="1050" cy="480" r="250" fill="#8b5cf6" opacity="0.1"/>
+  <g transform="translate(600, 315)">
+    <circle cx="0" cy="-40" r="80" fill="rgba(255,255,255,0.1)" stroke="url(#accent)" stroke-width="4" filter="url(#shadow)"/>
+    <path d="M25,-40 L-15,-15 L-15,-65 Z" fill="white" transform="translate(5,0)"/>
+    <text y="60" font-family="Arial Black, sans-serif" font-size="72" font-weight="900" fill="white" text-anchor="middle" letter-spacing="2">PLAYRA</text>
+    <text y="105" font-family="Arial, sans-serif" font-size="28" fill="#a1a1aa" text-anchor="middle">Next-Gen Video Discovery Platform</text>
+    <rect x="-150" y="130" width="300" height="3" fill="url(#accent)" rx="1.5"/>
+  </g>
   
-  <!-- Logo -->
-  <text x="600" y="280" font-family="Arial Black, sans-serif" font-size="120" font-weight="900" fill="white" text-anchor="middle">PLAYRA</text>
-  
-  <!-- Tagline -->
-  <text x="600" y="360" font-family="Arial, sans-serif" font-size="36" fill="#a1a1aa" text-anchor="middle">Next-Gen Video Discovery</text>
-  
-  <!-- Accent line -->
-  <rect x="450" y="400" width="300" height="4" fill="url(#accent)" rx="2"/>
-  
-  <!-- CTA -->
-  <text x="600" y="480" font-family="Arial, sans-serif" font-size="28" fill="#71717a" text-anchor="middle">Discover • Share • Connect</text>
-  
-  <!-- URL -->
-  <text x="600" y="560" font-family="monospace" font-size="20" fill="#52525b" text-anchor="middle">playra.vercel.app</text>
+  <text x="600" y="580" font-family="Arial, sans-serif" font-size="20" fill="#71717a" text-anchor="middle">Discover • Create • Share • Connect</text>
 </svg>

@@ -3,8 +3,8 @@ import "./globals.css";
 import LayoutShell from "@/components/LayoutShell";
 
 export const metadata: Metadata = {
-  title: "Playra - Watch Videos",
-  description: "A Playra-like video platform",
+  title: "Playra - Next-Gen Video Discovery & Creation Platform",
+  description: "Discover, create, and share amazing videos on Playra. Join a community of creators and viewers exploring the future of video content. Upload videos, engage with polls, quizzes, and more!",
   icons: {
     icon: [
       { url: "/icon-512x512.png", type: "image/png", sizes: "512x512" },
@@ -14,8 +14,8 @@ export const metadata: Metadata = {
     apple: "/icon-192x192.png",
   },
   openGraph: {
-    title: "Playra - Next-Gen Video Discovery",
-    description: "Discover and share videos on Playra - the future of video content",
+    title: "Playra - Next-Gen Video Discovery & Creation Platform",
+    description: "Discover, create, and share amazing videos on Playra. Join a community of creators and viewers exploring the future of video content with polls, quizzes, and interactive posts!",
     url: "https://playra.vercel.app",
     siteName: "Playra",
     images: [
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
         url: "/og-image.svg",
         width: 1200,
         height: 630,
-        alt: "Playra - Video Discovery Platform",
+        alt: "Playra - Next-Gen Video Discovery Platform with Play Button",
       },
     ],
     locale: "en_US",
@@ -31,8 +31,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Playra - Next-Gen Video Discovery",
-    description: "Discover and share videos on Playra - the future of video content",
+    title: "Playra - Next-Gen Video Discovery & Creation Platform",
+    description: "Discover, create, and share amazing videos on Playra. Join a community of creators and viewers exploring the future of video content!",
     images: ["/og-image.svg"],
   },
 };
