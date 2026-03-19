@@ -452,12 +452,16 @@ function Comments({ videoId, profileId, profileName, profileAvatar }: CommentsPr
         });
     }, [comments, sortBy]);
 
+    const displayedCommentCount = useMemo(() => {
+        return sortedComments.length;
+    }, [sortedComments]);
+
     return (
         <div className="mt-8">
             {/* Header */}
             <div className="flex items-center gap-6 mb-6">
                 <h2 className="text-xl font-bold text-white">
-                    {commentCount.toLocaleString()} Comments
+                    {displayedCommentCount.toLocaleString()} Comments
                 </h2>
 
                 <div className="relative">

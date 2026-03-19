@@ -548,6 +548,49 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
               <source src={videoSrc} type="video/mp4" />
             </video>
           )}
+          
+          {/* Custom Progress Bar with Hover Timeline */}
+          {hasStarted && videoLoaded && duration > 0 && (
+            <div
+              className="absolute bottom-0 left-0 right-0 h-1.5 bg-white/20 cursor-pointer group/progress z-20 hover:h-2 transition-all"
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                if (videoRef.current && resolvedDuration > 0) {
+                  videoRef.current.currentTime = pct * resolvedDuration;
+                }
+              }}
+              onMouseMove={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                const hoverEl = e.currentTarget.querySelector('.hover-preview') as HTMLElement;
+                const tooltipEl = e.currentTarget.querySelector('.hover-tooltip') as HTMLElement;
+                if (hoverEl) hoverEl.style.left = `${pct * 100}%`;
+                if (tooltipEl) {
+                  tooltipEl.style.left = `${pct * 100}%`;
+                  tooltipEl.textContent = formatTime(pct * resolvedDuration);
+                }
+              }}
+            >
+              {/* Progress fill */}
+              <div
+                className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-r"
+                style={{ width: `${progressPct}%` }}
+              />
+              
+              {/* Hover preview line */}
+              <div className="hover-preview absolute top-0 bottom-0 w-0.5 bg-white/70 opacity-0 group-hover/progress:opacity-100 transition-opacity pointer-events-none" />
+              
+              {/* Hover time tooltip */}
+              <div className="hover-tooltip absolute -top-9 px-2 py-1 bg-black/90 text-white text-xs rounded transform -translate-x-1/2 opacity-0 group-hover/progress:opacity-100 transition-opacity pointer-events-none whitespace-nowrap" />
+              
+              {/* Seek handle */}
+              <div
+                className="absolute top-1/2 w-4 h-4 bg-white rounded-full shadow-lg opacity-0 group-hover/progress:opacity-100 transition-opacity -translate-y-1/2 -translate-x-1/2"
+                style={{ left: `${progressPct}%` }}
+              />
+            </div>
+          )}
         </div>
 
         {/* Video Info Section */}
