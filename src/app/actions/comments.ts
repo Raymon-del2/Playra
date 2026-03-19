@@ -30,9 +30,6 @@ export async function getVideoComments(videoId: string, profileId?: string) {
         });
         
         console.log('Raw query result:', result.rows.length, 'rows');
-        if (result.rows.length > 0) {
-            console.log('Sample row:', result.rows[0]);
-        }
 
         const comments: Comment[] = result.rows.map(row => ({
             id: row.id as string,
@@ -43,63 +40,19 @@ export async function getVideoComments(videoId: string, profileId?: string) {
             likes: Number(row.likes),
             dislikes: Number(row.dislikes),
             created_at: row.created_at as string,
+            profile_name: 'Unknown User', // Default fallback
+            profile_avatar: undefined,
+            profile_join_order: null,
+            replies: [],
+            user_liked: false,
+            user_disliked: false,
         }));
 
         console.log('Mapped comments:', comments.length);
 
         if (comments.length === 0) return [];
 
-        // Fetch profiles for comments
-        const profileIds = Array.from(new Set(comments.map(c => c.profile_id)));
-        if (profileIds.length > 0) {
-            const placeholders = profileIds.map(() => '?').join(',');
-            const profileRes = await turso.execute({
-                sql: `SELECT c.id, c.name, c.avatar, u.join_order 
-                      FROM channels c 
-                      LEFT JOIN users u ON c.user_id = u.id 
-                      WHERE c.id IN (${placeholders})`,
-                args: profileIds
-            });
-
-            const profileMap = new Map();
-            profileRes.rows.forEach(r => {
-                profileMap.set(r.id, r);
-            });
-
-            comments.forEach(c => {
-                const p = profileMap.get(c.profile_id);
-                if (p) {
-                    c.profile_name = p.name;
-                    c.profile_avatar = p.avatar;
-                    c.profile_join_order = p.join_order;
-                }
-            });
-        }
-
-        // Fetch engagement if logged in
-        let engagementMap = new Map(); // commentId -> 'like' | 'dislike'
-        if (profileId) {
-            const commentIds = comments.map(c => c.id);
-            if (commentIds.length > 0) {
-                const placeholders = commentIds.map(() => '?').join(',');
-                const engRes = await turso.execute({
-                    sql: `SELECT comment_id, type FROM comment_engagement WHERE profile_id = ? AND comment_id IN (${placeholders})`,
-                    args: [profileId, ...commentIds]
-                });
-                engRes.rows.forEach(r => {
-                    engagementMap.set(r.comment_id, r.type);
-                });
-            }
-        }
-
-        // Apply engagement to comments
-        comments.forEach(c => {
-            const type = engagementMap.get(c.id);
-            c.user_liked = type === 'like';
-            c.user_disliked = type === 'dislike';
-        });
-
-        // Build hierarchy
+        // Build hierarchy - only root comments for now
         const rootComments: Comment[] = [];
         const commentMap = new Map<string, Comment>();
 
@@ -113,8 +66,6 @@ export async function getVideoComments(videoId: string, profileId?: string) {
                 const parent = commentMap.get(c.parent_id);
                 if (parent) {
                     parent.replies?.push(c);
-                    // Sort replies old to new
-                    parent.replies?.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
                 }
             } else {
                 rootComments.push(c);
