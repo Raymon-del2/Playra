@@ -58,10 +58,7 @@ export async function getVideoComments(videoId: string, profileId?: string) {
             try {
                 const placeholders = profileIds.map(() => '?').join(',');
                 const profileRes = await turso.execute({
-                    sql: `SELECT c.id, c.name, c.avatar, u.join_order 
-                          FROM channels c 
-                          LEFT JOIN users u ON c.user_id = u.id 
-                          WHERE c.id IN (${placeholders})`,
+                    sql: `SELECT id, name, avatar FROM channels WHERE id IN (${placeholders})`,
                     args: profileIds
                 });
 
@@ -75,9 +72,10 @@ export async function getVideoComments(videoId: string, profileId?: string) {
                     if (p) {
                         c.profile_name = p.name;
                         c.profile_avatar = p.avatar;
-                        c.profile_join_order = p.join_order;
+                        c.profile_join_order = null; // Can't fetch without users table
                     }
                 });
+                console.log('Profiles fetched successfully:', profileRes.rows.length);
             } catch (profileError) {
                 console.error('Failed to fetch profiles:', profileError);
                 // Keep default values if profile fetch fails
