@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { getVideos, Video } from '@/lib/supabase';
 import { formatDistanceToNow } from 'date-fns';
 import { getActiveProfile, getBatchProfiles } from '@/app/actions/profile';
+import CommunityPostCard from '@/components/CommunityPostCard';
 
 const SKELETON_BATCH = Array.from({ length: 8 });
 
@@ -265,6 +266,7 @@ function StylesShelf({
 
 export default function Home() {
   const [videos, setVideos] = useState<Video[]>([]);
+  const [posts, setPosts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [activeProfile, setActiveProfile] = useState<any>(null);
@@ -278,16 +280,19 @@ export default function Home() {
   const hoverTimersRef = useRef<Record<string, ReturnType<typeof setTimeout> | null>>({});
 
   useEffect(() => {
-    const fetchVideos = async () => {
+    const fetchContent = async () => {
       try {
         const profile = await getActiveProfile();
         setActiveProfile(profile);
 
-        // Fetch all videos (no account-type/category filter to avoid hiding uploads)
-        const data = await getVideos(50, 0);
+        // Fetch videos and posts in parallel
+        const [videoData, postsRes] = await Promise.all([
+          getVideos(50, 0),
+          fetch('/api/posts?limit=20').then(r => r.json()).catch(() => ({ posts: [] }))
+        ]);
 
         // Ensure the uploader sees their latest avatar on their own videos
-        let hydrated = (data || []).map((v) => {
+        let hydrated = (videoData || []).map((v) => {
           if (profile?.id && v.channel_id === profile.id && profile.avatar) {
             return { ...v, channel_avatar: profile.avatar };
           }
@@ -315,13 +320,14 @@ export default function Home() {
         }
 
         setVideos(hydrated);
+        setPosts(postsRes.posts || []);
       } catch (error) {
         console.error(error);
       } finally {
         setIsLoading(false);
       }
     };
-    fetchVideos();
+    fetchContent();
 
     // Check for video updates made while page wasn't loaded
     const lastUpdate = localStorage.getItem('video-updated');
@@ -337,27 +343,27 @@ export default function Home() {
       }
     }
 
-    // Listen for video update events from studio
+    // Listen for updates
     const handleVideoUpdate = (e: any) => {
       console.log('Video update event received:', e.detail);
-      fetchVideos();
+      fetchContent();
     };
 
     // Listen for localStorage changes (cross-tab support)
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'video-updated') {
         console.log('Video update detected via localStorage');
-        fetchVideos();
+        fetchContent();
       }
     };
 
     window.addEventListener('video-updated', handleVideoUpdate);
     window.addEventListener('storage', handleStorageChange);
 
-    // Refresh when tab becomes visible (user returns from watch page)
+    // Refresh when tab becomes visible
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        fetchVideos();
+        fetchContent();
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -471,23 +477,51 @@ export default function Home() {
           );
 
           if (displayVideos.length > 0 || styles.length > 0) {
+            // Interleave posts randomly between videos
+            const interleavePosts = (videos: Video[], posts: any[]): (Video | { type: 'post'; data: any })[] => {
+              if (posts.length === 0) return videos;
+              
+              const result: (Video | { type: 'post'; data: any })[] = [];
+              let postIndex = 0;
+              let nextPostAt = Math.floor(Math.random() * 3) + 4;
+              
+              videos.forEach((video, videoIndex) => {
+                result.push(video);
+                if (videoIndex === nextPostAt && postIndex < posts.length) {
+                  result.push({ type: 'post', data: posts[postIndex] });
+                  postIndex++;
+                  nextPostAt = videoIndex + Math.floor(Math.random() * 3) + 4;
+                }
+              });
+              
+              return result;
+            };
+
+            const interleavedContent = interleavePosts(displayVideos, posts);
+
             return (
               <div className="pb-20">
-                {/* Initial Grid of Regular Videos */}
+                {/* Initial Grid with Posts Interleaved */}
                 {displayVideos.length > 0 ? (
                   <div className="relative z-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 4xl:grid-cols-6 gap-x-6 gap-y-12 px-6 md:px-10 pt-4 mt-1">
-                    {displayVideos.slice(0, 8).map((video) => (
-                      <VideoCard
-                        key={video.id}
-                        video={video}
-                        isHovered={hoveredId === video.id}
-                        isPreviewing={previewingId === video.id}
-                        isMuted={isMuted}
-                        onHoverStart={handleHoverStart}
-                        onHoverEnd={handleHoverEnd}
-                        onToggleMuted={() => setIsMuted(!isMuted)}
-                        videoRef={(el) => { videoRefs.current[video.id] = el; }}
-                      />
+                    {interleavedContent.slice(0, 12).map((item, index) => (
+                      'type' in item ? (
+                        <div key={`post-${item.data.id}-${index}`} className="col-span-full sm:col-span-2 lg:col-span-3 2xl:col-span-4 3xl:col-span-5 4xl:col-span-6 max-w-2xl mx-auto w-full">
+                          <CommunityPostCard post={item.data} />
+                        </div>
+                      ) : (
+                        <VideoCard
+                          key={item.id}
+                          video={item}
+                          isHovered={hoveredId === item.id}
+                          isPreviewing={previewingId === item.id}
+                          isMuted={isMuted}
+                          onHoverStart={handleHoverStart}
+                          onHoverEnd={handleHoverEnd}
+                          onToggleMuted={() => setIsMuted(!isMuted)}
+                          videoRef={(el) => { videoRefs.current[item.id] = el; }}
+                        />
+                      )
                     ))}
                   </div>
                 ) : (
