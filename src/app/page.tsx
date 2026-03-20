@@ -83,7 +83,7 @@ function VideoCard({
       <Link href={video.is_short ? `/styles/${video.id}` : `/watch/${video.id}`} className="relative block w-full mb-3">
         <div className={`relative w-full overflow-hidden rounded-xl bg-zinc-900 ${video.is_short ? 'aspect-[9/16]' : 'aspect-video'} shadow-md transition-all duration-300`}>
           <img
-            src={video.thumbnail_url}
+            src={video.thumbnail_url || '/default-thumbnail.jpg'}
             alt={video.title}
             className={`w-full h-full object-cover transition-opacity duration-300 ${isPreviewing ? 'opacity-0' : 'opacity-100'}`}
           />
@@ -93,7 +93,7 @@ function VideoCard({
               videoRef(el);
             }}
             className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${isPreviewing ? 'opacity-100' : 'opacity-0'}`}
-            src={video.video_url}
+            src={video.video_url || undefined}
             muted={isMuted}
             playsInline
             loop
@@ -221,7 +221,7 @@ function StyleCard({
       className="flex-shrink-0 w-44 sm:w-52 group relative"
     >
       <div className="relative aspect-[9/16] rounded-2xl overflow-hidden bg-zinc-800 shadow-xl border border-white/5 group-hover:scale-[1.02] transition-transform">
-        <img src={style.thumbnail_url} className="w-full h-full object-cover" alt="" />
+        <img src={style.thumbnail_url || '/default-thumbnail.jpg'} className="w-full h-full object-cover" alt="" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
         <div className="absolute bottom-4 left-4 right-4">
           <h3 className="text-sm font-bold text-white line-clamp-2 leading-tight uppercase tracking-tighter drop-shadow-md">{style.title}</h3>

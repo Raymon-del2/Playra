@@ -221,7 +221,10 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
           </div>
 
           <div className="flex flex-col items-center sm:items-start text-center sm:text-left flex-1">
-            <h1 className="text-[24px] sm:text-[36px] font-black leading-tight mb-1">{channel.name}</h1>
+            <h1 className="text-[24px] sm:text-[36px] font-black leading-tight mb-1 flex items-center gap-2">
+              {channel.name}
+              <img src="/verified-badge.ico" alt="Verified" className="w-5 h-5 sm:w-6 sm:h-6" />
+            </h1>
             <div className="flex flex-wrap justify-center sm:justify-start items-center gap-x-2 text-[14px] text-zinc-400 font-medium mb-3">
               <span className="text-white font-bold">{handle}</span>
               <span>•</span>
