@@ -16,6 +16,7 @@ interface PostProps {
     created_at: string;
     likes?: number;
     comments?: number;
+    join_order?: number;
   };
   onVote?: (postId: string, optionIndex: number) => void;
   onQuizAnswer?: (postId: string, answerIndex: number) => void;
