@@ -526,7 +526,7 @@ export default function Home() {
             new Map(videos.filter(v => v.is_short).map((style) => [style.id, style])).values()
           );
 
-          if (displayVideos.length > 0 || styles.length > 0) {
+          if (displayVideos.length > 0 || styles.length > 0 || feedPosts.length > 0) {
             // Interleave posts randomly between videos
             const interleavePosts = (videos: Video[], posts: any[]): (Video | { type: 'post'; data: any })[] => {
               if (posts.length === 0) return videos;
@@ -547,7 +547,7 @@ export default function Home() {
               return result;
             };
 
-            const interleavedContent = interleavePosts(displayVideos, posts);
+            const interleavedContent = interleavePosts(displayVideos, feedPosts);
 
             return (
               <div className="pb-20">

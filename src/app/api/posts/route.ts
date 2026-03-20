@@ -1,30 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { NextResponse } from 'next/server';
 
-// Auto-migrate on first request
-let migrated = false;
-
-async function ensureMigrated() {
-  if (migrated) return;
-  try {
-    await fetch('http://localhost:3000/api/migrate');
-    migrated = true;
-  } catch (e) {
-    console.log('Migration check skipped');
-  }
-}
-
 export async function POST(request: Request) {
-  // Ensure columns exist
-  await ensureMigrated();
-  
-  // 1. Auth Check: Ensure only logged-in users can post
-  // Note: This will be handled by RLS policies in Supabase
-  // const { data: { session } } = await supabase.auth.getSession();
-  // if (!session) {
-  //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  // }
-
   try {
     const body = await request.json();
     const { post_type, visibility, content, profile_id, profile_name, profile_avatar } = body;
