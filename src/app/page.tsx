@@ -553,20 +553,20 @@ export default function Home() {
 
             return (
               <div className="pb-20">
-                {/* Initial Grid with Posts Interleaved */}
+                {/* Videos Grid */}
                 {displayVideos.length > 0 ? (
                   <div className="relative z-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 4xl:grid-cols-6 gap-x-6 gap-y-12 px-6 md:px-10 pt-4 mt-1">
-                    {interleavedContent.slice(0, 12).map((item, index) => (
-                      <FeedItem
-                        key={index}
-                        item={item}
-                        hoveredId={hoveredId}
-                        previewingId={previewingId}
+                    {displayVideos.slice(0, 12).map((video) => (
+                      <VideoCard
+                        key={video.id}
+                        video={video}
+                        isHovered={hoveredId === video.id}
+                        isPreviewing={previewingId === video.id}
                         isMuted={isMuted}
                         onHoverStart={handleHoverStart}
                         onHoverEnd={handleHoverEnd}
                         onToggleMuted={() => setIsMuted(!isMuted)}
-                        videoRef={(el, id) => { videoRefs.current[id] = el; }}
+                        videoRef={(el) => { videoRefs.current[video.id] = el; }}
                       />
                     ))}
                   </div>
@@ -576,7 +576,7 @@ export default function Home() {
                   </div>
                 )}
 
-                {/* Styles Shelf - Only show on All or if something matches */}
+                {/* Styles Shelf */}
                 {(selectedCategory === 'All' || selectedCategory === 'New to you') && (
                   styles.length > 0 ? (
                     <StylesShelf styles={styles} />
@@ -587,10 +587,24 @@ export default function Home() {
                   )
                 )}
 
-                {/* Remaining Grid of Regular Videos */}
-                {displayVideos.length > 8 && (
+                {/* Community Posts Section */}
+                {feedPosts.length > 0 && (
+                  <div className="px-6 md:px-10 pt-8">
+                    <h2 className="text-xl font-bold text-white mb-4">Community Posts</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
+                      {feedPosts.map((post, index) => (
+                        <div key={`post-${post.id}-${index}`} className="max-w-2xl mx-auto w-full">
+                          <CommunityPostCard post={post} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Remaining Videos */}
+                {displayVideos.length > 12 && (
                   <div className="relative z-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 4xl:grid-cols-6 gap-x-6 gap-y-12 px-6 md:px-10 pt-10">
-                    {displayVideos.slice(8).map((video) => (
+                    {displayVideos.slice(12).map((video) => (
                       <VideoCard
                         key={video.id}
                         video={video}
