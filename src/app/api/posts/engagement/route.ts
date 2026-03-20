@@ -3,6 +3,36 @@ import { NextResponse } from 'next/server';
 import { turso } from '@/lib/turso';
 import { getActiveProfile } from '@/app/actions/profile';
 
+async function ensureTables() {
+  // Create post_likes table if not exists
+  try {
+    await turso.execute({
+      sql: `CREATE TABLE IF NOT EXISTS post_likes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        post_id TEXT NOT NULL,
+        profile_id TEXT NOT NULL,
+        created_at TEXT DEFAULT (datetime('now')),
+        UNIQUE(post_id, profile_id)
+      )`,
+      args: []
+    });
+  } catch (e) { /* ignore */ }
+  
+  // Create post_comments table if not exists
+  try {
+    await turso.execute({
+      sql: `CREATE TABLE IF NOT EXISTS post_comments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        post_id TEXT NOT NULL,
+        profile_id TEXT NOT NULL,
+        content TEXT NOT NULL,
+        created_at TEXT DEFAULT (datetime('now'))
+      )`,
+      args: []
+    });
+  } catch (e) { /* ignore */ }
+}
+
 async function getProfile() {
   const profile = await getActiveProfile();
   if (!profile?.id) {
@@ -13,6 +43,8 @@ async function getProfile() {
 
 export async function GET(req: Request) {
   try {
+    await ensureTables();
+    
     const { searchParams } = new URL(req.url);
     const postId = searchParams.get('postId');
     if (!postId) return NextResponse.json({ error: 'postId required' }, { status: 400 });
@@ -108,7 +140,7 @@ export async function POST(req: Request) {
         args: [postId, profileId, content.trim()],
       });
 
-      return NextResponse.json({ ok: true, commentId: result.lastInsertedRowid });
+      return NextResponse.json({ ok: true, commentId: result.lastInsertRowid });
     }
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });

@@ -63,8 +63,10 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
         body: JSON.stringify({ postId: post.id, action: 'like' }),
       });
       const data = await res.json();
-      setUserLiked(data.liked);
-      setLikes(prev => data.liked ? prev + 1 : prev - 1);
+      if (data.liked !== undefined) {
+        setUserLiked(data.liked);
+        setLikes(prev => data.liked ? prev + 1 : Math.max(0, prev - 1));
+      }
     } catch (e) { console.log('Like error', e); }
   };
 
