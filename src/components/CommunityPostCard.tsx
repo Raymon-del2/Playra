@@ -43,7 +43,11 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
       try {
         const res = await fetch(`/api/posts/engagement?postId=${post.id}`);
         const data = await res.json();
-        if (data.likes !== undefined) setLikes(data.likes);
+        console.log('Likes data:', data);
+        if (data.likes !== undefined) {
+          console.log('Setting likes to:', data.likes);
+          setLikes(data.likes);
+        }
         if (data.userLiked !== undefined) setUserLiked(data.userLiked);
       } catch (e) { console.log('Load engagement error', e); }
     };

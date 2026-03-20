@@ -134,11 +134,13 @@ export async function POST(req: Request) {
     if (!postId) return NextResponse.json({ error: 'postId required' }, { status: 400 });
 
     if (action === 'like') {
+      console.log('Like action - postId:', postId, 'profileId:', profileId);
       // Check if already liked
       const existing = await turso.execute({
         sql: `SELECT 1 FROM post_likes WHERE post_id = ? AND profile_id = ?`,
         args: [postId, profileId],
       });
+      console.log('Existing likes:', existing.rows);
 
       if (existing.rows?.length > 0) {
         // Unlike
@@ -153,6 +155,7 @@ export async function POST(req: Request) {
           sql: `INSERT INTO post_likes (post_id, profile_id, created_at) VALUES (?, ?, NOW())`,
           args: [postId, profileId],
         });
+        console.log('Like inserted for postId:', postId, 'profileId:', profileId);
         return NextResponse.json({ liked: true });
       }
     }
