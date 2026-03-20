@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import FounderBadge from '@/components/FounderBadge';
 import { formatDistanceToNow } from 'date-fns';
+import { supabase } from '@/lib/supabase';
 
 interface PostProps {
   post: {
@@ -38,6 +39,7 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
   const [loadingComments, setLoadingComments] = useState(false);
   const [postingComment, setPostingComment] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserName, setCurrentUserName] = useState<string>('You');
 
   // Parse post data from description
   const postData = parsePostData(post.description);
@@ -52,7 +54,18 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
         if (data.likes !== undefined) setLikes(data.likes);
         if (data.userLiked !== undefined) setUserLiked(data.userLiked);
         if (data.comments) setComments(data.comments);
-        if (data.currentUserId) setCurrentUserId(data.currentUserId);
+        if (data.currentUserId) {
+          setCurrentUserId(data.currentUserId);
+          // Fetch current user's name
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('name, avatar')
+            .eq('id', data.currentUserId)
+            .single();
+          if (profile) {
+            setCurrentUserName(profile.name || 'You');
+          }
+        }
       } catch (e) { console.log('Load engagement error', e); }
     };
     loadEngagement();
@@ -94,10 +107,13 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
     e.preventDefault();
     if (!commentText.trim() || postingComment) return;
     
+    // Get current user name for optimistic display
+    const userName = currentUserName;
+    
     const newComment = {
       id: Date.now(),
       content: commentText.trim(),
-      profile_name: 'You',
+      profile_name: userName,
       profile_avatar: null,
       profile_id: currentUserId,
       created_at: new Date().toISOString(),
@@ -105,7 +121,7 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
     };
     
     // Optimistic update - show immediately
-    setComments([newComment, ...comments]);
+    setComments(prev => [newComment, ...prev]);
     const textToSubmit = commentText;
     setCommentText('');
     setPostingComment(true);
@@ -117,17 +133,15 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
         body: JSON.stringify({ postId: post.id, action: 'comment', content: textToSubmit }),
       });
       if (res.ok) {
-        // Reload comments to get real data with profile name
+        // Reload all engagement data (likes and comments)
         const res = await fetch(`/api/posts/engagement?postId=${post.id}`);
         const data = await res.json();
+        // Keep likes, update comments
+        if (data.likes !== undefined) setLikes(data.likes);
         if (data.comments) setComments(data.comments);
-      } else {
-        // Remove optimistic comment on error
-        setComments(comments);
       }
     } catch (e) { 
       console.log('Comment error', e);
-      setComments(comments);
     } finally {
       setPostingComment(false);
     }
