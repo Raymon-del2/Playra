@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import FounderBadge from '@/components/FounderBadge';
 import { formatDistanceToNow } from 'date-fns';
-import { supabase } from '@/lib/supabase';
 
 interface PostProps {
   post: {
@@ -33,13 +32,6 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
   // Engagement state
   const [likes, setLikes] = useState(post.likes || 0);
   const [userLiked, setUserLiked] = useState(false);
-  const [comments, setComments] = useState<any[]>([]);
-  const [showComments, setShowComments] = useState(false);
-  const [commentText, setCommentText] = useState('');
-  const [loadingComments, setLoadingComments] = useState(false);
-  const [postingComment, setPostingComment] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [currentUserName, setCurrentUserName] = useState<string>('You');
 
   // Parse post data from description
   const postData = parsePostData(post.description);
@@ -53,34 +45,10 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
         const data = await res.json();
         if (data.likes !== undefined) setLikes(data.likes);
         if (data.userLiked !== undefined) setUserLiked(data.userLiked);
-        if (data.comments) setComments(data.comments);
-        if (data.currentUserId) {
-          setCurrentUserId(data.currentUserId);
-          // Fetch current user's name
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('name, avatar')
-            .eq('id', data.currentUserId)
-            .single();
-          if (profile) {
-            setCurrentUserName(profile.name || 'You');
-          }
-        }
       } catch (e) { console.log('Load engagement error', e); }
     };
     loadEngagement();
   }, [post.id]);
-
-  const handleDeleteComment = async (commentId: number) => {
-    try {
-      await fetch('/api/posts/engagement', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ postId: post.id, action: 'deleteComment', commentId }),
-      });
-      setComments(comments.filter((c: any) => c.id !== commentId));
-    } catch (e) { console.log('Delete comment error', e); }
-  };
 
   const handleLike = async () => {
     // Optimistic update - immediately toggle UI
@@ -100,50 +68,6 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
       setUserLiked(wasLiked);
       setLikes(prev => wasLiked ? prev + 1 : Math.max(0, prev - 1));
       console.log('Like error', e); 
-    }
-  };
-
-  const handleCommentSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!commentText.trim() || postingComment) return;
-    
-    // Get current user name for optimistic display
-    const userName = currentUserName;
-    
-    const newComment = {
-      id: Date.now(),
-      content: commentText.trim(),
-      profile_name: userName,
-      profile_avatar: null,
-      profile_id: currentUserId,
-      created_at: new Date().toISOString(),
-      isOptimistic: true
-    };
-    
-    // Optimistic update - show immediately
-    setComments(prev => [newComment, ...prev]);
-    const textToSubmit = commentText;
-    setCommentText('');
-    setPostingComment(true);
-    
-    try {
-      const res = await fetch('/api/posts/engagement', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ postId: post.id, action: 'comment', content: textToSubmit }),
-      });
-      if (res.ok) {
-        // Reload all engagement data (likes and comments)
-        const res = await fetch(`/api/posts/engagement?postId=${post.id}`);
-        const data = await res.json();
-        // Keep likes, update comments
-        if (data.likes !== undefined) setLikes(data.likes);
-        if (data.comments) setComments(data.comments);
-      }
-    } catch (e) { 
-      console.log('Comment error', e);
-    } finally {
-      setPostingComment(false);
     }
   };
 
@@ -310,58 +234,12 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
           </svg>
           <span>{likes || 'Like'}</span>
         </button>
-        <button className="engage-btn" onClick={() => setShowComments(!showComments)}>
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-          </svg>
-          <span>{comments.length || 'Comment'}</span>
-        </button>
         <button className="engage-btn" onClick={handleShare}>
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
           </svg>
         </button>
       </div>
-
-      {/* Comments Popup */}
-      {showComments && (
-        <div className="comments-popup">
-          <div className="comments-header">
-            <h4>Comments ({comments.length})</h4>
-            <button onClick={() => setShowComments(false)} className="close-btn">×</button>
-          </div>
-          <div className="comments-list">
-            {comments.length === 0 ? (
-              <p className="no-comments">No comments yet. Be the first!</p>
-            ) : (
-              comments.map((c: any) => (
-                <div key={c.id} className="comment-item">
-                  <img src={c.profile_avatar || '/default-avatar.png'} alt="" className="comment-avatar" />
-                  <div className="comment-content">
-                    <span className="comment-author">{c.profile_name}</span>
-                    <p>{c.content}</p>
-                  </div>
-                  {currentUserId && c.profile_id === currentUserId && (
-                    <button onClick={() => handleDeleteComment(c.id)} className="delete-comment-btn">×</button>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-          <form onSubmit={handleCommentSubmit} className="comment-form">
-            <input
-              type="text"
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              placeholder="Add a comment..."
-              className="comment-input"
-            />
-            <button type="submit" disabled={!commentText.trim() || postingComment}>
-              {postingComment ? 'Posting...' : 'Post'}
-            </button>
-          </form>
-        </div>
-      )}
 
       <style jsx>{`
         .community-post {
