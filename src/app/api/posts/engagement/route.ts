@@ -96,7 +96,7 @@ export async function GET(req: Request) {
     if (profileIds.length > 0) {
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('id, name, avatar_url')
+        .select('id, name, avatar')
         .in('id', profileIds);
       
       if (profiles) {
@@ -105,7 +105,7 @@ export async function GET(req: Request) {
           const profile = profileMap.get(c.profile_id);
           if (profile) {
             c.profile_name = profile.name || 'User';
-            c.profile_avatar = profile.avatar_url;
+            c.profile_avatar = profile.avatar;
           }
         });
       }
@@ -114,7 +114,8 @@ export async function GET(req: Request) {
     return NextResponse.json({ 
       likes: likesCount, 
       userLiked, 
-      comments 
+      comments,
+      currentUserId: profileId 
     });
   } catch (error: any) {
     console.error('Post engagement error', error);
@@ -166,6 +167,19 @@ export async function POST(req: Request) {
       });
 
       return NextResponse.json({ ok: true, commentId: result.lastInsertRowid });
+    }
+
+    if (action === 'deleteComment') {
+      const commentId = body?.commentId as number;
+      if (!commentId) return NextResponse.json({ error: 'commentId required' }, { status: 400 });
+
+      // Only allow deleting own comments
+      await turso.execute({
+        sql: `DELETE FROM post_comments WHERE id = ? AND profile_id = ?`,
+        args: [commentId, profileId],
+      });
+
+      return NextResponse.json({ ok: true });
     }
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });

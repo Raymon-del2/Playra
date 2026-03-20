@@ -36,6 +36,7 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [loadingComments, setLoadingComments] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   // Parse post data from description
   const postData = parsePostData(post.description);
@@ -50,10 +51,22 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
         if (data.likes !== undefined) setLikes(data.likes);
         if (data.userLiked !== undefined) setUserLiked(data.userLiked);
         if (data.comments) setComments(data.comments);
+        if (data.currentUserId) setCurrentUserId(data.currentUserId);
       } catch (e) { console.log('Load engagement error', e); }
     };
     loadEngagement();
   }, [post.id]);
+
+  const handleDeleteComment = async (commentId: number) => {
+    try {
+      await fetch('/api/posts/engagement', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ postId: post.id, action: 'deleteComment', commentId }),
+      });
+      setComments(comments.filter((c: any) => c.id !== commentId));
+    } catch (e) { console.log('Delete comment error', e); }
+  };
 
   const handleLike = async () => {
     // Optimistic update - immediately toggle UI
@@ -289,6 +302,9 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
                     <span className="comment-author">{c.profile_name}</span>
                     <p>{c.content}</p>
                   </div>
+                  {currentUserId && c.profile_id === currentUserId && (
+                    <button onClick={() => handleDeleteComment(c.id)} className="delete-comment-btn">×</button>
+                  )}
                 </div>
               ))
             )}
@@ -546,6 +562,20 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
           margin: 4px 0 0;
           font-size: 13px;
           color: var(--text, #ddd);
+        }
+
+        .delete-comment-btn {
+          background: none;
+          border: none;
+          color: var(--text-muted, #666);
+          font-size: 18px;
+          cursor: pointer;
+          padding: 0 4px;
+          align-self: flex-start;
+        }
+
+        .delete-comment-btn:hover {
+          color: #ef4444;
         }
 
         .comment-form {
