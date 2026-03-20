@@ -126,19 +126,19 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     await ensureTables();
-    let profileId: string;
-    try {
-      profileId = await getProfile();
-    } catch (e: any) {
-      console.error('getProfile error:', e);
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-    }
     
     const body = await req.json();
     const postId = body?.postId as string;
     const action = body?.action as string;
 
     if (!postId) return NextResponse.json({ error: 'postId required' }, { status: 400 });
+
+    // Get profile directly
+    const profile = await getActiveProfile();
+    if (!profile?.id) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+    const profileId = profile.id;
 
     console.log('POST engagement - action:', action, 'postId:', postId, 'profileId:', profileId);
 
