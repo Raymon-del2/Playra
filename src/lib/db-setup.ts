@@ -10,13 +10,21 @@ export async function initDatabase() {
                 id TEXT PRIMARY KEY,
                 email TEXT UNIQUE NOT NULL,
                 username TEXT UNIQUE,
-                account_type TEXT DEFAULT 'adult', -- adult | family | kid | advertiser
+                account_type TEXT DEFAULT 'adult',
                 parent_id TEXT,
-                join_order INTEGER, -- Auto-assigned order for First 50 badge
+                join_order INTEGER,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (parent_id) REFERENCES users(id)
             );
         `);
+
+        // Migration: Add join_order column if it doesn't exist
+        try {
+            await turso.execute(`ALTER TABLE users ADD COLUMN join_order INTEGER`);
+            console.log("Added join_order column to users table");
+        } catch (e) {
+            // Column already exists, ignore error
+        }
 
         // Join order counter table for auto-increment
         await turso.execute(`
