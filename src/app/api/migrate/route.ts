@@ -31,6 +31,48 @@ export async function GET() {
       }
     }
     
+    // Create post_likes table
+    try {
+      await turso.execute({
+        sql: `CREATE TABLE IF NOT EXISTS post_likes (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          post_id TEXT NOT NULL,
+          profile_id TEXT NOT NULL,
+          created_at TEXT DEFAULT (datetime('now')),
+          UNIQUE(post_id, profile_id)
+        )`,
+        args: []
+      });
+      results.push('Created table: post_likes');
+    } catch (e: any) {
+      if (e.message?.includes('already exists')) {
+        results.push('Table exists: post_likes');
+      } else {
+        results.push(`Error creating post_likes: ${e.message}`);
+      }
+    }
+    
+    // Create post_comments table
+    try {
+      await turso.execute({
+        sql: `CREATE TABLE IF NOT EXISTS post_comments (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          post_id TEXT NOT NULL,
+          profile_id TEXT NOT NULL,
+          content TEXT NOT NULL,
+          created_at TEXT DEFAULT (datetime('now'))
+        )`,
+        args: []
+      });
+      results.push('Created table: post_comments');
+    } catch (e: any) {
+      if (e.message?.includes('already exists')) {
+        results.push('Table exists: post_comments');
+      } else {
+        results.push(`Error creating post_comments: ${e.message}`);
+      }
+    }
+    
     return NextResponse.json({ 
       success: true, 
       message: 'Migration completed',

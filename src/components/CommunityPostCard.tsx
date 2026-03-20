@@ -28,10 +28,74 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
   const [votedOption, setVotedOption] = useState<number | null>(null);
   const [quizAnswer, setQuizAnswer] = useState<number | null>(null);
   const [showQuizResult, setShowQuizResult] = useState(false);
+  
+  // Engagement state
+  const [likes, setLikes] = useState(post.likes || 0);
+  const [userLiked, setUserLiked] = useState(false);
+  const [comments, setComments] = useState<any[]>([]);
+  const [showComments, setShowComments] = useState(false);
+  const [commentText, setCommentText] = useState('');
+  const [loadingComments, setLoadingComments] = useState(false);
 
   // Parse post data from description
   const postData = parsePostData(post.description);
   const isMobile = useIsMobile();
+
+  // Load engagement data on mount
+  useEffect(() => {
+    const loadEngagement = async () => {
+      try {
+        const res = await fetch(`/api/posts/engagement?postId=${post.id}`);
+        const data = await res.json();
+        if (data.likes !== undefined) setLikes(data.likes);
+        if (data.userLiked !== undefined) setUserLiked(data.userLiked);
+        if (data.comments) setComments(data.comments);
+      } catch (e) { console.log('Load engagement error', e); }
+    };
+    loadEngagement();
+  }, [post.id]);
+
+  const handleLike = async () => {
+    try {
+      const res = await fetch('/api/posts/engagement', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ postId: post.id, action: 'like' }),
+      });
+      const data = await res.json();
+      setUserLiked(data.liked);
+      setLikes(prev => data.liked ? prev + 1 : prev - 1);
+    } catch (e) { console.log('Like error', e); }
+  };
+
+  const handleCommentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!commentText.trim()) return;
+    try {
+      const res = await fetch('/api/posts/engagement', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ postId: post.id, action: 'comment', content: commentText }),
+      });
+      if (res.ok) {
+        setCommentText('');
+        // Reload comments
+        const res = await fetch(`/api/posts/engagement?postId=${post.id}`);
+        const data = await res.json();
+        if (data.comments) setComments(data.comments);
+      }
+    } catch (e) { console.log('Comment error', e); }
+  };
+
+  const handleShare = async () => {
+    const url = `${window.location.origin}/community/${post.id}`;
+    if (navigator.share) {
+      try { await navigator.share({ title: post.title, url }); } catch (e) {}
+    } else {
+      await navigator.clipboard.writeText(url);
+      alert('Link copied to clipboard!');
+    }
+  };
 
   const handleVote = (index: number) => {
     if (votedOption !== null) return;
@@ -180,24 +244,59 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
 
       {/* Engagement Bar */}
       <div className="post-engagement">
-        <button className="engage-btn like-btn">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button className={`engage-btn like-btn ${userLiked ? 'liked' : ''}`} onClick={handleLike}>
+          <svg className="w-5 h-5" fill={userLiked ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
           </svg>
-          <span>{post.likes || 'Like'}</span>
+          <span>{likes || 'Like'}</span>
         </button>
-        <button className="engage-btn">
+        <button className="engage-btn" onClick={() => setShowComments(!showComments)}>
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
           </svg>
-          <span>{post.comments || 'Comment'}</span>
+          <span>{comments.length || 'Comment'}</span>
         </button>
-        <button className="engage-btn">
+        <button className="engage-btn" onClick={handleShare}>
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
           </svg>
         </button>
       </div>
+
+      {/* Comments Popup */}
+      {showComments && (
+        <div className="comments-popup">
+          <div className="comments-header">
+            <h4>Comments ({comments.length})</h4>
+            <button onClick={() => setShowComments(false)} className="close-btn">×</button>
+          </div>
+          <div className="comments-list">
+            {comments.length === 0 ? (
+              <p className="no-comments">No comments yet. Be the first!</p>
+            ) : (
+              comments.map((c: any) => (
+                <div key={c.id} className="comment-item">
+                  <img src={c.profile_avatar || '/default-avatar.png'} alt="" className="comment-avatar" />
+                  <div className="comment-content">
+                    <span className="comment-author">{c.profile_name}</span>
+                    <p>{c.content}</p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          <form onSubmit={handleCommentSubmit} className="comment-form">
+            <input
+              type="text"
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              placeholder="Add a comment..."
+              className="comment-input"
+            />
+            <button type="submit" disabled={!commentText.trim()}>Post</button>
+          </form>
+        </div>
+      )}
 
       <style jsx>{`
         .community-post {
@@ -361,6 +460,122 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
 
         .like-btn:hover {
           color: #ef4444;
+        }
+
+        .like-btn.liked {
+          color: #ef4444;
+        }
+
+        /* Comments Popup */
+        .comments-popup {
+          border-top: 1px solid var(--border, rgba(255,255,255,0.1));
+          max-height: 300px;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .comments-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 12px 16px;
+          border-bottom: 1px solid var(--border, rgba(255,255,255,0.1));
+        }
+
+        .comments-header h4 {
+          margin: 0;
+          font-size: 14px;
+          font-weight: 600;
+        }
+
+        .close-btn {
+          background: none;
+          border: none;
+          color: var(--text-muted, #aaa);
+          font-size: 20px;
+          cursor: pointer;
+          padding: 0;
+          line-height: 1;
+        }
+
+        .comments-list {
+          flex: 1;
+          overflow-y: auto;
+          padding: 12px 16px;
+        }
+
+        .no-comments {
+          color: var(--text-muted, #666);
+          font-size: 13px;
+          text-align: center;
+          padding: 20px 0;
+        }
+
+        .comment-item {
+          display: flex;
+          gap: 10px;
+          margin-bottom: 12px;
+        }
+
+        .comment-avatar {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          object-fit: cover;
+        }
+
+        .comment-content {
+          flex: 1;
+        }
+
+        .comment-author {
+          font-size: 13px;
+          font-weight: 600;
+          color: white;
+        }
+
+        .comment-content p {
+          margin: 4px 0 0;
+          font-size: 13px;
+          color: var(--text, #ddd);
+        }
+
+        .comment-form {
+          display: flex;
+          gap: 8px;
+          padding: 12px 16px;
+          border-top: 1px solid var(--border, rgba(255,255,255,0.1));
+        }
+
+        .comment-input {
+          flex: 1;
+          padding: 8px 12px;
+          border-radius: 20px;
+          border: 1px solid var(--border, rgba(255,255,255,0.2));
+          background: rgba(255,255,255,0.05);
+          color: white;
+          font-size: 13px;
+        }
+
+        .comment-input:focus {
+          outline: none;
+          border-color: #3b82f6;
+        }
+
+        .comment-form button {
+          padding: 8px 16px;
+          border-radius: 20px;
+          border: none;
+          background: #3b82f6;
+          color: white;
+          font-size: 13px;
+          font-weight: 500;
+          cursor: pointer;
+        }
+
+        .comment-form button:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
         }
 
         /* Keyboard hint for desktop */
