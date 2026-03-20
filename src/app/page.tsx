@@ -516,12 +516,12 @@ export default function Home() {
           let feedPosts: any[] = [];
           
           if (selectedCategory === 'All' || selectedCategory === 'New to you') {
-            displayVideos = videos.filter(v => !v.is_short && v.video_url);
-            feedPosts = videos.filter(v => !v.video_url);
+            displayVideos = videos.filter(v => !v.is_short && v.video_url && v.video_url.trim() !== '');
+            feedPosts = videos.filter(v => !v.video_url || v.video_url.trim() === '');
           } else if (selectedCategory === 'Recently uploaded') {
             const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
-            displayVideos = videos.filter(v => !v.is_short && v.video_url && new Date(v.created_at).getTime() > oneDayAgo);
-            feedPosts = videos.filter(v => !v.video_url && new Date(v.created_at).getTime() > oneDayAgo);
+            displayVideos = videos.filter(v => !v.is_short && v.video_url && v.video_url.trim() !== '' && new Date(v.created_at).getTime() > oneDayAgo);
+            feedPosts = videos.filter(v => (!v.video_url || v.video_url.trim() === '') && new Date(v.created_at).getTime() > oneDayAgo);
           }
 
           const styles = Array.from(
