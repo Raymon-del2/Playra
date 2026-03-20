@@ -275,8 +275,10 @@ function FeedItem({ item, hoveredId, previewingId, isMuted, onHoverStart, onHove
   onToggleMuted: () => void;
   videoRef: (el: HTMLVideoElement | null, id: string) => void;
 }) {
-  // Check if it's a post (either wrapped type or is_post flag)
-  const isPost = ('type' in item && item.type === 'post') || ('is_post' in item && item.is_post);
+  // Check if it's a post (wrapped type, empty video_url, or is_post flag)
+  const isPost = ('type' in item && item.type === 'post') || 
+                 ('video_url' in item && !item.video_url) || 
+                 ('is_post' in item && item.is_post);
   
   if (isPost) {
     const postData = 'type' in item ? item.data : item;
