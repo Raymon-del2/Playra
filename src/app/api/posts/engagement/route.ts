@@ -125,16 +125,23 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    console.log('POST /api/posts/engagement called');
+    
     await ensureTables();
+    console.log('ensureTables done');
     
     const body = await req.json();
     const postId = body?.postId as string;
     const action = body?.action as string;
+    console.log('body parsed:', { postId, action });
 
     if (!postId) return NextResponse.json({ error: 'postId required' }, { status: 400 });
 
     // Get profile directly
+    console.log('calling getActiveProfile');
     const profile = await getActiveProfile();
+    console.log('getActiveProfile result:', profile);
+    
     if (!profile?.id) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
