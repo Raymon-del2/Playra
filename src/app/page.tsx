@@ -514,12 +514,12 @@ export default function Home() {
           let feedPosts: any[] = [];
           
           if (selectedCategory === 'All' || selectedCategory === 'New to you') {
-            displayVideos = videos.filter(v => !v.is_short && !v.is_post);
-            feedPosts = videos.filter(v => v.is_post);
+            displayVideos = videos.filter(v => !v.is_short && v.video_url);
+            feedPosts = videos.filter(v => !v.video_url);
           } else if (selectedCategory === 'Recently uploaded') {
             const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
-            displayVideos = videos.filter(v => !v.is_short && !v.is_post && new Date(v.created_at).getTime() > oneDayAgo);
-            feedPosts = videos.filter(v => v.is_post && new Date(v.created_at).getTime() > oneDayAgo);
+            displayVideos = videos.filter(v => !v.is_short && v.video_url && new Date(v.created_at).getTime() > oneDayAgo);
+            feedPosts = videos.filter(v => !v.video_url && new Date(v.created_at).getTime() > oneDayAgo);
           }
 
           const styles = Array.from(
