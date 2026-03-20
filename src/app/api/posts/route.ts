@@ -120,7 +120,36 @@ export async function GET(request: Request) {
       }
     });
 
-    return NextResponse.json({ posts }, { status: 200 });
+    // Get channel IDs and fetch join_order from channels table
+    const channelIds = [...new Set(posts.map((p: any) => p.channel_id).filter(Boolean))];
+    let channelJoinOrders: Record<string, number> = {};
+    
+    if (channelIds.length > 0) {
+      // Fetch join_order from Turso channels table
+      const { turso } = await import('@/lib/turso');
+      try {
+        const placeholders = channelIds.map(() => '?').join(',');
+        const channelResult = await turso.execute({
+          sql: `SELECT id, join_order FROM channels WHERE id IN (${placeholders})`,
+          args: channelIds
+        });
+        (channelResult.rows || []).forEach((row: any) => {
+          if (row.join_order) {
+            channelJoinOrders[row.id] = row.join_order;
+          }
+        });
+      } catch (e) {
+        console.warn('Failed to fetch join_order from channels:', e);
+      }
+    }
+
+    // Add join_order to each post
+    const postsWithJoinOrder = posts.map((post: any) => ({
+      ...post,
+      join_order: channelJoinOrders[post.channel_id] || null
+    }));
+
+    return NextResponse.json({ posts: postsWithJoinOrder }, { status: 200 });
   } catch (err) {
     console.error('Fetch posts error:', err);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

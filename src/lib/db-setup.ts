@@ -50,10 +50,19 @@ export async function initDatabase() {
                 banner TEXT, -- Base64 storage for channel cover
                 verified BOOLEAN DEFAULT 0,
                 account_type TEXT DEFAULT 'general', -- adult | family | kids | general
+                join_order INTEGER, -- Copy of user's join_order for profile badge
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(id)
             );
         `);
+
+        // Migration: Add join_order column to channels if it doesn't exist
+        try {
+            await turso.execute(`ALTER TABLE channels ADD COLUMN join_order INTEGER`);
+            console.log("Added join_order column to channels table");
+        } catch (e) {
+            // Column already exists, ignore error
+        }
 
         // Videos Table
         await turso.execute(`

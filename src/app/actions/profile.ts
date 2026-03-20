@@ -62,12 +62,22 @@ export async function createProfile(userId: string, name: string, avatarBase64: 
 
         const channelId = `ch_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
+        // Get user's join_order to copy to channel
+        let joinOrder = null;
+        try {
+            const userResult = await turso.execute({
+                sql: 'SELECT join_order FROM users WHERE id = ?',
+                args: [userId]
+            });
+            joinOrder = userResult.rows[0]?.join_order;
+        } catch (e) { /* ignore */ }
+
         await turso.execute({
             sql: `
-                INSERT INTO channels (id, user_id, name, avatar, account_type)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO channels (id, user_id, name, avatar, account_type, join_order)
+                VALUES (?, ?, ?, ?, ?, ?)
             `,
-            args: [channelId, userId, name, avatarBase64, accountType]
+            args: [channelId, userId, name, avatarBase64, accountType, joinOrder]
         });
 
         revalidatePath('/select-profile');

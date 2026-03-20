@@ -6,7 +6,7 @@ interface FounderBadgeProps {
 }
 
 export default function FounderBadge({ joinOrder, size = 'md' }: FounderBadgeProps) {
-    if (!joinOrder || joinOrder > 50) return null;
+    if (!joinOrder || joinOrder > 500) return null;
 
     const sizeClass = size === 'sm' ? 'w-4 h-4' : 'w-5 h-5';
     
