@@ -2,16 +2,17 @@
 import { NextResponse } from 'next/server';
 import { turso } from '@/lib/turso';
 import { getActiveProfile } from '@/app/actions/profile';
+import { supabase } from '@/lib/supabase';
 
 async function ensureTables() {
-  // Create post_likes table if not exists
+  // Create post_likes table if not exists (PostgreSQL syntax)
   try {
     await turso.execute({
       sql: `CREATE TABLE IF NOT EXISTS post_likes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         post_id TEXT NOT NULL,
         profile_id TEXT NOT NULL,
-        created_at TEXT DEFAULT (datetime('now')),
+        created_at TIMESTAMP DEFAULT NOW(),
         UNIQUE(post_id, profile_id)
       )`,
       args: []
@@ -22,11 +23,11 @@ async function ensureTables() {
   try {
     await turso.execute({
       sql: `CREATE TABLE IF NOT EXISTS post_comments (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         post_id TEXT NOT NULL,
         profile_id TEXT NOT NULL,
         content TEXT NOT NULL,
-        created_at TEXT DEFAULT (datetime('now'))
+        created_at TIMESTAMP DEFAULT NOW()
       )`,
       args: []
     });
@@ -71,7 +72,7 @@ export async function GET(req: Request) {
       userLiked = (userLikeRes.rows?.length || 0) > 0;
     }
 
-    // Get comments - don't join with profiles table since it may not exist
+    // Get comments
     const commentsRes = await turso.execute({
       sql: `SELECT id, content, created_at, profile_id 
             FROM post_comments 
@@ -89,6 +90,26 @@ export async function GET(req: Request) {
       profile_name: 'User',
       profile_avatar: null,
     }));
+
+    // Fetch real profile names from Supabase
+    const profileIds = comments.map((c: any) => c.profile_id).filter(Boolean);
+    if (profileIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, name, avatar_url')
+        .in('id', profileIds);
+      
+      if (profiles) {
+        const profileMap = new Map(profiles.map((p: any) => [p.id, p]));
+        comments.forEach((c: any) => {
+          const profile = profileMap.get(c.profile_id);
+          if (profile) {
+            c.profile_name = profile.name || 'User';
+            c.profile_avatar = profile.avatar_url;
+          }
+        });
+      }
+    }
 
     return NextResponse.json({ 
       likes: likesCount, 
@@ -128,7 +149,7 @@ export async function POST(req: Request) {
       } else {
         // Like
         await turso.execute({
-          sql: `INSERT INTO post_likes (post_id, profile_id, created_at) VALUES (?, ?, datetime('now'))`,
+          sql: `INSERT INTO post_likes (post_id, profile_id, created_at) VALUES (?, ?, NOW())`,
           args: [postId, profileId],
         });
         return NextResponse.json({ liked: true });
@@ -140,7 +161,7 @@ export async function POST(req: Request) {
       if (!content?.trim()) return NextResponse.json({ error: 'content required' }, { status: 400 });
 
       const result = await turso.execute({
-        sql: `INSERT INTO post_comments (post_id, profile_id, content, created_at) VALUES (?, ?, ?, datetime('now'))`,
+        sql: `INSERT INTO post_comments (post_id, profile_id, content, created_at) VALUES (?, ?, ?, NOW())`,
         args: [postId, profileId, content.trim()],
       });
 

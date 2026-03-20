@@ -35,10 +35,10 @@ export async function GET() {
     try {
       await turso.execute({
         sql: `CREATE TABLE IF NOT EXISTS post_likes (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          id SERIAL PRIMARY KEY,
           post_id TEXT NOT NULL,
           profile_id TEXT NOT NULL,
-          created_at TEXT DEFAULT (datetime('now')),
+          created_at TIMESTAMP DEFAULT NOW(),
           UNIQUE(post_id, profile_id)
         )`,
         args: []
@@ -56,11 +56,11 @@ export async function GET() {
     try {
       await turso.execute({
         sql: `CREATE TABLE IF NOT EXISTS post_comments (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          id SERIAL PRIMARY KEY,
           post_id TEXT NOT NULL,
           profile_id TEXT NOT NULL,
           content TEXT NOT NULL,
-          created_at TEXT DEFAULT (datetime('now'))
+          created_at TIMESTAMP DEFAULT NOW()
         )`,
         args: []
       });
