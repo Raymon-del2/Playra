@@ -65,7 +65,7 @@ export default function ProfileMenu({ isOpen, onClose, activeProfile, userEmail 
                 <div className="flex flex-col min-w-0">
                     <span className="font-semibold truncate">{activeProfile.name}</span>
                     <span className="text-gray-400 text-sm truncate">{displayHandle}</span>
-                    <Link href="/channel" className="text-blue-400 text-sm mt-1 hover:text-blue-300">
+                    <Link href={`/channel/${activeProfile.id}`} className="text-blue-400 text-sm mt-1 hover:text-blue-300">
                         View your channel
                     </Link>
                 </div>
