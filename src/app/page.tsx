@@ -381,7 +381,7 @@ export default function Home() {
       // If update was within last 30 seconds, refetch
       if (updateAge < 30000) {
         console.log('Detected recent video update, refetching...');
-        fetchVideos();
+        fetchContent();
         localStorage.removeItem('video-updated');
       }
     }
