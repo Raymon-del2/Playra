@@ -60,7 +60,7 @@ export default function CreateMenu({ isOpen, onClose }: CreateMenuProps) {
             </Link>
 
             <Link
-                href="/studio/content"
+                href="/create/post"
                 onClick={onClose}
                 className="flex items-center gap-4 px-4 py-2.5 hover:bg-white/10 transition-colors group w-full text-left"
             >
