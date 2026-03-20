@@ -85,7 +85,7 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
         <div className="post-meta">
           <div className="post-author-row">
             <span className="post-author-name">{post.channel_name}</span>
-            <FounderBadge userId={post.channel_id} className="ml-1" />
+            <FounderBadge joinOrder={post.join_order} size="sm" />
           </div>
           <span className="post-time">
             {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
