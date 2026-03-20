@@ -70,7 +70,6 @@ export async function POST(request: Request) {
         channel_avatar: profile.avatar || '',
         post_type,
         visibility: visibility || 'public',
-        content: finalContent,
         is_post: true,
         content_type: 'post',
         title: content.text?.substring(0, 100) || 'Community Post',
