@@ -49,8 +49,12 @@ export async function GET(req: Request) {
     const postId = searchParams.get('postId');
     if (!postId) return NextResponse.json({ error: 'postId required' }, { status: 400 });
 
-    // Get likes count and if current user liked
-    const profileId = await getProfile().catch(() => null);
+    // Try to get profile, but don't fail if not logged in
+    let profileId: string | null = null;
+    try {
+      const profile = await getActiveProfile();
+      profileId = profile?.id || null;
+    } catch (e) { profileId = null; }
     
     const likesRes = await turso.execute({
       sql: `SELECT COUNT(*) as count FROM post_likes WHERE post_id = ?`,
@@ -93,13 +97,13 @@ export async function GET(req: Request) {
     });
   } catch (error: any) {
     console.error('Post engagement error', error);
-    if (error instanceof Response) return error;
-    return NextResponse.json({ error: 'Failed to load engagement' }, { status: 500 });
+    return NextResponse.json({ likes: 0, userLiked: false, comments: [] });
   }
 }
 
 export async function POST(req: Request) {
   try {
+    await ensureTables();
     const profileId = await getProfile();
     const body = await req.json();
     const postId = body?.postId as string;
