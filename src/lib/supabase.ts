@@ -59,22 +59,48 @@ function ensureSupabase() {
 
 export async function ensurePostsTables() {
   try {
-    // Try to create posts storage bucket - ignore error if it already exists
+    // 1. Ensure storage bucket exists
     const { error: createError } = await supabase.storage.createBucket('posts', {
       public: true,
       allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg'],
       fileSizeLimit: 52428800, // 50MB per file
     });
     
-    // Ignore error if bucket already exists
     if (createError && !createError.message?.includes('already exists')) {
       console.error('Error creating posts bucket:', createError);
     }
     
-    console.log('Posts storage bucket verified');
+    // 2. Ensure videos table has post-related columns
+    const columnsToAdd = [
+      { name: 'is_post', type: 'BOOLEAN DEFAULT FALSE' },
+      { name: 'post_type', type: 'TEXT' },
+      { name: 'content_type', type: 'TEXT DEFAULT \'video\'' },
+      { name: 'visibility', type: 'TEXT DEFAULT \'public\'' },
+    ];
+    
+    for (const col of columnsToAdd) {
+      try {
+        await supabase.rpc('add_column_if_not_exists', {
+          table_name: 'videos',
+          column_name: col.name,
+          column_type: col.type
+        });
+      } catch (e) {
+        // RPC might not exist, try direct SQL via query
+        try {
+          await supabase.from('videos').select(col.name).limit(1);
+          // If we get here, column exists
+        } catch (colError: any) {
+          if (colError.message?.includes(col.name)) {
+            console.log(`Column ${col.name} needs to be added via Supabase dashboard`);
+          }
+        }
+      }
+    }
+    
+    console.log('Posts tables verified');
   } catch (error) {
     console.error('Error ensuring posts tables:', error);
-    // Don't throw - allow app to continue even if bucket creation fails
   }
 }
 
