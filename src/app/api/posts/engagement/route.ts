@@ -126,12 +126,21 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     await ensureTables();
-    const profileId = await getProfile();
+    let profileId: string;
+    try {
+      profileId = await getProfile();
+    } catch (e: any) {
+      console.error('getProfile error:', e);
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+    
     const body = await req.json();
     const postId = body?.postId as string;
     const action = body?.action as string;
 
     if (!postId) return NextResponse.json({ error: 'postId required' }, { status: 400 });
+
+    console.log('POST engagement - action:', action, 'postId:', postId, 'profileId:', profileId);
 
     if (action === 'like') {
       console.log('Like action - postId:', postId, 'profileId:', profileId);
