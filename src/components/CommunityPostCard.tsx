@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FounderBadge } from '@/components/FounderBadge';
+import FounderBadge from '@/components/FounderBadge';
 import { formatDistanceToNow } from 'date-fns';
 
 interface PostProps {
