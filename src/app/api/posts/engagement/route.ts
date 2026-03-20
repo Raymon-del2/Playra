@@ -71,13 +71,12 @@ export async function GET(req: Request) {
       userLiked = (userLikeRes.rows?.length || 0) > 0;
     }
 
-    // Get comments
+    // Get comments - don't join with profiles table since it may not exist
     const commentsRes = await turso.execute({
-      sql: `SELECT c.id, c.content, c.created_at, p.name as profile_name, p.avatar_url 
-            FROM post_comments c 
-            LEFT JOIN profiles p ON c.profile_id = p.id 
-            WHERE c.post_id = ? 
-            ORDER BY c.created_at DESC 
+      sql: `SELECT id, content, created_at, profile_id 
+            FROM post_comments 
+            WHERE post_id = ? 
+            ORDER BY created_at DESC 
             LIMIT 50`,
       args: [postId],
     });
@@ -86,8 +85,9 @@ export async function GET(req: Request) {
       id: r.id,
       content: r.content,
       created_at: r.created_at,
-      profile_name: r.profile_name,
-      profile_avatar: r.avatar_url,
+      profile_id: r.profile_id,
+      profile_name: 'User',
+      profile_avatar: null,
     }));
 
     return NextResponse.json({ 
