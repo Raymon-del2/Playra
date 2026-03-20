@@ -4,6 +4,16 @@ import { turso } from '@/lib/turso';
 
 export async function GET(req: Request) {
   try {
+    // Ensure join_order column exists in users table
+    try {
+      await turso.execute(`ALTER TABLE users ADD COLUMN join_order INTEGER`);
+    } catch (e) { /* ignore if already exists */ }
+
+    // Ensure join_order column exists in channels table
+    try {
+      await turso.execute(`ALTER TABLE channels ADD COLUMN join_order INTEGER`);
+    } catch (e) { /* ignore if already exists */ }
+
     const { searchParams } = new URL(req.url);
     const email = searchParams.get('email');
     const joinOrder = searchParams.get('order');
@@ -20,7 +30,7 @@ export async function GET(req: Request) {
     }
 
     // Update user's join_order
-    const result = await turso.execute({
+    await turso.execute({
       sql: `UPDATE users SET join_order = ? WHERE email = ?`,
       args: [orderNum, email]
     });
