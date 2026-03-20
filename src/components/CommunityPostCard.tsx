@@ -36,6 +36,7 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [loadingComments, setLoadingComments] = useState(false);
+  const [postingComment, setPostingComment] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   // Parse post data from description
@@ -91,21 +92,45 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
 
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!commentText.trim()) return;
+    if (!commentText.trim() || postingComment) return;
+    
+    const newComment = {
+      id: Date.now(),
+      content: commentText.trim(),
+      profile_name: 'You',
+      profile_avatar: null,
+      profile_id: currentUserId,
+      created_at: new Date().toISOString(),
+      isOptimistic: true
+    };
+    
+    // Optimistic update - show immediately
+    setComments([newComment, ...comments]);
+    const textToSubmit = commentText;
+    setCommentText('');
+    setPostingComment(true);
+    
     try {
       const res = await fetch('/api/posts/engagement', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ postId: post.id, action: 'comment', content: commentText }),
+        body: JSON.stringify({ postId: post.id, action: 'comment', content: textToSubmit }),
       });
       if (res.ok) {
-        setCommentText('');
-        // Reload comments
+        // Reload comments to get real data with profile name
         const res = await fetch(`/api/posts/engagement?postId=${post.id}`);
         const data = await res.json();
         if (data.comments) setComments(data.comments);
+      } else {
+        // Remove optimistic comment on error
+        setComments(comments);
       }
-    } catch (e) { console.log('Comment error', e); }
+    } catch (e) { 
+      console.log('Comment error', e);
+      setComments(comments);
+    } finally {
+      setPostingComment(false);
+    }
   };
 
   const handleShare = async () => {
@@ -317,7 +342,9 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
               placeholder="Add a comment..."
               className="comment-input"
             />
-            <button type="submit" disabled={!commentText.trim()}>Post</button>
+            <button type="submit" disabled={!commentText.trim() || postingComment}>
+              {postingComment ? 'Posting...' : 'Post'}
+            </button>
           </form>
         </div>
       )}
