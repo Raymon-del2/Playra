@@ -277,7 +277,7 @@ function FeedItem({ item, hoveredId, previewingId, isMuted, onHoverStart, onHove
 }) {
   // Check if it's a post (wrapped type, empty video_url, or is_post flag)
   const isPost = ('type' in item && item.type === 'post') || 
-                 ('video_url' in item && !item.video_url) || 
+                 ('video_url' in item && (!item.video_url || item.video_url.trim() === '')) || 
                  ('is_post' in item && item.is_post);
   
   if (isPost) {
