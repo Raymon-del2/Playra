@@ -72,19 +72,22 @@ export async function POST(request: Request) {
       avatar: profile_avatar || null 
     };
 
-    // 4. Insert into Supabase
+    // 4. Insert into Supabase - only use existing columns
+    const postData = {
+      ...finalContent,
+      _post_type: post_type,
+      _visibility: visibility || 'public',
+      _is_post: true,
+    };
+
     const { data, error } = await supabase
       .from('videos')
       .insert({
         channel_id: profile.id,
         channel_name: profile.name,
         channel_avatar: profile.avatar || '',
-        post_type,
-        visibility: visibility || 'public',
-        is_post: true,
-        content_type: 'post',
         title: content.text?.substring(0, 100) || 'Community Post',
-        description: JSON.stringify(finalContent),
+        description: JSON.stringify(postData),
         video_url: '',
         thumbnail_url: content.images?.[0] || '',
         is_live: false,
@@ -114,11 +117,11 @@ export async function GET(request: Request) {
   const offset = parseInt(searchParams.get('offset') || '0');
 
   try {
+    // Fetch all and filter in memory since we store post data in description
     let query = supabase
       .from('videos')
       .select('*')
-      .eq('is_post', true)
-      .eq('visibility', 'public')
+      .is('video_url', '') // Posts have empty video_url
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
@@ -129,8 +132,18 @@ export async function GET(request: Request) {
     const { data, error } = await query;
 
     if (error) throw error;
+    
+    // Filter to only include posts (those with _is_post in description)
+    const posts = (data || []).filter((item: any) => {
+      try {
+        const desc = JSON.parse(item.description || '{}');
+        return desc._is_post === true;
+      } catch {
+        return false;
+      }
+    });
 
-    return NextResponse.json({ posts: data }, { status: 200 });
+    return NextResponse.json({ posts }, { status: 200 });
   } catch (err) {
     console.error('Fetch posts error:', err);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
