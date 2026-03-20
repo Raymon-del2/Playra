@@ -69,6 +69,14 @@ export default function HelpPage() {
 
                             <details className="group bg-zinc-900/30 border border-white/5 rounded-2xl overflow-hidden pointer-events-auto">
                                 <summary className="p-5 font-bold cursor-pointer list-none flex justify-between items-center group-open:bg-white/[0.03]">
+                                    What does the badge mean?
+                                    <span className="group-open:rotate-180 transition-transform"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" /></svg></span>
+                                </summary>
+                                <div className="p-5 text-zinc-400 text-sm border-t border-white/5">The badge shows that you are one of the first 500 members to join Playra. It's a special recognition for being an early supporter of our community.</div>
+                            </details>
+
+                            <details className="group bg-zinc-900/30 border border-white/5 rounded-2xl overflow-hidden pointer-events-auto">
+                                <summary className="p-5 font-bold cursor-pointer list-none flex justify-between items-center group-open:bg-white/[0.03]">
                                     Is Playra free to use?
                                     <span className="group-open:rotate-180 transition-transform"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" /></svg></span>
                                 </summary>
