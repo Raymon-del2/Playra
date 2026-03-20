@@ -56,18 +56,24 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
   }, [post.id]);
 
   const handleLike = async () => {
+    // Optimistic update - immediately toggle UI
+    const wasLiked = userLiked;
+    setUserLiked(!wasLiked);
+    setLikes(prev => !wasLiked ? prev + 1 : Math.max(0, prev - 1));
+    
+    // Silent DB save in background
     try {
-      const res = await fetch('/api/posts/engagement', {
+      await fetch('/api/posts/engagement', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ postId: post.id, action: 'like' }),
       });
-      const data = await res.json();
-      if (data.liked !== undefined) {
-        setUserLiked(data.liked);
-        setLikes(prev => data.liked ? prev + 1 : Math.max(0, prev - 1));
-      }
-    } catch (e) { console.log('Like error', e); }
+    } catch (e) { 
+      // Revert on error
+      setUserLiked(wasLiked);
+      setLikes(prev => wasLiked ? prev + 1 : Math.max(0, prev - 1));
+      console.log('Like error', e); 
+    }
   };
 
   const handleCommentSubmit = async (e: React.FormEvent) => {
