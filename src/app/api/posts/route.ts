@@ -16,7 +16,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { post_type, visibility, content } = body;
+    const { post_type, visibility, content, profile_id, profile_name, profile_avatar } = body;
 
     // 2. Basic Validation
     if (!post_type || !content) {
@@ -54,15 +54,18 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Invalid post type' }, { status: 400 });
     }
 
-    // Get user profile info - for now we'll use a placeholder since auth is disabled
-    // In production, you'd get this from the session
-    const profile = { id: 'anonymous', name: 'Anonymous', avatar: null };
+    // Get user profile info from request or use defaults
+    const profile = { 
+      id: profile_id || 'anonymous', 
+      name: profile_name || 'Anonymous', 
+      avatar: profile_avatar || null 
+    };
 
     // 4. Insert into Supabase
     const { data, error } = await supabase
       .from('videos')
       .insert({
-        channel_id: 'anonymous', // profile.id,
+        channel_id: profile.id,
         channel_name: profile.name,
         channel_avatar: profile.avatar || '',
         post_type,

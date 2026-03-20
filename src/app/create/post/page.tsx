@@ -190,6 +190,9 @@ export default function CreatePostPage() {
                     post_type: mode,
                     visibility: visibility,
                     content: content,
+                    profile_id: profile.id,
+                    profile_name: profile.name,
+                    profile_avatar: profile.avatar,
                 }),
             });
 
