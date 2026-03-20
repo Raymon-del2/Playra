@@ -275,17 +275,20 @@ function FeedItem({ item, hoveredId, previewingId, isMuted, onHoverStart, onHove
   onToggleMuted: () => void;
   videoRef: (el: HTMLVideoElement | null, id: string) => void;
 }) {
-  // Check if it's a post
-  if ('type' in item && item.type === 'post') {
+  // Check if it's a post (either wrapped type or is_post flag)
+  const isPost = ('type' in item && item.type === 'post') || ('is_post' in item && item.is_post);
+  
+  if (isPost) {
+    const postData = 'type' in item ? item.data : item;
     return (
       <div className="col-span-full sm:col-span-2 lg:col-span-3 2xl:col-span-4 3xl:col-span-5 4xl:col-span-6 max-w-2xl mx-auto w-full">
         {/* Mobile: Inset card style */}
         <div className="sm:hidden mx-4">
-          <CommunityPostCard post={item.data} />
+          <CommunityPostCard post={postData} />
         </div>
         {/* Desktop: Full width within grid cell */}
         <div className="hidden sm:block">
-          <CommunityPostCard post={item.data} />
+          <CommunityPostCard post={postData} />
         </div>
       </div>
     );
@@ -508,11 +511,15 @@ export default function Home() {
       ) : (
         (() => {
           let displayVideos: Video[] = [];
+          let feedPosts: any[] = [];
+          
           if (selectedCategory === 'All' || selectedCategory === 'New to you') {
-            displayVideos = videos.filter(v => !v.is_short);
+            displayVideos = videos.filter(v => !v.is_short && !v.is_post);
+            feedPosts = videos.filter(v => v.is_post);
           } else if (selectedCategory === 'Recently uploaded') {
             const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
-            displayVideos = videos.filter(v => !v.is_short && new Date(v.created_at).getTime() > oneDayAgo);
+            displayVideos = videos.filter(v => !v.is_short && !v.is_post && new Date(v.created_at).getTime() > oneDayAgo);
+            feedPosts = videos.filter(v => v.is_post && new Date(v.created_at).getTime() > oneDayAgo);
           }
 
           const styles = Array.from(
