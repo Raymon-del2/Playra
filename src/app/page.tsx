@@ -264,6 +264,49 @@ function StylesShelf({
   );
 }
 
+// Feed Item Component - switches between Video and Post
+function FeedItem({ item, hoveredId, previewingId, isMuted, onHoverStart, onHoverEnd, onToggleMuted, videoRef }: {
+  item: Video | { type: 'post'; data: any };
+  hoveredId: string | null;
+  previewingId: string | null;
+  isMuted: boolean;
+  onHoverStart: (id: string) => void;
+  onHoverEnd: (id: string) => void;
+  onToggleMuted: () => void;
+  videoRef: (el: HTMLVideoElement | null, id: string) => void;
+}) {
+  // Check if it's a post
+  if ('type' in item && item.type === 'post') {
+    return (
+      <div className="col-span-full sm:col-span-2 lg:col-span-3 2xl:col-span-4 3xl:col-span-5 4xl:col-span-6 max-w-2xl mx-auto w-full">
+        {/* Mobile: Inset card style */}
+        <div className="sm:hidden mx-4">
+          <CommunityPostCard post={item.data} />
+        </div>
+        {/* Desktop: Full width within grid cell */}
+        <div className="hidden sm:block">
+          <CommunityPostCard post={item.data} />
+        </div>
+      </div>
+    );
+  }
+
+  // It's a video
+  const video = item as Video;
+  return (
+    <VideoCard
+      video={video}
+      isHovered={hoveredId === video.id}
+      isPreviewing={previewingId === video.id}
+      isMuted={isMuted}
+      onHoverStart={onHoverStart}
+      onHoverEnd={onHoverEnd}
+      onToggleMuted={onToggleMuted}
+      videoRef={(el) => videoRef(el, video.id)}
+    />
+  );
+}
+
 export default function Home() {
   const [videos, setVideos] = useState<Video[]>([]);
   const [posts, setPosts] = useState<any[]>([]);
@@ -505,23 +548,17 @@ export default function Home() {
                 {displayVideos.length > 0 ? (
                   <div className="relative z-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 4xl:grid-cols-6 gap-x-6 gap-y-12 px-6 md:px-10 pt-4 mt-1">
                     {interleavedContent.slice(0, 12).map((item, index) => (
-                      'type' in item ? (
-                        <div key={`post-${item.data.id}-${index}`} className="col-span-full sm:col-span-2 lg:col-span-3 2xl:col-span-4 3xl:col-span-5 4xl:col-span-6 max-w-2xl mx-auto w-full">
-                          <CommunityPostCard post={item.data} />
-                        </div>
-                      ) : (
-                        <VideoCard
-                          key={item.id}
-                          video={item}
-                          isHovered={hoveredId === item.id}
-                          isPreviewing={previewingId === item.id}
-                          isMuted={isMuted}
-                          onHoverStart={handleHoverStart}
-                          onHoverEnd={handleHoverEnd}
-                          onToggleMuted={() => setIsMuted(!isMuted)}
-                          videoRef={(el) => { videoRefs.current[item.id] = el; }}
-                        />
-                      )
+                      <FeedItem
+                        key={index}
+                        item={item}
+                        hoveredId={hoveredId}
+                        previewingId={previewingId}
+                        isMuted={isMuted}
+                        onHoverStart={handleHoverStart}
+                        onHoverEnd={handleHoverEnd}
+                        onToggleMuted={() => setIsMuted(!isMuted)}
+                        videoRef={(el, id) => { videoRefs.current[id] = el; }}
+                      />
                     ))}
                   </div>
                 ) : (
