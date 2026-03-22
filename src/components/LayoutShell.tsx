@@ -180,14 +180,16 @@ export default function LayoutShell({ children, activeProfile }: LayoutShellProp
       <Suspense fallback={null}>
         <TopLoader />
       </Suspense>
-      <Navbar
-        isSidebarCollapsed={isSidebarCollapsed}
-        onToggleSidebar={toggleSidebar}
-        isSignedIn={isSignedIn}
-        onToggleSignIn={handleToggleSignIn}
-        onToggleMobileDrawer={() => setIsMobileDrawerOpen(true)}
-        activeProfile={activeProfile}
-      />
+      <div className={isStylesPage ? 'styles-page-navbar' : ''}>
+        <Navbar
+          isSidebarCollapsed={isSidebarCollapsed}
+          onToggleSidebar={toggleSidebar}
+          isSignedIn={isSignedIn}
+          onToggleSignIn={handleToggleSignIn}
+          onToggleMobileDrawer={() => setIsMobileDrawerOpen(true)}
+          activeProfile={activeProfile}
+        />
+      </div>
 
       <div
         suppressHydrationWarning
@@ -213,10 +215,23 @@ export default function LayoutShell({ children, activeProfile }: LayoutShellProp
         </main>
       </div>
 
-      <MobileNav
-        isSignedIn={isSignedIn}
-        userAvatar={activeProfile?.avatar || ""}
-      />
+      <div className={isStylesPage ? 'styles-page-mobilenav' : ''}>
+        <MobileNav
+          isSignedIn={isSignedIn}
+          userAvatar={activeProfile?.avatar || ""}
+        />
+      </div>
+
+      {isStylesPage && (
+        <style jsx global>{`
+          @media (max-width: 767px) {
+            .styles-page-navbar { display: none !important; }
+            .styles-page-mobilenav { display: none !important; }
+            /* Make main content start from very top with no navbar offset */
+            main { padding-top: 0 !important; margin-top: 0 !important; }
+          }
+        `}</style>
+      )}
 
       <MobileDrawer
         isOpen={isMobileDrawerOpen}

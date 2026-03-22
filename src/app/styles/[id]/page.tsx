@@ -11,11 +11,11 @@ import { fetchBatchWatchLaterStatus } from '@/app/actions/watch-later';
 import { getVideoComments, addComment, engageComment, getBatchCommentCounts, Comment as CommentType } from '@/app/actions/comments';
 import { getStylesFeed } from '@/app/actions/styles-feed';
 import { formatDistanceToNow } from 'date-fns';
-import { 
-  ThumbsUp, 
-  ThumbsDown, 
-  MessageCircle, 
-  Share2, 
+import {
+  ThumbsUp,
+  ThumbsDown,
+  MessageCircle,
+  Share2,
   MoreVertical,
   Play,
   Volume2,
@@ -30,7 +30,8 @@ import {
   AlertTriangle,
   Link2,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  ChevronLeft
 } from 'lucide-react';
 import SubscribeButton from '@/components/SubscribeButton';
 
@@ -67,55 +68,44 @@ function StylesFeed({ styleId }: { styleId?: string }) {
   const [reactions, setReactions] = useState<Record<string, ReactionState>>({});
   const [showComments, setShowComments] = useState(false);
   const [showShare, setShowShare] = useState(false);
-  const [showSidePanel, setShowSidePanel] = useState(false);
   const [watchLaterMap, setWatchLaterMap] = useState<Record<string, boolean>>({});
   const [comments, setComments] = useState<CommentType[]>([]);
   const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
   const [newComment, setNewComment] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
-
   const [shareCopied, setShareCopied] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [isPlaying, setIsPlaying] = useState(true);
   const [activeFilterIndex, setActiveFilterIndex] = useState(0);
-  const [showFilterToast, setShowFilterToast] = useState(false);
   const [progress, setProgress] = useState<Record<string, number>>({});
   const [isAnimatingPlay, setIsAnimatingPlay] = useState(false);
   const [showOptionsId, setShowOptionsId] = useState<string | null>(null);
-
   const [hasMore, setHasMore] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const offsetRef = useRef(0);
-
   const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
-
   const initializedRef = useRef(false);
+
   useEffect(() => {
     if (initializedRef.current) return;
     initializedRef.current = true;
-
     const init = async () => {
       try {
         setIsLoading(true);
         const profile = await getActiveProfile();
         setActiveProfile(profile);
-        const filterType = profile?.account_type || 'general';
-
         const limit = 15;
         const res = await getStylesFeed(profile?.id, limit, 0);
-
         if (res.success && res.videos && res.videos.length > 0) {
           const data = res.videos;
           let startIndex = 0;
           const foundIndex = data.findIndex(v => v.id === styleId);
           if (foundIndex !== -1) startIndex = foundIndex;
-
           setClips(data);
           setReactions(res.engagement || {});
           setWatchLaterMap(res.watchLater || {});
           setCommentCounts(res.commentCounts || {});
-          
           setActiveIndex(startIndex);
           offsetRef.current = limit;
           if (data.length < limit) setHasMore(false);
@@ -124,7 +114,7 @@ function StylesFeed({ styleId }: { styleId?: string }) {
           setHasMore(false);
         }
       } catch (e) { console.error(e); } finally { setIsLoading(false); }
-    }
+    };
     init();
   }, [styleId]);
 
@@ -134,24 +124,18 @@ function StylesFeed({ styleId }: { styleId?: string }) {
         setIsFetchingMore(true);
         const limit = 10;
         const res = await getStylesFeed(activeProfile?.id, limit, offsetRef.current);
-
         if (res.success && res.videos && res.videos.length > 0) {
           const newData = res.videos;
           setClips(prev => {
             const existingIds = new Set(prev.map(p => p.id));
-            const uniqueNew = newData.filter(n => !existingIds.has(n.id));
-            return [...prev, ...uniqueNew];
+            return [...prev, ...newData.filter(n => !existingIds.has(n.id))];
           });
-          
           setReactions(prev => ({ ...prev, ...res.engagement }));
           setWatchLaterMap(prev => ({ ...prev, ...res.watchLater }));
           setCommentCounts(prev => ({ ...prev, ...res.commentCounts }));
-          
           offsetRef.current += limit;
           if (newData.length < limit) setHasMore(false);
-        } else {
-          setHasMore(false);
-        }
+        } else { setHasMore(false); }
         setIsFetchingMore(false);
       };
       loadMore();
@@ -169,66 +153,39 @@ function StylesFeed({ styleId }: { styleId?: string }) {
 
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     const container = e.currentTarget;
-    const scrollPos = container.scrollTop;
-    const height = container.clientHeight;
-    const index = Math.round(scrollPos / height);
-
+    const index = Math.round(container.scrollTop / container.clientHeight);
     if (index !== activeIndex && index >= 0 && index < clips.length) {
       setActiveIndex(index);
-      const newClip = clips[index];
-      window.history.replaceState(null, '', `/styles/${newClip.id}`);
+      window.history.replaceState(null, '', `/styles/${clips[index].id}`);
     }
   }, [activeIndex, clips]);
 
-  // Targeted playback control
   const prevActiveRef = useRef<number>(-1);
   useEffect(() => {
-    // Pause previous
     if (prevActiveRef.current !== -1 && prevActiveRef.current !== activeIndex) {
       const prevVideo = videoRefs.current[prevActiveRef.current];
-      if (prevVideo) {
-        prevVideo.pause();
-        prevVideo.currentTime = 0;
-      }
+      if (prevVideo) { prevVideo.pause(); prevVideo.currentTime = 0; }
     }
-
-    // Play current
     const currentVideo = videoRefs.current[activeIndex];
     if (currentVideo) {
-      if (isPlaying) {
-        currentVideo.play().catch(() => { });
-      } else {
-        currentVideo.pause();
-      }
+      if (isPlaying) { currentVideo.play().catch(() => {}); }
+      else { currentVideo.pause(); }
     }
-
     prevActiveRef.current = activeIndex;
   }, [activeIndex, isPlaying]);
 
-  // Increment views when clip becomes active (with cooldown)
   const viewedClipsRef = useRef<Set<string>>(new Set());
   useEffect(() => {
     const clip = clips[activeIndex];
     if (!clip || viewedClipsRef.current.has(clip.id)) return;
-    
     viewedClipsRef.current.add(clip.id);
-    
-    // Increment views in background
-    incrementViews(clip.id)
-      .then(newViews => {
-        // Update local state with new view count
-        setClips(prev => prev.map(c => 
-          c.id === clip.id ? { ...c, views: newViews } : c
-        ));
-      })
-      .catch(() => { /* ignore */ });
+    incrementViews(clip.id).then(newViews => {
+      setClips(prev => prev.map(c => c.id === clip.id ? { ...c, views: newViews } : c));
+    }).catch(() => {});
   }, [activeIndex, clips]);
 
-  // Sync mute state via DOM property to ensure browser obedience
   useEffect(() => {
-    videoRefs.current.forEach(v => {
-      if (v) v.muted = isMuted;
-    });
+    videoRefs.current.forEach(v => { if (v) v.muted = isMuted; });
   }, [isMuted, clips.length]);
 
   const handleManualScroll = (index: number) => {
@@ -238,791 +195,445 @@ function StylesFeed({ styleId }: { styleId?: string }) {
   const togglePlay = (e?: React.MouseEvent) => {
     e?.stopPropagation();
     if (!isPlaying) {
-      // Animation when starting from pause
       setIsAnimatingPlay(true);
-      setTimeout(() => {
-        setIsAnimatingPlay(false);
-        setIsPlaying(true);
-      }, 400);
-    } else {
-      setIsPlaying(false);
-    }
+      setTimeout(() => { setIsAnimatingPlay(false); setIsPlaying(true); }, 400);
+    } else { setIsPlaying(false); }
   };
 
   const handleLike = async (id: string) => {
-    if (!activeProfile) {
-      alert('Please sign in to like videos');
-      return;
-    }
-    
-    // Get current state and update optimistically in one go
+    if (!activeProfile) { alert('Please sign in to like videos'); return; }
     const currentState = reactions[id];
-    console.log('[Like] Clicked, current state:', currentState);
     if (!currentState) return;
-    
     const isCurrentlyLiked = currentState.isLiked;
-    
-    // Optimistic update using functional form
     setReactions(prev => {
       const state = prev[id];
       if (!state) return prev;
-      return {
-        ...prev,
-        [id]: {
-          ...state,
-          likes: isCurrentlyLiked ? state.likes - 1 : state.likes + 1,
-          isLiked: !isCurrentlyLiked,
-          isDisliked: false
-        }
-      };
+      return { ...prev, [id]: { ...state, likes: isCurrentlyLiked ? state.likes - 1 : state.likes + 1, isLiked: !isCurrentlyLiked, isDisliked: false } };
     });
-    
-    // Save to DB
-    try {
-      const result = await toggleLikeVideo(id, activeProfile.id, isCurrentlyLiked);
-      console.log('[Like] DB result:', result);
-    } catch (error) {
-      console.error('[Like] Failed:', error);
-      // Revert on error
-      setReactions(prev => {
-        const state = prev[id];
-        if (!state) return prev;
-        return {
-          ...prev,
-          [id]: {
-            ...state,
-            likes: isCurrentlyLiked ? state.likes : state.likes - 1,
-            isLiked: isCurrentlyLiked
-          }
-        };
-      });
-    }
+    try { await toggleLikeVideo(id, activeProfile.id, isCurrentlyLiked); }
+    catch { setReactions(prev => { const state = prev[id]; if (!state) return prev; return { ...prev, [id]: { ...state, likes: isCurrentlyLiked ? state.likes : state.likes - 1, isLiked: isCurrentlyLiked } }; }); }
   };
 
   const handleDislike = async (id: string) => {
-    if (!activeProfile) {
-      alert('Please sign in to dislike videos');
-      return;
-    }
-    
+    if (!activeProfile) { alert('Please sign in to dislike videos'); return; }
     const currentState = reactions[id];
     if (!currentState) return;
-    
     const isCurrentlyDisliked = currentState.isDisliked;
     const isCurrentlyLiked = currentState.isLiked;
-    
-    // Optimistic update
     setReactions(prev => {
       const state = prev[id];
       if (!state) return prev;
-      return {
-        ...prev,
-        [id]: {
-          ...state,
-          isDisliked: !isCurrentlyDisliked,
-          isLiked: false,
-          likes: isCurrentlyLiked ? state.likes - 1 : state.likes
-        }
-      };
+      return { ...prev, [id]: { ...state, isDisliked: !isCurrentlyDisliked, isLiked: false, likes: isCurrentlyLiked ? state.likes - 1 : state.likes } };
     });
-    
-    // Save to DB
-    try {
-      await toggleDislikeVideo(id, activeProfile.id, isCurrentlyDisliked);
-    } catch (error) {
-      console.error('[Dislike] Failed:', error);
-      // Revert on error
-      setReactions(prev => {
-        const state = prev[id];
-        if (!state) return prev;
-        return {
-          ...prev,
-          [id]: {
-            ...state,
-            isDisliked: isCurrentlyDisliked,
-            isLiked: isCurrentlyLiked,
-            likes: isCurrentlyLiked ? state.likes : state.likes + 1
-          }
-        };
-      });
-    }
+    try { await toggleDislikeVideo(id, activeProfile.id, isCurrentlyDisliked); }
+    catch { setReactions(prev => { const state = prev[id]; if (!state) return prev; return { ...prev, [id]: { ...state, isDisliked: isCurrentlyDisliked, isLiked: isCurrentlyLiked, likes: isCurrentlyLiked ? state.likes : state.likes + 1 } }; }); }
   };
 
   const handleSave = async (id: string) => {
-    if (!activeProfile) {
-      alert('Please sign in to save videos');
-      return;
-    }
-    
+    if (!activeProfile) { alert('Please sign in to save videos'); return; }
     const isSaved = watchLaterMap[id];
-    
-    // Optimistic update
     setWatchLaterMap(prev => ({ ...prev, [id]: !isSaved }));
-    
-    // Save to DB
-    try {
-      if (isSaved) {
-        await removeWatchLater(activeProfile.id, id);
-      } else {
-        await addWatchLater(activeProfile.id, id);
-      }
-    } catch (error) {
-      console.error('Failed to toggle watch later:', error);
-      // Revert on error
-      setWatchLaterMap(prev => ({ ...prev, [id]: isSaved }));
-    }
+    try { isSaved ? await removeWatchLater(activeProfile.id, id) : await addWatchLater(activeProfile.id, id); }
+    catch { setWatchLaterMap(prev => ({ ...prev, [id]: isSaved })); }
   };
 
-  // Load comments when panel opens
   const loadComments = async (videoId: string) => {
     if (!videoId) return;
     try {
-      const commentsData = await getVideoComments(videoId, activeProfile?.id);
-      setComments(commentsData);
-      setCommentCounts(prev => ({ ...prev, [videoId]: commentsData.length }));
-    } catch (error) {
-      console.error('Failed to load comments:', error);
-    }
+      const data = await getVideoComments(videoId, activeProfile?.id);
+      setComments(data);
+      setCommentCounts(prev => ({ ...prev, [videoId]: data.length }));
+    } catch (e) { console.error(e); }
   };
 
   const handleSubmitComment = async () => {
     if (!activeProfile || !newComment.trim() || !activeClip) return;
-    
     const commentText = newComment.trim();
-    setNewComment(''); // Clear input immediately
-    
-    // Create optimistic comment object
+    setNewComment('');
     const optimisticComment: CommentType = {
-      id: `temp-${Date.now()}`,
-      video_id: activeClip.id,
-      content: commentText,
-      profile_id: activeProfile.id,
-      profile_name: activeProfile.name || 'You',
-      profile_avatar: activeProfile.avatar,
-      created_at: new Date().toISOString(),
-      likes: 0,
-      dislikes: 0,
-      parent_id: null,
-      user_liked: false
+      id: `temp-${Date.now()}`, video_id: activeClip.id, content: commentText,
+      profile_id: activeProfile.id, profile_name: activeProfile.name || 'You',
+      profile_avatar: activeProfile.avatar, created_at: new Date().toISOString(),
+      likes: 0, dislikes: 0, parent_id: null, user_liked: false
     };
-    
-    // Update local state immediately
     setComments(prev => [optimisticComment, ...prev]);
-    setCommentCounts(prev => ({ 
-      ...prev, 
-      [activeClip.id]: (prev[activeClip.id] || 0) + 1 
-    }));
-    
+    setCommentCounts(prev => ({ ...prev, [activeClip.id]: (prev[activeClip.id] || 0) + 1 }));
     try {
       await addComment(activeClip.id, activeProfile.id, commentText);
-      // Wait a bit and reload to get real ID and finalized data
-      const freshComments = await getVideoComments(activeClip.id, activeProfile.id);
-      setComments(freshComments);
-      setCommentCounts(prev => ({ ...prev, [activeClip.id]: freshComments.length }));
-    } catch (error) {
-      console.error('Failed to add comment:', error);
-      // Revert optimism on error
+      const fresh = await getVideoComments(activeClip.id, activeProfile.id);
+      setComments(fresh);
+      setCommentCounts(prev => ({ ...prev, [activeClip.id]: fresh.length }));
+    } catch {
       setComments(prev => prev.filter(c => c.id !== optimisticComment.id));
-      setCommentCounts(prev => ({ 
-        ...prev, 
-        [activeClip.id]: Math.max(0, (prev[activeClip.id] || 0) - 1) 
-      }));
-      setNewComment(commentText); // Restore input on fail
+      setCommentCounts(prev => ({ ...prev, [activeClip.id]: Math.max(0, (prev[activeClip.id] || 0) - 1) }));
+      setNewComment(commentText);
     }
   };
 
   const handleCommentLike = async (commentId: string, currentlyLiked: boolean) => {
-    if (!activeProfile) {
-      alert('Please sign in to like comments');
-      return;
-    }
-    
-    // Optimistic update
-    setComments(prev => prev.map(c => {
-      if (c.id === commentId) {
-        return {
-          ...c,
-          user_liked: !currentlyLiked,
-          user_disliked: false,
-          likes: !currentlyLiked ? c.likes + 1 : c.likes - 1,
-        };
-      }
-      return c;
-    }));
-    
-    try {
-      await engageComment(commentId, activeProfile.id, currentlyLiked ? null : 'like');
-    } catch (error) {
-      console.error('Failed to like comment:', error);
-    }
+    if (!activeProfile) { alert('Please sign in'); return; }
+    setComments(prev => prev.map(c => c.id === commentId ? { ...c, user_liked: !currentlyLiked, user_disliked: false, likes: !currentlyLiked ? c.likes + 1 : c.likes - 1 } : c));
+    try { await engageComment(commentId, activeProfile.id, currentlyLiked ? null : 'like'); } catch { console.error('Failed'); }
   };
 
   const handleCommentDislike = async (commentId: string, currentlyDisliked: boolean) => {
-    if (!activeProfile) {
-      alert('Please sign in to dislike comments');
-      return;
-    }
-    
-    // Optimistic update
-    setComments(prev => prev.map(c => {
-      if (c.id === commentId) {
-        const wasLiked = c.user_liked;
-        return {
-          ...c,
-          user_disliked: !currentlyDisliked,
-          user_liked: false,
-          likes: wasLiked ? c.likes - 1 : c.likes,
-        };
-      }
-      return c;
-    }));
-    
-    try {
-      await engageComment(commentId, activeProfile.id, currentlyDisliked ? null : 'dislike');
-    } catch (error) {
-      console.error('Failed to dislike comment:', error);
-    }
+    if (!activeProfile) { alert('Please sign in'); return; }
+    setComments(prev => prev.map(c => c.id === commentId ? { ...c, user_disliked: !currentlyDisliked, user_liked: false, likes: c.user_liked ? c.likes - 1 : c.likes } : c));
+    try { await engageComment(commentId, activeProfile.id, currentlyDisliked ? null : 'dislike'); } catch { console.error('Failed'); }
   };
 
   const copyToClipboard = (id: string) => {
-    const url = `${window.location.origin}/styles/${id}`;
-    navigator.clipboard.writeText(url);
+    navigator.clipboard.writeText(`${window.location.origin}/styles/${id}`);
     setShareCopied(true);
     setTimeout(() => setShareCopied(false), 2000);
   };
 
-  const cycleFilter = () => {
-    setActiveFilterIndex((prev) => (prev + 1) % VIDEO_FILTERS.length);
-    setShowFilterToast(true);
-  };
-
-  useEffect(() => {
-    if (showFilterToast) {
-      const timer = setTimeout(() => setShowFilterToast(false), 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [showFilterToast]);
-
   const activeClip = clips[activeIndex];
 
   return (
-    <div className="h-[calc(100vh-64px)] bg-black overflow-hidden relative">
-      {/* Filter Toast */}
-      <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 pointer-events-none ${showFilterToast ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
-        <div className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-full">
-          <span className="text-white text-sm font-medium">{VIDEO_FILTERS[activeFilterIndex].name}</span>
-        </div>
-      </div>
+    <div className="yt-shorts-root">
+      {/* Back Button (Top Left) */}
+      <button className="yt-back-btn" onClick={() => router.back()} aria-label="Go back">
+        <ChevronLeft size={28} />
+      </button>
 
       {/* Scroll Container */}
-      <div
-        className="h-full overflow-y-scroll snap-y snap-mandatory scroll-smooth hide-scrollbar"
-        onScroll={handleScroll}
-      >
+      <div className="yt-shorts-scroller hide-scrollbar" onScroll={handleScroll}>
         {clips.length === 0 ? (
-          <div className="h-screen w-full flex items-center justify-center p-4">
-            <div className="h-full md:h-[92vh] aspect-[9/16] bg-zinc-900 md:rounded-2xl animate-pulse flex items-center justify-center">
-               <div className="w-16 h-16 bg-white/5 rounded-full" />
+          <div className="yt-slide">
+            <div className="yt-slide-inner">
+              <div className="yt-video-wrap skeleton-pulse">
+                <div className="skeleton-inner" />
+              </div>
             </div>
           </div>
         ) : clips.map((clip, index) => (
           <div
             key={clip.id}
             ref={el => { slideRefs.current[index] = el; }}
-            className="h-full w-full snap-start relative flex items-center justify-center bg-black"
+            className="yt-slide"
           >
-            {/* Main Content Container */}
-            <div className="relative flex items-center justify-center h-full w-full max-w-[1200px] mx-auto px-4 lg:px-6">
-              
-              {/* Desktop Layout Wrapper: Video + Side Actions */}
-              <div className="relative flex justify-center h-full w-full md:gap-4 md:py-6">
-              
-                {/* Video Container - Fixed Desktop Aspect Ratio */}
-                <div className="relative h-full w-full md:w-auto aspect-[9/16] bg-[#0f0f0f] md:rounded-2xl overflow-hidden shadow-2xl flex-shrink-0 self-center">
-                <video
-                  ref={el => { videoRefs.current[index] = el; }}
-                  src={clip.video_url}
-                  className={`h-full w-full object-cover select-none ${VIDEO_FILTERS[activeFilterIndex].class}`}
-                  loop
-                  playsInline
-                  muted={isMuted}
-                  onTimeUpdate={(e) => {
-                    const v = e.currentTarget;
-                    const p = (v.currentTime / v.duration) * 100;
-                    setProgress(prev => ({ ...prev, [clip.id]: p }));
-                  }}
-                  onClick={togglePlay}
-                />
+            <div className="yt-slide-inner">
 
-                {/* Center Play Button Overlay */}
-                {!isPlaying && index === activeIndex && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-transparent group/player cursor-pointer z-30" onClick={togglePlay}>
-                     {/* Animation Ripple */}
-                    <div className={`absolute inset-0 bg-white rounded-full transition-all duration-700 ease-out pointer-events-none 
-                      ${isAnimatingPlay ? 'scale-[4] opacity-0' : 'scale-0 opacity-0'}`} 
-                    />
+              {/* ── VIDEO COLUMN ── */}
+              <div className="yt-video-col">
+                <div className="yt-video-wrap">
+                  <video
+                    ref={el => { videoRefs.current[index] = el; }}
+                    src={clip.video_url}
+                    className={`yt-video ${VIDEO_FILTERS[activeFilterIndex].class}`}
+                    loop playsInline muted={isMuted}
+                    onTimeUpdate={e => {
+                      const v = e.currentTarget;
+                      setProgress(prev => ({ ...prev, [clip.id]: (v.currentTime / v.duration) * 100 }));
+                    }}
+                    onClick={togglePlay}
+                  />
 
-                    {/* Red YouTube Splash Button Replacement */}
-                    <div className={`relative transition-all duration-300 transform 
-                      ${isAnimatingPlay ? 'scale-[2] opacity-0' : 'scale-100 opacity-100 hover:scale-110 active:scale-95'}`}
-                    >
-                      <svg className="w-20 h-20 overflow-visible" viewBox="0 0 100 100">
-                        <defs>
-                          <linearGradient id="styleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stopColor="#3B82F6" />
-                            <stop offset="100%" stopColor="#A855F7" />
-                          </linearGradient>
-                        </defs>
-                        <path 
-                          d="M35,25 L75,50 L35,75 Z" 
-                          fill={isAnimatingPlay ? "white" : "none"}
-                          stroke={isAnimatingPlay ? "white" : "url(#styleGrad)"}
-                          strokeWidth="5" 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round" 
-                          className="transition-colors duration-200"
-                          style={{ 
-                            strokeDasharray: 200, 
-                            strokeDashoffset: 200,
-                            animation: 'drawTriStyle 1.5s ease-out forwards' 
-                          }}
-                        />
-                        <style>{`
-                          @keyframes drawTriStyle {
-                            0% { stroke-dashoffset: 200; }
-                            100% { stroke-dashoffset: 0; }
-                          }
-                        `}</style>
-                      </svg>
+                  {/* Pause overlay */}
+                  {!isPlaying && index === activeIndex && (
+                    <div className="yt-play-overlay" onClick={togglePlay}>
+                      <div className={`yt-play-ripple ${isAnimatingPlay ? 'yt-play-ripple--active' : ''}`} />
+                      <div className={`yt-play-btn-wrap ${isAnimatingPlay ? 'yt-play-btn-wrap--exit' : ''}`}>
+                        <svg className="yt-play-svg" viewBox="0 0 100 100">
+                          <circle cx="50" cy="50" r="48" fill="rgba(0,0,0,0.6)" />
+                          <path d="M38,28 L72,50 L38,72 Z" fill="white" />
+                        </svg>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Top Controls Overlay */}
-                <div className="absolute top-4 left-4 z-20 flex gap-2">
-                   <button
-                    onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); }}
-                    className="p-2 bg-black/20 backdrop-blur-md rounded-full text-white hover:bg-black/40 transition-all active:scale-90"
-                  >
-                    {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                  {/* Mute button */}
+                  <button className="yt-mute-btn" onClick={e => { e.stopPropagation(); setIsMuted(!isMuted); }}>
+                    {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
                   </button>
-                </div>
 
-                {/* Right Side Actions Overlay (Mobile Only) */}
-                <div className="absolute right-2 bottom-16 z-30 flex flex-col items-center gap-5 md:hidden">
-                  {/* Like */}
-                  <div className="flex flex-col items-center">
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); handleLike(clip.id); }}
-                      className={`w-12 h-12 flex items-center justify-center rounded-full bg-black/20 backdrop-blur-md hover:bg-black/40 transition-all active:scale-90 ${reactions[clip.id]?.isLiked ? 'text-white' : 'text-zinc-100'}`}
-                    >
-                      <ThumbsUp className={`w-6 h-6 ${reactions[clip.id]?.isLiked ? 'fill-current' : ''}`} />
-                    </button>
-                    <span className="text-white text-[12px] font-bold mt-1 drop-shadow-md">
-                      {reactions[clip.id]?.likes?.toLocaleString() || '0'}
-                    </span>
-                  </div>
+                  {/* Mobile-only action buttons (right side overlay) */}
+                  <div className="yt-mobile-actions">
+                    {/* Channel avatar */}
+                    <div className="yt-mob-avatar-wrap">
+                      <Link href={`/channel/${clip.channel_id}`} onClick={e => e.stopPropagation()}>
+                        <img src={clip.channel_avatar || '/default-avatar.png'} className="yt-mob-avatar" alt="" />
+                      </Link>
+                      <div className="yt-mob-sub-dot">
+                        <SubscribeButton channelId={clip.channel_id} channelName={clip.channel_name} profileId={activeProfile?.id} showCount={false} size="sm" className="yt-sub-dot-btn" />
+                      </div>
+                    </div>
 
-                  {/* Dislike */}
-                  <div className="flex flex-col items-center">
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); handleDislike(clip.id); }}
-                      className={`w-12 h-12 flex items-center justify-center rounded-full bg-black/20 backdrop-blur-md hover:bg-black/40 transition-all active:scale-90 ${reactions[clip.id]?.isDisliked ? 'text-white' : 'text-zinc-100'}`}
-                    >
-                      <ThumbsDown className={`w-6 h-6 ${reactions[clip.id]?.isDisliked ? 'fill-current' : ''}`} />
-                    </button>
-                    <span className="text-white text-[12px] font-bold mt-1 drop-shadow-md">Dislike</span>
-                  </div>
-
-                  {/* Comments */}
-                  <div className="flex flex-col items-center">
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); setShowComments(true); loadComments(clip.id); }}
-                      className="w-12 h-12 flex items-center justify-center rounded-full bg-black/20 backdrop-blur-md hover:bg-black/40 transition-all active:scale-90 text-white"
-                    >
-                      <MessageCircle className="w-6 h-6" />
-                    </button>
-                    <span className="text-white text-[12px] font-bold mt-1 drop-shadow-md">
-                      {(commentCounts[clip.id] || 0).toLocaleString()}
-                    </span>
-                  </div>
-
-                  {/* Share */}
-                  <div className="flex flex-col items-center">
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); setShowShare(true); }}
-                      className="w-12 h-12 flex items-center justify-center rounded-full bg-black/20 backdrop-blur-md hover:bg-black/40 transition-all active:scale-90 text-white"
-                    >
-                      <Share2 className="w-6 h-6" />
-                    </button>
-                    <span className="text-white text-[12px] font-bold mt-1 drop-shadow-md">Share</span>
-                  </div>
-
-                  <div className="relative">
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); setShowOptionsId(clip.id === showOptionsId ? null : clip.id); }}
-                      className={`w-12 h-12 flex items-center justify-center rounded-full bg-black/20 backdrop-blur-md hover:bg-black/40 transition-all active:scale-90 text-white ${showOptionsId === clip.id ? 'bg-white text-black' : ''}`}
-                    >
-                      <MoreVertical className="w-6 h-6" />
-                    </button>
-
-                    {/* Options Menu Dropdown */}
-                    {showOptionsId === clip.id && (
-                      <div 
-                        className="absolute bottom-full right-0 mb-4 w-60 bg-[#161616]/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden z-[100] animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-200"
-                        onClick={e => e.stopPropagation()}
-                      >
-                        <div className="p-2 space-y-1">
+                    <YTActionBtn
+                      icon={<ThumbsUp size={22} className={reactions[clip.id]?.isLiked ? 'fill-white' : ''} />}
+                      label={(reactions[clip.id]?.likes || 0).toLocaleString()}
+                      active={reactions[clip.id]?.isLiked}
+                      onClick={e => { e.stopPropagation(); handleLike(clip.id); }}
+                    />
+                    <YTActionBtn
+                      icon={<ThumbsDown size={22} className={reactions[clip.id]?.isDisliked ? 'fill-white' : ''} />}
+                      label="Dislike"
+                      active={reactions[clip.id]?.isDisliked}
+                      onClick={e => { e.stopPropagation(); handleDislike(clip.id); }}
+                    />
+                    <YTActionBtn
+                      icon={<MessageCircle size={22} />}
+                      label={(commentCounts[clip.id] || 0).toLocaleString()}
+                      onClick={e => { e.stopPropagation(); setShowComments(true); loadComments(clip.id); }}
+                    />
+                    <YTActionBtn
+                      icon={<Share2 size={22} />}
+                      label="Share"
+                      onClick={e => { e.stopPropagation(); setShowShare(true); }}
+                    />
+                    <div className="yt-mob-more-wrap">
+                      <YTActionBtn
+                        icon={<MoreVertical size={22} />}
+                        label=""
+                        onClick={e => { e.stopPropagation(); setShowOptionsId(clip.id === showOptionsId ? null : clip.id); }}
+                      />
+                      {showOptionsId === clip.id && (
+                        <div className="yt-options-menu" onClick={e => e.stopPropagation()}>
                           {[
                             { label: 'Save to Watch later', icon: History, action: () => handleSave(clip.id) },
                             { label: 'Not interested', icon: Slash, action: () => setShowOptionsId(null) },
-                            { label: 'Report Styles', icon: AlertTriangle, action: () => setShowOptionsId(null) },
+                            { label: 'Report', icon: AlertTriangle, action: () => setShowOptionsId(null) },
                             { label: 'Copy Link', icon: Link2, action: () => copyToClipboard(clip.id) },
                           ].map((item, i) => (
-                            <button
-                              key={i}
-                              onClick={() => { item.action(); setShowOptionsId(null); }}
-                              className="w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-white/10 transition-all text-[15px] font-semibold text-white group active:scale-[0.98]"
-                            >
-                              <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-gradient-to-br group-hover:from-[#3B82F6] group-hover:to-[#A855F7] transition-all duration-300">
-                                <item.icon className="w-4 h-4 text-zinc-400 group-hover:text-white transition-colors" />
-                              </div>
-                              <span className="group-hover:translate-x-0.5 transition-transform">{item.label}</span>
+                            <button key={i} className="yt-option-item" onClick={() => { item.action(); setShowOptionsId(null); }}>
+                              <item.icon size={16} />
+                              <span>{item.label}</span>
                             </button>
                           ))}
                         </div>
-                        <div className="bg-white/5 h-px mx-4 my-1" />
-                        <div className="p-2">
-                           <button
-                            onClick={() => setShowOptionsId(null)}
-                            className="w-full flex items-center justify-center py-2.5 rounded-xl text-sm font-bold text-zinc-500 hover:text-white transition-colors"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
 
-                </div>
-
-                {/* Bottom Overlay - Info */}
-                <div className="absolute bottom-0 left-0 right-14 md:right-0 p-4 z-20 bg-gradient-to-t from-black/80 via-black/30 to-transparent pb-6">
-                  <div className="flex flex-col gap-3">
-                    <div className="flex items-center gap-3">
-                      <Link href={`/channel/${clip.channel_id}`} onClick={e => e.stopPropagation()}>
-                        <img 
-                          src={clip.channel_avatar || '/default-avatar.png'} 
-                          className="w-10 h-10 rounded-full border border-white/20 shadow-lg object-cover" 
-                          alt="" 
-                        />
+                  {/* Bottom overlay - info (visible on mobile) */}
+                  <div className="yt-video-info-overlay">
+                    <div className="yt-info-channel-row">
+                      <Link href={`/channel/${clip.channel_id}`} onClick={e => e.stopPropagation()} className="yt-info-avatar-link">
+                        <img src={clip.channel_avatar || '/default-avatar.png'} className="yt-info-avatar" alt="" />
                       </Link>
-                      <Link href={`/channel/${clip.channel_id}`} onClick={e => e.stopPropagation()} className="text-white font-bold text-[16px] drop-shadow-lg hover:underline decoration-white underline-offset-4">
+                      <Link href={`/channel/${clip.channel_id}`} onClick={e => e.stopPropagation()} className="yt-info-channel-name">
                         @{clip.channel_name.replace(/^@/, '')}
                       </Link>
-                      <div className="ml-1">
-                        <SubscribeButton
-                          channelId={clip.channel_id}
-                          channelName={clip.channel_name}
-                          profileId={activeProfile?.id}
-                          showCount={false}
-                          size="sm"
-                          className="!h-[32px] !min-w-[100px] !text-[13px] !font-bold"
-                        />
-                      </div>
                     </div>
-                    <h1 className="text-white text-[14px] font-medium leading-snug line-clamp-2 drop-shadow-md pr-4">
-                      {clip.title}
-                    </h1>
-                    <div className="flex items-center gap-2 text-white/90 text-xs font-semibold drop-shadow-md">
-                      <Music className="w-3.5 h-3.5" />
-                      <span className="truncate">Original Sound - {clip.channel_name}</span>
+                    <p className="yt-info-title">{clip.title}</p>
+                    <div className="yt-info-sound">
+                      <Music size={12} />
+                      <span>Original Sound · @{clip.channel_name.replace(/^@/, '')}</span>
                     </div>
                   </div>
-                </div>
 
-                {/* Slim Progress Bar */}
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-transparent z-40">
-                  <div 
-                    className="h-full bg-gradient-to-r from-[#3B82F6] to-[#A855F7] transition-all duration-100 shadow-[0_0_10px_rgba(168,85,247,0.8)]"
-                    style={{ width: `${progress[clip.id] || 0}%` }}
-                  />
+                  {/* Progress bar */}
+                  <div className="yt-progress-track">
+                    <div className="yt-progress-fill" style={{ width: `${progress[clip.id] || 0}%` }} />
+                  </div>
                 </div>
               </div>
 
-              {/* Desktop Side Actions Panel */}
-              <div className="hidden md:flex flex-col justify-end pb-8 pl-4 flex-shrink-0 self-center h-full gap-4">
-                {/* Navigation Arrows */}
-                <div className="flex flex-col gap-2 mb-4">
-                  <button 
-                    onClick={() => activeIndex > 0 && handleManualScroll(activeIndex - 1)}
-                    className="w-12 h-12 flex items-center justify-center rounded-full bg-zinc-800 hover:bg-zinc-700 transition-all active:scale-90 text-white shadow-xl"
+              {/* ── DESKTOP ACTIONS COLUMN ── */}
+              <div className="yt-desktop-actions">
+
+                {/* Like */}
+                <div className="yt-action-item">
+                  <button
+                    className={`yt-action-circle ${reactions[clip.id]?.isLiked ? 'yt-action-circle--active' : ''}`}
+                    onClick={() => handleLike(clip.id)}
                   >
-                    <ChevronUp className="w-6 h-6" />
+                    <ThumbsUp size={22} className={reactions[clip.id]?.isLiked ? 'fill-white' : ''} />
                   </button>
-                  <button 
-                    onClick={() => activeIndex < clips.length - 1 && handleManualScroll(activeIndex + 1)}
-                    className="w-12 h-12 flex items-center justify-center rounded-full bg-zinc-800 hover:bg-zinc-700 transition-all active:scale-90 text-white shadow-xl"
+                  <span className="yt-action-label">{(reactions[clip.id]?.likes || 0).toLocaleString()}</span>
+                </div>
+
+                {/* Dislike */}
+                <div className="yt-action-item">
+                  <button
+                    className={`yt-action-circle ${reactions[clip.id]?.isDisliked ? 'yt-action-circle--active' : ''}`}
+                    onClick={() => handleDislike(clip.id)}
                   >
-                    <ChevronDown className="w-6 h-6" />
+                    <ThumbsDown size={22} className={reactions[clip.id]?.isDisliked ? 'fill-white' : ''} />
                   </button>
+                  <span className="yt-action-label">Dislike</span>
                 </div>
 
-                <div className="flex flex-col items-center gap-5">
-                  <div className="flex flex-col items-center">
-                    <button onClick={() => handleLike(clip.id)} className={`w-12 h-12 flex items-center justify-center rounded-full bg-zinc-800 hover:bg-zinc-700 transition-all active:scale-95 ${reactions[clip.id]?.isLiked ? 'text-white' : 'text-zinc-100'}`}>
-                      <ThumbsUp className={`w-6 h-6 ${reactions[clip.id]?.isLiked ? 'fill-current' : ''}`} />
-                    </button>
-                    <span className="text-zinc-400 text-[13px] font-bold mt-1.5">{reactions[clip.id]?.likes?.toLocaleString() || '0'}</span>
-                  </div>
-
-                  <div className="flex flex-col items-center">
-                    <button onClick={() => handleDislike(clip.id)} className={`w-12 h-12 flex items-center justify-center rounded-full bg-zinc-800 hover:bg-zinc-700 transition-all active:scale-95 ${reactions[clip.id]?.isDisliked ? 'text-white' : 'text-zinc-100'}`}>
-                      <ThumbsDown className={`w-6 h-6 ${reactions[clip.id]?.isDisliked ? 'fill-current' : ''}`} />
-                    </button>
-                    <span className="text-zinc-400 text-[13px] font-bold mt-1.5">Dislike</span>
-                  </div>
-
-                  <div className="flex flex-col items-center">
-                    <button onClick={() => { setShowComments(true); loadComments(clip.id); }} className="w-12 h-12 flex items-center justify-center rounded-full bg-zinc-800 hover:bg-zinc-700 transition-all active:scale-95 text-white">
-                      <MessageCircle className="w-6 h-6" />
-                    </button>
-                    <span className="text-zinc-400 text-[13px] font-bold mt-1.5">{(commentCounts[clip.id] || 0).toLocaleString()}</span>
-                  </div>
-
-                  <div className="flex flex-col items-center">
-                    <button onClick={() => setShowShare(true)} className="w-12 h-12 flex items-center justify-center rounded-full bg-zinc-800 hover:bg-zinc-700 transition-all active:scale-95 text-white">
-                      <Share2 className="w-6 h-6" />
-                    </button>
-                    <span className="text-zinc-400 text-[13px] font-bold mt-1.5">Share</span>
-                  </div>
-
-                  <div className="relative">
-                    <button onClick={(e) => { e.stopPropagation(); setShowOptionsId(clip.id === showOptionsId ? null : clip.id); }} className={`w-12 h-12 flex items-center justify-center rounded-full bg-zinc-800 hover:bg-zinc-700 transition-all active:scale-95 text-white ${showOptionsId === clip.id ? 'bg-zinc-700' : ''}`}>
-                      <MoreVertical className="w-6 h-6" />
-                    </button>
-                    
-                    {showOptionsId === clip.id && (
-                      <div className="absolute bottom-full right-full mr-2 mb-2 w-60 bg-[#161616]/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden z-[100] animate-in fade-in zoom-in-95" onClick={e => e.stopPropagation()}>
-                        <div className="p-2 space-y-1">
-                          {[
-                            { label: 'Save to Watch later', icon: History, action: () => handleSave(clip.id) },
-                            { label: 'Not interested', icon: Slash, action: () => setShowOptionsId(null) },
-                            { label: 'Report Styles', icon: AlertTriangle, action: () => setShowOptionsId(null) },
-                            { label: 'Copy Link', icon: Link2, action: () => copyToClipboard(clip.id) },
-                          ].map((item, i) => (
-                            <button key={i} onClick={() => { item.action(); setShowOptionsId(null); }} className="w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-white/10 transition-all text-[15px] font-semibold text-white group active:scale-[0.98]">
-                              <item.icon className="w-5 h-5 text-zinc-400 group-hover:text-white transition-colors" />
-                              <span className="group-hover:translate-x-0.5 transition-transform">{item.label}</span>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Desktop Channel Avatar at bottom of actions */}
-                  <Link 
-                    href={`/channel/${clip.channel_id}`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="w-12 h-12 mt-2 rounded-[12px] overflow-hidden border border-white/10 hover:border-white/30 transition-all active:scale-90 shadow-xl"
+                {/* Comments */}
+                <div className="yt-action-item">
+                  <button
+                    className="yt-action-circle"
+                    onClick={() => { setShowComments(true); loadComments(clip.id); }}
                   >
-                    <img src={clip.channel_avatar || '/default-avatar.png'} className="w-full h-full object-cover" alt="" />
-                  </Link>
+                    <MessageCircle size={22} />
+                  </button>
+                  <span className="yt-action-label">{(commentCounts[clip.id] || 0).toLocaleString()}</span>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      ))}
 
-      {hasMore && (
-        <div className="h-20 flex items-center justify-center">
-          <div className="w-8 h-8 border-4 border-white/20 border-t-white rounded-full animate-spin" />
-        </div>
-      )}
-    </div>
-
-      {/* Comments Panel - Slides from right */}
-      {showComments && activeClip && (
-        <div 
-          className="fixed inset-0 bg-black/40 z-50"
-          onClick={() => setShowComments(false)}
-        >
-          <div 
-            className="absolute right-0 top-0 h-full w-full max-w-md bg-zinc-900 border-l border-white/10 animate-slide-right overflow-hidden flex flex-col"
-            onClick={e => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="sticky top-0 bg-zinc-900 border-b border-white/10 p-4 flex items-center justify-between z-10">
-              <div className="flex items-center gap-3">
-                <button 
-                  onClick={() => setShowComments(false)}
-                  className="p-2 hover:bg-white/10 rounded-full transition-colors"
-                >
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-                <h3 className="text-lg font-semibold text-white">{commentCounts[activeClip?.id] || 0} Comments</h3>
-              </div>
-            </div>
-
-            {/* Comments List */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {comments.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 mx-auto bg-zinc-800 rounded-full flex items-center justify-center mb-4">
-                    <MessageCircle className="w-8 h-8 text-zinc-500" />
-                  </div>
-                  <h3 className="text-lg font-bold text-white mb-1">No comments yet</h3>
-                  <p className="text-sm text-zinc-500">Be the first to share what you think!</p>
+                {/* Share */}
+                <div className="yt-action-item">
+                  <button className="yt-action-circle" onClick={() => setShowShare(true)}>
+                    <Share2 size={22} />
+                  </button>
+                  <span className="yt-action-label">Share</span>
                 </div>
-              ) : (
-                comments.map((comment) => (
-                  <div key={comment.id} className="flex gap-3">
-                    <Link href={`/channel/${comment.profile_id}`}>
-                      <div className="w-10 h-10 rounded-full overflow-hidden bg-zinc-800 flex-shrink-0">
-                        {comment.profile_avatar ? (
-                          <img src={comment.profile_avatar} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-sm font-bold text-zinc-400">
-                            {comment.profile_name?.[0]?.toUpperCase() || '?'}
-                          </div>
-                        )}
-                      </div>
-                    </Link>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <Link href={`/channel/${comment.profile_id}`} className="text-[13px] font-bold text-white hover:text-blue-400 transition-colors">
-                          @{comment.profile_name?.replace(/^@/, '')}
-                        </Link>
-                        <span className="text-xs text-zinc-500">
-                          {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
-                        </span>
-                      </div>
-                      <p className="text-[14px] text-zinc-200 mt-1 whitespace-pre-wrap break-words">
-                        {comment.content}
-                      </p>
-                      <div className="flex items-center gap-4 mt-2">
-                        <button 
-                          onClick={() => handleCommentLike(comment.id, comment.user_liked || false)}
-                          className={`flex items-center gap-1 text-xs transition-colors ${comment.user_liked ? 'text-blue-400' : 'text-zinc-400 hover:text-white'}`}
-                        >
-                          <ThumbsUp className={`w-4 h-4 ${comment.user_liked ? 'fill-current' : ''}`} />
-                          {comment.likes > 0 && <span>{comment.likes}</span>}
+
+                {/* More */}
+                <div className="yt-action-item yt-desktop-more">
+                  <button
+                    className="yt-action-circle"
+                    onClick={e => { e.stopPropagation(); setShowOptionsId(clip.id === showOptionsId ? null : clip.id); }}
+                  >
+                    <MoreVertical size={22} />
+                  </button>
+                  {showOptionsId === clip.id && (
+                    <div className="yt-options-menu yt-options-menu--desktop" onClick={e => e.stopPropagation()}>
+                      {[
+                        { label: 'Save to Watch later', icon: History, action: () => handleSave(clip.id) },
+                        { label: 'Not interested', icon: Slash, action: () => setShowOptionsId(null) },
+                        { label: 'Report', icon: AlertTriangle, action: () => setShowOptionsId(null) },
+                        { label: 'Copy Link', icon: Link2, action: () => copyToClipboard(clip.id) },
+                      ].map((item, i) => (
+                        <button key={i} className="yt-option-item" onClick={() => { item.action(); setShowOptionsId(null); }}>
+                          <item.icon size={16} />
+                          <span>{item.label}</span>
                         </button>
-                        <button 
-                          onClick={() => handleCommentDislike(comment.id, comment.user_disliked || false)}
-                          className={`flex items-center gap-1 text-xs transition-colors ${comment.user_disliked ? 'text-blue-400' : 'text-zinc-400 hover:text-white'}`}
-                        >
-                          <ThumbsDown className={`w-4 h-4 ${comment.user_disliked ? 'fill-current' : ''}`} />
-                        </button>
-                      </div>
+                      ))}
                     </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            {/* Add Comment Input */}
-            {activeProfile ? (
-              <div className="border-t border-white/10 p-4 bg-zinc-900">
-                <div className="flex gap-3">
-                  <div className="w-10 h-10 rounded-full overflow-hidden bg-zinc-800 flex-shrink-0">
-                    {activeProfile?.avatar ? (
-                      <img src={activeProfile.avatar} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-sm font-bold text-zinc-400">
-                        {activeProfile?.name?.[0]?.toUpperCase() || '?'}
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1 flex gap-2">
-                    <input
-                      type="text"
-                      value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleSubmitComment()}
-                      placeholder="Add a comment..."
-                      className="flex-1 bg-zinc-800 text-white text-sm rounded-full px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <button
-                      onClick={handleSubmitComment}
-                      disabled={!newComment.trim() || isSubmittingComment}
-                      className="p-2 bg-blue-600 hover:bg-blue-500 text-white rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      <Send className="w-5 h-5" />
-                    </button>
-                  </div>
+                  )}
                 </div>
-              </div>
-            ) : (
-              <div className="border-t border-white/10 p-4 bg-zinc-900 text-center">
-                <Link href="/signin" className="text-blue-400 hover:text-blue-300 font-bold transition-colors">
-                  Sign in to comment
+
+                {/* Channel avatar */}
+                <Link href={`/channel/${clip.channel_id}`} onClick={e => e.stopPropagation()} className="yt-desktop-avatar-link">
+                  <img src={clip.channel_avatar || '/default-avatar.png'} className="yt-desktop-avatar" alt="" />
                 </Link>
               </div>
-            )}
+
+            </div>
+          </div>
+        ))}
+
+        {isFetchingMore && (
+          <div className="yt-loading-more">
+            <div className="yt-spinner" />
+          </div>
+        )}
+      </div>
+
+      {/* ── FLOATING NAV ARROWS (desktop only, fixed right edge) ── */}
+      <div className="yt-float-nav">
+        {activeIndex > 0 && (
+          <button
+            className="yt-float-arrow"
+            onClick={() => handleManualScroll(activeIndex - 1)}
+            aria-label="Previous video"
+          >
+            <ChevronUp size={24} />
+          </button>
+        )}
+        {activeIndex < clips.length - 1 && (
+          <button
+            className="yt-float-arrow"
+            onClick={() => handleManualScroll(activeIndex + 1)}
+            aria-label="Next video"
+          >
+            <ChevronDown size={24} />
+          </button>
+        )}
+      </div>
+
+      {/* Comments Panel */}
+      {showComments && activeClip && (
+        <div className="yt-panel-backdrop" onClick={() => setShowComments(false)}>
+          <div className="yt-panel" onClick={e => e.stopPropagation()}>
+            <div className="yt-panel-header">
+              <h3 className="yt-panel-title">{commentCounts[activeClip?.id] || 0} Comments</h3>
+              <button className="yt-panel-close" onClick={() => setShowComments(false)}><X size={20} /></button>
+            </div>
+            <div className="yt-panel-body">
+              {comments.length === 0 ? (
+                <div className="yt-empty-comments">
+                  <MessageCircle size={36} className="yt-empty-icon" />
+                  <p className="yt-empty-title">No comments yet</p>
+                  <p className="yt-empty-sub">Be the first to comment!</p>
+                </div>
+              ) : comments.map(comment => (
+                <div key={comment.id} className="yt-comment">
+                  <Link href={`/channel/${comment.profile_id}`}>
+                    <div className="yt-comment-avatar">
+                      {comment.profile_avatar
+                        ? <img src={comment.profile_avatar} alt="" className="yt-comment-avatar-img" />
+                        : <span>{comment.profile_name?.[0]?.toUpperCase() || '?'}</span>}
+                    </div>
+                  </Link>
+                  <div className="yt-comment-body">
+                    <div className="yt-comment-meta">
+                      <Link href={`/channel/${comment.profile_id}`} className="yt-comment-name">@{comment.profile_name?.replace(/^@/, '')}</Link>
+                      <span className="yt-comment-time">{formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}</span>
+                    </div>
+                    <p className="yt-comment-text">{comment.content}</p>
+                    <div className="yt-comment-actions">
+                      <button className={`yt-comment-btn ${comment.user_liked ? 'yt-comment-btn--active' : ''}`} onClick={() => handleCommentLike(comment.id, comment.user_liked || false)}>
+                        <ThumbsUp size={14} className={comment.user_liked ? 'fill-current' : ''} />
+                        {comment.likes > 0 && <span>{comment.likes}</span>}
+                      </button>
+                      <button className={`yt-comment-btn ${comment.user_disliked ? 'yt-comment-btn--active' : ''}`} onClick={() => handleCommentDislike(comment.id, comment.user_disliked || false)}>
+                        <ThumbsDown size={14} className={comment.user_disliked ? 'fill-current' : ''} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="yt-panel-footer">
+              {activeProfile ? (
+                <div className="yt-comment-input-row">
+                  <div className="yt-comment-input-avatar">
+                    {activeProfile?.avatar
+                      ? <img src={activeProfile.avatar} alt="" className="yt-comment-avatar-img" />
+                      : <span>{activeProfile?.name?.[0]?.toUpperCase() || '?'}</span>}
+                  </div>
+                  <input
+                    type="text"
+                    value={newComment}
+                    onChange={e => setNewComment(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleSubmitComment()}
+                    placeholder="Add a comment..."
+                    className="yt-comment-input"
+                  />
+                  <button onClick={handleSubmitComment} disabled={!newComment.trim()} className="yt-comment-send">
+                    <Send size={16} />
+                  </button>
+                </div>
+              ) : (
+                <div className="yt-signin-prompt">
+                  <Link href="/signin" className="yt-signin-link">Sign in to comment</Link>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
 
       {/* Share Sheet */}
       {showShare && activeClip && (
-        <div 
-          className="fixed inset-0 bg-black/60 z-50 flex items-end justify-center"
-          onClick={() => setShowShare(false)}
-        >
-          <div 
-            className="bg-zinc-900 w-full max-w-sm rounded-t-3xl p-6 animate-slide-up"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-white">Share</h3>
-              <button 
-                onClick={() => setShowShare(false)}
-                className="p-2 hover:bg-white/10 rounded-full transition-colors"
-              >
-                <svg className="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+        <div className="yt-panel-backdrop" onClick={() => setShowShare(false)}>
+          <div className="yt-share-sheet" onClick={e => e.stopPropagation()}>
+            <div className="yt-panel-header">
+              <h3 className="yt-panel-title">Share</h3>
+              <button className="yt-panel-close" onClick={() => setShowShare(false)}><X size={20} /></button>
             </div>
-            <div className="grid grid-cols-4 gap-4 mb-6">
-              {['WhatsApp', 'Facebook', 'X', 'Email', 'Copy'].map((app) => (
-                <button 
-                  key={app}
-                  onClick={() => app === 'Copy' && copyToClipboard(activeClip.id)}
-                  className="flex flex-col items-center gap-2 group"
-                >
-                  <div className="w-12 h-12 rounded-xl bg-zinc-800 flex items-center justify-center group-hover:bg-zinc-700 transition-colors">
-                    {app === 'Copy' ? (
-                      shareCopied ? (
-                        <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      ) : (
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                        </svg>
-                      )
-                    ) : (
-                      <span className="text-xs font-semibold text-white">{app[0]}</span>
-                    )}
+            <div className="yt-share-apps">
+              {['WhatsApp', 'Facebook', 'X', 'Email', 'Copy'].map(app => (
+                <button key={app} className="yt-share-app" onClick={() => app === 'Copy' && copyToClipboard(activeClip.id)}>
+                  <div className="yt-share-icon">
+                    {app === 'Copy' && shareCopied
+                      ? <svg className="yt-check" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                      : <span className="yt-share-letter">{app[0]}</span>}
                   </div>
-                  <span className="text-xs text-zinc-400">{app}</span>
+                  <span className="yt-share-app-label">{app}</span>
                 </button>
               ))}
             </div>
-            <div className="flex gap-2">
-              <div className="flex-1 bg-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-400 truncate">
-                {typeof window !== 'undefined' ? `${window.location.origin}/styles/${activeClip.id}` : ''}
-              </div>
-              <button 
-                onClick={() => copyToClipboard(activeClip.id)}
-                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${shareCopied ? 'bg-green-600 text-white' : 'bg-white text-black hover:bg-zinc-200'}`}
-              >
+            <div className="yt-share-url-row">
+              <div className="yt-share-url">{typeof window !== 'undefined' ? `${window.location.origin}/styles/${activeClip.id}` : ''}</div>
+              <button className={`yt-share-copy-btn ${shareCopied ? 'yt-share-copy-btn--copied' : ''}`} onClick={() => copyToClipboard(activeClip.id)}>
                 {shareCopied ? 'Copied!' : 'Copy'}
               </button>
             </div>
@@ -1030,213 +641,764 @@ function StylesFeed({ styleId }: { styleId?: string }) {
         </div>
       )}
 
-      {/* Side Panel - Slides from right */}
-      {showSidePanel && activeClip && (
-        <div 
-          className="fixed inset-0 bg-black/40 z-50"
-          onClick={() => setShowSidePanel(false)}
-        >
-          <div 
-            className="absolute right-0 top-0 h-full w-full max-w-md bg-zinc-900 border-l border-white/10 animate-slide-right overflow-y-auto"
-            onClick={e => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="sticky top-0 bg-zinc-900 border-b border-white/10 p-4 flex items-center justify-between z-10">
-              <div className="flex items-center gap-3">
-                <button 
-                  onClick={() => setShowSidePanel(false)}
-                  className="p-2 hover:bg-white/10 rounded-full transition-colors"
-                >
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-                <h3 className="text-lg font-semibold text-white">Related</h3>
-              </div>
-              <div className="flex gap-2">
-                <button className="p-2 hover:bg-white/10 rounded-full transition-colors">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            {/* Content */}
-            <div className="p-4 space-y-4">
-              {/* Current Video Info */}
-              <div className="bg-zinc-800/50 rounded-xl p-4">
-                <div className="flex gap-3">
-                  <img 
-                    src={activeClip.thumbnail_url} 
-                    alt="" 
-                    className="w-24 h-32 object-cover rounded-lg"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-white font-semibold text-sm line-clamp-2 mb-1">
-                      {activeClip.title}
-                    </h4>
-                    <p className="text-zinc-400 text-xs">
-                      @{activeClip.channel_name?.replace(/^@/, '')}
-                    </p>
-                    <p className="text-zinc-500 text-xs mt-1">
-                      {activeClip.views?.toLocaleString()} views
-                    </p>
-                  </div>
-                </div>
-                <button className="w-full mt-3 bg-white text-black py-2 rounded-full text-sm font-semibold hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                  </svg>
-                  Save to playlist
-                </button>
-              </div>
-
-              {/* Related Videos List */}
-              <div>
-                <h5 className="text-white font-semibold text-sm mb-3">More from this channel</h5>
-                <div className="space-y-3">
-                  {clips.filter(c => c.channel_id === activeClip.channel_id && c.id !== activeClip.id).slice(0, 5).map((relatedClip) => (
-                    <Link 
-                      key={relatedClip.id}
-                      href={`/styles/${relatedClip.id}`}
-                      className="flex gap-3 group"
-                      onClick={() => setShowSidePanel(false)}
-                    >
-                      <div className="relative w-28 h-36 flex-shrink-0">
-                        <img 
-                          src={relatedClip.thumbnail_url} 
-                          alt="" 
-                          className="w-full h-full object-cover rounded-lg"
-                        />
-                        {relatedClip.is_live && (
-                          <div className="absolute bottom-1 left-1 bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
-                            LIVE
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0 py-1">
-                        <h6 className="text-white font-medium text-sm line-clamp-2 group-hover:text-blue-400 transition-colors">
-                          {relatedClip.title}
-                        </h6>
-                        <p className="text-zinc-400 text-xs mt-1">
-                          @{relatedClip.channel_name?.replace(/^@/, '')}
-                        </p>
-                        <p className="text-zinc-500 text-xs mt-0.5">
-                          {relatedClip.views?.toLocaleString()} views
-                        </p>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-
-              {/* Other videos */}
-              <div>
-                <h5 className="text-white font-semibold text-sm mb-3">You might also like</h5>
-                <div className="space-y-3">
-                  {clips.filter(c => c.channel_id !== activeClip.channel_id).slice(0, 5).map((relatedClip) => (
-                    <Link 
-                      key={relatedClip.id}
-                      href={`/styles/${relatedClip.id}`}
-                      className="flex gap-3 group"
-                      onClick={() => setShowSidePanel(false)}
-                    >
-                      <div className="relative w-28 h-36 flex-shrink-0">
-                        <img 
-                          src={relatedClip.thumbnail_url} 
-                          alt="" 
-                          className="w-full h-full object-cover rounded-lg"
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0 py-1">
-                        <h6 className="text-white font-medium text-sm line-clamp-2 group-hover:text-blue-400 transition-colors">
-                          {relatedClip.title}
-                        </h6>
-                        <p className="text-zinc-400 text-xs mt-1">
-                          @{relatedClip.channel_name?.replace(/^@/, '')}
-                        </p>
-                        <p className="text-zinc-500 text-xs mt-0.5">
-                          {relatedClip.views?.toLocaleString()} views
-                        </p>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* CSS for animations */}
       <style jsx global>{`
-        .hide-scrollbar::-webkit-scrollbar {
+        /* ── ROOT ── */
+        .yt-shorts-root {
+          position: fixed;
+          top: 56px; /* Navbar height */
+          left: 0;
+          bottom: 0;
+          right: 0;
+          background: #000;
+          z-index: 10;
+        }
+        .yt-back-btn {
+          position: absolute;
+          top: 14px;
+          left: 14px;
+          color: #fff;
+          background: none;
+          border: none;
+          cursor: pointer;
+          z-index: 60;
+          filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: transform 0.2s;
+        }
+        .yt-back-btn:active { transform: scale(0.85); }
+
+        .yt-shorts-scroller {
+          height: 100%;
+          overflow-y: scroll;
+          scroll-snap-type: y mandatory;
+          scroll-behavior: smooth;
+        }
+
+        /* ── SLIDE ── */
+        .yt-slide {
+          height: 100%;
+          width: 100%;
+          scroll-snap-align: start;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #0f0f0f;
+        }
+
+        /* Desktop slide inner: video + actions side-by-side */
+        .yt-slide-inner {
+          display: flex;
+          align-items: flex-end;
+          justify-content: center;
+          height: 100%;
+          width: 100%;
+          max-width: 1080px;
+          margin: 0 auto;
+          padding: 12px 0;
+          gap: 0;
+        }
+
+        /* ── VIDEO COLUMN ── */
+        .yt-video-col {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 100%;
+          flex-shrink: 0;
+        }
+
+        .yt-video-wrap {
+          position: relative;
+          /* On desktop: fixed height, 9:16 aspect */
+          height: 100%;
+          max-height: calc(100vh - 80px);
+          aspect-ratio: 9/16;
+          background: #000;
+          border-radius: 12px;
+          overflow: hidden;
+          flex-shrink: 0;
+          box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+        }
+
+        .yt-video {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          cursor: pointer;
+          display: block;
+        }
+
+        /* ── SKELETON ── */
+        .skeleton-pulse {
+          animation: skeletonPulse 1.5s ease-in-out infinite;
+        }
+        .skeleton-inner {
+          width: 100%;
+          height: 100%;
+          background: #1a1a1a;
+        }
+        @keyframes skeletonPulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+
+        /* ── PLAY OVERLAY ── */
+        .yt-play-overlay {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          z-index: 20;
+        }
+        .yt-play-ripple {
+          position: absolute;
+          inset: 0;
+          background: rgba(255,255,255,0.15);
+          border-radius: 50%;
+          transform: scale(0);
+          opacity: 0;
+          transition: transform 0.7s ease-out, opacity 0.7s ease-out;
+          pointer-events: none;
+        }
+        .yt-play-ripple--active {
+          transform: scale(4);
+          opacity: 0;
+        }
+        .yt-play-btn-wrap {
+          transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        .yt-play-btn-wrap--exit {
+          transform: scale(2);
+          opacity: 0;
+        }
+        .yt-play-svg {
+          width: 72px;
+          height: 72px;
+          filter: drop-shadow(0 2px 12px rgba(0,0,0,0.5));
+        }
+
+        /* ── MUTE BUTTON ── */
+        .yt-mute-btn {
+          position: absolute;
+          top: 12px;
+          right: 12px;
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          background: rgba(0,0,0,0.5);
+          backdrop-filter: blur(8px);
+          border: none;
+          color: #fff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          z-index: 25;
+          transition: background 0.2s;
+        }
+        .yt-mute-btn:hover { background: rgba(0,0,0,0.7); }
+
+        /* ── MOBILE ACTIONS (right side overlay) ── */
+        .yt-mobile-actions {
+          position: absolute;
+          right: 8px;
+          bottom: 80px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 16px;
+          z-index: 30;
+        }
+
+        /* Mobile avatar */
+        .yt-mob-avatar-wrap {
+          position: relative;
+          margin-bottom: 4px;
+        }
+        .yt-mob-avatar {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          border: 1.5px solid #fff;
+          object-fit: cover;
+          display: block;
+        }
+        /* Subscribe dot hidden — cleaner look like YT Shorts */
+        .yt-mob-sub-dot { display: none; }
+
+        /* Bottom info overlay (mobile only) */
+        .yt-video-info-overlay {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 60px;
+          padding: 12px 14px 18px;
+          background: transparent;
+          z-index: 20;
+        }
+        .yt-info-channel-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 6px;
+        }
+        .yt-info-avatar-link {}
+        .yt-info-avatar {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 1.5px solid rgba(255,255,255,0.4);
+        }
+        .yt-info-channel-name {
+          font-size: 14px;
+          font-weight: 700;
+          color: #fff;
+          text-decoration: none;
+        }
+        .yt-info-channel-name:hover { text-decoration: underline; }
+        .yt-sub-btn-overlay {
+          height: 28px !important;
+          min-width: 80px !important;
+          font-size: 12px !important;
+          font-weight: 700 !important;
+          border-radius: 20px !important;
+        }
+        .yt-info-title {
+          font-size: 13px;
+          font-weight: 500;
+          color: #fff;
+          margin: 0 0 4px;
+          line-height: 1.4;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+        .yt-info-sound {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          color: rgba(255,255,255,0.85);
+          font-size: 12px;
+        }
+        .yt-info-sound span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* ── PROGRESS BAR ── */
+        .yt-progress-track {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: 2px;
+          background: transparent;
+          z-index: 40;
+        }
+        .yt-progress-fill {
+          height: 100%;
+          background: linear-gradient(to right, #3B82F6, #A855F7);
+          transition: width 0.1s linear;
+          box-shadow: 0 0 8px rgba(168, 85, 247, 0.6);
+        }
+
+        /* ── DESKTOP ACTIONS ── */
+        .yt-desktop-actions {
           display: none;
+          flex-direction: column;
+          align-items: center;
+          justify-content: flex-end;
+          padding-bottom: 16px;
+          padding-left: 12px;
+          gap: 4px;
+          flex-shrink: 0;
+          height: 100%;
         }
-        .hide-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
+
+        /* ── FLOATING NAV ARROWS (desktop only) ── */
+        .yt-float-nav {
+          display: none;
+          position: fixed;
+          right: 24px;
+          top: 50%;
+          transform: translateY(-50%);
+          flex-direction: column;
+          gap: 8px;
+          z-index: 50;
+          pointer-events: none;
         }
-        .animate-spin-slow {
-          animation: spin 8s linear infinite;
+        .yt-float-arrow {
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          background: #272727;
+          border: none;
+          color: #fff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          pointer-events: all;
+          transition: background 0.2s, transform 0.15s;
+          box-shadow: 0 2px 12px rgba(0,0,0,0.5);
         }
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
+        .yt-float-arrow:hover { background: #3f3f3f; }
+        .yt-float-arrow:active { transform: scale(0.92); }
+
+        .yt-action-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 2px;
+          margin-bottom: 8px;
+          position: relative;
         }
-        .animate-slide-up {
-          animation: slideUp 0.3s ease-out;
+        .yt-action-circle {
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          background: #272727;
+          border: none;
+          color: #fff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: background 0.2s, transform 0.15s;
+        }
+        .yt-action-circle:hover { background: #3f3f3f; }
+        .yt-action-circle:active { transform: scale(0.92); }
+        .yt-action-circle--active { background: #272727; color: #fff; }
+        .yt-action-label {
+          font-size: 12px;
+          font-weight: 600;
+          color: #aaa;
+          text-align: center;
+          min-width: 48px;
+        }
+
+        .yt-desktop-more { position: relative; }
+
+        .yt-desktop-avatar-link {
+          display: block;
+          margin-top: 8px;
+        }
+        .yt-desktop-avatar {
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 2px solid rgba(255,255,255,0.2);
+          transition: border-color 0.2s;
+          display: block;
+        }
+        .yt-desktop-avatar:hover { border-color: rgba(255,255,255,0.5); }
+
+        /* ── OPTIONS MENU ── */
+        .yt-mob-more-wrap { position: relative; }
+        .yt-options-menu {
+          position: absolute;
+          right: 56px;
+          bottom: 0;
+          width: 220px;
+          background: #212121;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+          z-index: 100;
+          animation: menuPop 0.15s ease-out;
+        }
+        .yt-options-menu--desktop {
+          right: 56px;
+          bottom: 0;
+        }
+        @keyframes menuPop {
+          from { transform: scale(0.9); opacity: 0; }
+          to { transform: scale(1); opacity: 1; }
+        }
+        .yt-option-item {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px 16px;
+          background: none;
+          border: none;
+          color: #fff;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: background 0.15s;
+          text-align: left;
+        }
+        .yt-option-item:hover { background: rgba(255,255,255,0.1); }
+
+        /* ── MOBILE ACTION BTN (YTActionBtn) ── */
+        .yt-mob-action-btn {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 3px;
+          background: none;
+          border: none;
+          cursor: pointer;
+          padding: 0;
+          color: #fff;
+        }
+        .yt-mob-action-circle {
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          background: rgba(0,0,0,0.3);
+          backdrop-filter: blur(8px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: background 0.2s, transform 0.15s;
+        }
+        .yt-mob-action-circle:active { transform: scale(0.88); }
+        .yt-mob-action-circle--active { background: rgba(255,255,255,0.25); }
+        .yt-mob-action-label {
+          font-size: 11px;
+          font-weight: 700;
+          color: #fff;
+          text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+          text-align: center;
+          min-width: 44px;
+        }
+
+        /* ── LOADING ── */
+        .yt-loading-more {
+          height: 64px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .yt-spinner {
+          width: 28px;
+          height: 28px;
+          border: 3px solid rgba(255,255,255,0.15);
+          border-top-color: #fff;
+          border-radius: 50%;
+          animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── PANEL (Comments / Share) ── */
+        .yt-panel-backdrop {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.5);
+          z-index: 200;
+        }
+        .yt-panel {
+          position: absolute;
+          right: 0;
+          top: 0;
+          height: 100%;
+          width: 100%;
+          max-width: 420px;
+          background: #212121;
+          display: flex;
+          flex-direction: column;
+          animation: slideInRight 0.25s ease-out;
+        }
+        @keyframes slideInRight {
+          from { transform: translateX(100%); }
+          to { transform: translateX(0); }
+        }
+        .yt-panel-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 16px 20px;
+          border-bottom: 1px solid rgba(255,255,255,0.1);
+          flex-shrink: 0;
+        }
+        .yt-panel-title {
+          font-size: 16px;
+          font-weight: 700;
+          color: #fff;
+          margin: 0;
+        }
+        .yt-panel-close {
+          width: 36px; height: 36px;
+          border-radius: 50%;
+          background: none;
+          border: none;
+          color: #aaa;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: background 0.2s;
+        }
+        .yt-panel-close:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .yt-panel-body {
+          flex: 1;
+          overflow-y: auto;
+          padding: 16px 20px;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+        .yt-panel-footer {
+          border-top: 1px solid rgba(255,255,255,0.1);
+          padding: 12px 16px;
+          flex-shrink: 0;
+          background: #212121;
+        }
+
+        /* ── COMMENTS ── */
+        .yt-empty-comments {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 48px 0;
+          gap: 8px;
+        }
+        .yt-empty-icon { color: #555; }
+        .yt-empty-title { font-size: 16px; font-weight: 700; color: #fff; margin: 0; }
+        .yt-empty-sub { font-size: 13px; color: #666; margin: 0; }
+
+        .yt-comment {
+          display: flex;
+          gap: 12px;
+        }
+        .yt-comment-avatar {
+          width: 36px; height: 36px;
+          border-radius: 50%;
+          background: #333;
+          flex-shrink: 0;
+          overflow: hidden;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 14px;
+          font-weight: 700;
+          color: #aaa;
+        }
+        .yt-comment-avatar-img { width: 100%; height: 100%; object-fit: cover; }
+        .yt-comment-body { flex: 1; min-width: 0; }
+        .yt-comment-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+        .yt-comment-name { font-size: 12px; font-weight: 700; color: #fff; text-decoration: none; }
+        .yt-comment-name:hover { color: #aaa; }
+        .yt-comment-time { font-size: 11px; color: #666; }
+        .yt-comment-text { font-size: 13px; color: #ddd; line-height: 1.5; word-break: break-word; }
+        .yt-comment-actions { display: flex; gap: 12px; margin-top: 6px; }
+        .yt-comment-btn {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          background: none;
+          border: none;
+          color: #888;
+          font-size: 12px;
+          cursor: pointer;
+          padding: 0;
+          transition: color 0.15s;
+        }
+        .yt-comment-btn:hover { color: #fff; }
+        .yt-comment-btn--active { color: #3ea6ff; }
+
+        .yt-comment-input-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .yt-comment-input-avatar {
+          width: 32px; height: 32px;
+          border-radius: 50%;
+          background: #333;
+          overflow: hidden;
+          flex-shrink: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 12px;
+          font-weight: 700;
+          color: #aaa;
+        }
+        .yt-comment-input {
+          flex: 1;
+          background: #333;
+          border: none;
+          border-radius: 20px;
+          padding: 8px 16px;
+          color: #fff;
+          font-size: 13px;
+          outline: none;
+        }
+        .yt-comment-input::placeholder { color: #888; }
+        .yt-comment-send {
+          width: 36px; height: 36px;
+          border-radius: 50%;
+          background: #3ea6ff;
+          border: none;
+          color: #000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          flex-shrink: 0;
+          transition: background 0.2s;
+        }
+        .yt-comment-send:disabled { background: #333; color: #666; cursor: default; }
+        .yt-comment-send:hover:not(:disabled) { background: #65b8ff; }
+
+        .yt-signin-prompt { text-align: center; }
+        .yt-signin-link { color: #3ea6ff; font-size: 14px; font-weight: 700; text-decoration: none; }
+
+        /* ── SHARE SHEET ── */
+        .yt-share-sheet {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          background: #212121;
+          border-radius: 20px 20px 0 0;
+          padding-bottom: env(safe-area-inset-bottom, 16px);
+          animation: slideUp 0.25s ease-out;
         }
         @keyframes slideUp {
-          from { transform: translateY(100%); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
+          from { transform: translateY(100%); }
+          to { transform: translateY(0); }
         }
-        .animate-slide-right {
-          animation: slideRight 0.3s ease-out;
+        .yt-share-apps {
+          display: flex;
+          gap: 12px;
+          padding: 16px 20px;
+          overflow-x: auto;
         }
-        @keyframes slideRight {
-          from { transform: translateX(100%); opacity: 0; }
-          to { transform: translateX(0); opacity: 1; }
+        .yt-share-app {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 6px;
+          background: none;
+          border: none;
+          cursor: pointer;
+          min-width: 56px;
+        }
+        .yt-share-icon {
+          width: 48px; height: 48px;
+          border-radius: 50%;
+          background: #333;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: background 0.2s;
+        }
+        .yt-share-app:hover .yt-share-icon { background: #444; }
+        .yt-share-letter { font-size: 18px; font-weight: 700; color: #fff; }
+        .yt-check { width: 20px; height: 20px; color: #4ade80; }
+        .yt-share-app-label { font-size: 11px; color: #aaa; }
+        .yt-share-url-row {
+          display: flex;
+          gap: 8px;
+          padding: 0 20px 20px;
+          align-items: center;
+        }
+        .yt-share-url {
+          flex: 1;
+          background: #333;
+          border-radius: 8px;
+          padding: 10px 14px;
+          font-size: 12px;
+          color: #aaa;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .yt-share-copy-btn {
+          background: #fff;
+          color: #000;
+          border: none;
+          border-radius: 8px;
+          padding: 10px 16px;
+          font-size: 13px;
+          font-weight: 700;
+          cursor: pointer;
+          flex-shrink: 0;
+          transition: background 0.2s;
+        }
+        .yt-share-copy-btn--copied { background: #4ade80; color: #000; }
+
+        /* ── SCROLLBAR HIDING ── */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* ── RESPONSIVE ── */
+
+        /* MOBILE: full-screen video, actions overlaid */
+        @media (max-width: 767px) {
+          .yt-shorts-root { top: 0; }
+          .yt-slide-inner {
+            padding: 0;
+            max-width: 100%;
+          }
+          .yt-video-col {
+            width: 100%;
+            height: 100%;
+          }
+          .yt-progress-track { height: 0 !important; }
+          .yt-video-wrap {
+            border-radius: 0;
+            width: 100vw;
+            height: 100%;
+            max-height: 100%;
+            aspect-ratio: unset;
+            box-shadow: none;
+            border: none;
+          }
+          .yt-desktop-actions { display: none !important; }
+          .yt-float-nav { display: none !important; }
+          .yt-mobile-actions { display: flex; }
+          .yt-video-info-overlay { display: block; }
+        }
+
+        /* TABLET / DESKTOP */
+        @media (min-width: 768px) {
+          .yt-mobile-actions { display: none; }
+          .yt-video-info-overlay {
+            /* On desktop show info below but inside the video overlay area */
+            right: 0;
+          }
+          .yt-desktop-actions { display: flex; }
+          .yt-float-nav { display: flex; }
+          .yt-slide-inner {
+            align-items: flex-end;
+            padding: 16px 0;
+          }
+        }
+
+        /* Large desktop: constrain video height */
+        @media (min-width: 1024px) {
+          .yt-video-wrap {
+            max-height: calc(100vh - 100px);
+          }
         }
       `}</style>
     </div>
   );
 }
 
-// Action Button Component with animation
-function ActionButton({ 
-  icon, 
-  label, 
-  onClick, 
-  isActive = false 
-}: { 
-  icon: React.ReactNode; 
-  label: string; 
-  onClick: () => void;
-  isActive?: boolean;
+/* Reusable mobile action button */
+function YTActionBtn({ icon, label, active, onClick }: {
+  icon: React.ReactNode;
+  label: string;
+  active?: boolean;
+  onClick: (e: React.MouseEvent) => void;
 }) {
-  const [isPressed, setIsPressed] = useState(false);
-
   return (
-    <button
-      onClick={() => {
-        setIsPressed(true);
-        setTimeout(() => setIsPressed(false), 150);
-        onClick();
-      }}
-      className={`flex flex-col items-center gap-1 transition-all duration-150 ${isPressed ? 'scale-90' : 'scale-100'}`}
-    >
-      <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 ${
-        isActive 
-          ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)]' 
-          : 'bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm'
-      }`}>
+    <button className="yt-mob-action-btn" onClick={onClick}>
+      <div className={`yt-mob-action-circle ${active ? 'yt-mob-action-circle--active' : ''}`}>
         {icon}
       </div>
-      {label && (
-        <span className="text-xs font-medium text-white drop-shadow-md">{label}</span>
-      )}
+      {label && <span className="yt-mob-action-label">{label}</span>}
     </button>
   );
 }
