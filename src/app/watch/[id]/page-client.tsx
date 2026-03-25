@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo, use } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { getVideoById, recordWatch, isHistoryPaused, incrementViews, Video, updateChannelAvatarInVideos } from '@/lib/supabase';
 import { getSubscriberCount } from '@/app/actions/subscription';
 import { trackVideoView } from '@/app/actions/views';
@@ -11,6 +12,18 @@ import { toggleLikeVideo, toggleDislikeVideo, fetchVideoEngagement } from '@/app
 import Comments from '@/components/Comments';
 import RelatedVideos from '@/components/RelatedVideos';
 import SubscribeButton from '@/components/SubscribeButton';
+import { 
+  Play, 
+  Pause, 
+  Volume2, 
+  VolumeX, 
+  Settings, 
+  Subtitles, 
+  Monitor, 
+  Maximize, 
+  Repeat,
+  ChevronRight
+} from 'lucide-react';
 
 export default function WatchPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: watchId } = use(params);
@@ -42,7 +55,67 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
   const [hasStarted, setHasStarted] = useState(false);
   const [isAnimatingPlay, setIsAnimatingPlay] = useState(false);
   const [subscriberCount, setSubscriberCount] = useState<number | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [showRemainingTime, setShowRemainingTime] = useState(false);
+  const [isTheatreMode, setIsTheatreMode] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [activeSubMenu, setActiveSubMenu] = useState<string | null>(null);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [quality, setQuality] = useState('Auto');
+  const [isSubtitlesOn, setIsSubtitlesOn] = useState(false);
+  const [volume, setVolume] = useState(1);
+  const [isAutoplayOn, setIsAutoplayOn] = useState(true);
+  
+  // Autoplay Next States
+  const [relatedVideos, setRelatedVideos] = useState<Video[]>([]);
+  const [showNextOverlay, setShowNextOverlay] = useState(false);
+  const [nextCountdown, setNextCountdown] = useState(8);
+  const [isAutoplayCancelled, setIsAutoplayCancelled] = useState(false);
+  const [playbackFeedback, setPlaybackFeedback] = useState<'play' | 'pause' | null>(null);
+  const [isBuffering, setIsBuffering] = useState(false);
+  const [showMobileControls, setShowMobileControls] = useState(false);
+  const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Dragging and Hover states
+  const [isDraggingProgress, setIsDraggingProgress] = useState(false);
+  const [hoverTime, setHoverTime] = useState<number | null>(null);
+  const [hoverX, setHoverX] = useState<number>(0);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const previewVideoRef = useRef<HTMLVideoElement | null>(null);
+  const progressFillRef = useRef<HTMLDivElement | null>(null);
+  const seekDotRef = useRef<HTMLDivElement | null>(null);
+  const isDraggingProgressRef = useRef(false);
+  const router = useRouter();
+
+  // Description expansion
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [needsExpansion, setNeedsExpansion] = useState(false);
+  const descriptionTextRef = useRef<HTMLParagraphElement | null>(null);
+
+  useEffect(() => {
+    if (descriptionTextRef.current) {
+      const isOverflowing = descriptionTextRef.current.scrollHeight > descriptionTextRef.current.clientHeight;
+      // We only want to set needsExpansion if it's currently NOT expanded (initial check)
+      if (!isDescriptionExpanded) setNeedsExpansion(isOverflowing);
+    }
+  }, [video, isDescriptionExpanded]);
+
+  // Find next video from related list - prioritize NON-shorts
+  const nextVideo = relatedVideos.find(v => !v.is_short) || (relatedVideos.length > 0 ? relatedVideos[0] : null);
+
+  // Autoplay Countdown Effect
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (showNextOverlay && !isAutoplayCancelled && nextCountdown > 0) {
+      timer = setTimeout(() => {
+        setNextCountdown(prev => prev - 1);
+      }, 1000);
+    } else if (showNextOverlay && !isAutoplayCancelled && nextCountdown === 0 && nextVideo) {
+      router.push(`/watch/${nextVideo.id}`);
+    }
+    return () => clearTimeout(timer);
+  }, [showNextOverlay, nextCountdown, nextVideo, router, isAutoplayCancelled]);
 
   const showToast = (message: string, kind: 'success' | 'error' = 'success') => {
     setToast({ message, kind });
@@ -426,8 +499,79 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
       setHasStarted(true);
       if (videoRef.current) {
         videoRef.current.play().catch(err => console.warn('Play error:', err));
+        setIsPlaying(true);
       }
     }, 400);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setIsSettingsOpen(false);
+    };
+    if (isSettingsOpen) {
+      window.addEventListener('click', handleClickOutside);
+    }
+    return () => {
+      window.removeEventListener('click', handleClickOutside);
+    };
+  }, [isSettingsOpen]);
+
+  const togglePlay = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (!videoRef.current) return;
+    if (isPlaying) {
+      videoRef.current.pause();
+      setIsPlaying(false);
+      setPlaybackFeedback('pause');
+    } else {
+      videoRef.current.play();
+      setIsPlaying(true);
+      setPlaybackFeedback('play');
+    }
+    // Clear feedback after animation
+    setTimeout(() => setPlaybackFeedback(null), 500);
+    
+    // Reset controls timer
+    resetControlsTimeout();
+  };
+
+  const resetControlsTimeout = () => {
+    setShowMobileControls(true);
+    if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+    controlsTimeoutRef.current = setTimeout(() => {
+      // Only auto-hide if video is playing
+      if (isPlaying) {
+        setShowMobileControls(false);
+      }
+    }, 3000);
+  };
+
+  const toggleMute = () => {
+    if (!videoRef.current) return;
+    const newMute = !isMuted;
+    videoRef.current.muted = newMute;
+    setIsMuted(newMute);
+  };
+
+  const toggleFullscreen = () => {
+    const el = document.querySelector('.aspect-video');
+    if (!el) return;
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(err => console.error(err));
+    } else {
+      el.requestFullscreen().catch(err => console.error(err));
+    }
+  };
+
+  const changeVolume = (v: number) => {
+    if (!videoRef.current) return;
+    videoRef.current.volume = v;
+    setVolume(v);
+    setIsMuted(v === 0);
+  };
+
+  const toggleTheatreMode = () => {
+    setIsTheatreMode(!isTheatreMode);
   };
 
   const videoTitle = video?.title || "";
@@ -437,8 +581,8 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
   const videoViews = video ? `${Math.max(1, video.views ?? 0).toLocaleString()} views` : "";
   const videoDate = video ? formatDistanceToNow(new Date(video.created_at), { addSuffix: true }) : "";
   const videoDescription = video?.description || "";  return (
-    <div className="flex flex-col lg:flex-row gap-6 p-0 lg:p-6 bg-[#0f0f0f] min-h-screen">
-      <div className="flex-1 lg:max-w-[calc(100vw-450px)]">
+    <div className={`flex ${isTheatreMode ? 'flex-col lg:flex-col' : 'flex-col lg:flex-row'} gap-6 p-0 lg:p-6 bg-[#0f0f0f] min-h-screen items-center lg:items-start`}>
+      <div className={`w-full ${isTheatreMode ? 'max-w-none' : 'flex-1 lg:max-w-[calc(100vw-450px)]'}`}>
         {/* Video Player Section */}
         <div 
           className="aspect-video bg-zinc-900 sm:rounded-xl overflow-hidden mb-4 relative shadow-2xl group/player cursor-pointer"
@@ -525,11 +669,28 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
             <video
               ref={videoRef}
               key={videoSrc}
-              className={`w-full h-full ${videoLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500 [&::-webkit-media-controls-timeline]:hidden [&::-webkit-media-controls-current-time-display]:hidden [&::-webkit-media-controls-time-remaining-display]:hidden`}
-              controls={hasStarted && videoLoaded && duration > 0}
+              className={`w-full h-full ${videoLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500`}
+              controls={false}
               autoPlay={false}
               poster={video?.thumbnail_url}
               preload="metadata"
+              onClick={(e) => {
+                // Toggle controls on mobile/touch
+                if (window.innerWidth < 1024) {
+                  if (showMobileControls) {
+                    setShowMobileControls(false);
+                  } else {
+                    resetControlsTimeout();
+                  }
+                } else {
+                  togglePlay();
+                }
+              }}
+              onMouseMove={() => {
+                if (window.innerWidth >= 1024) {
+                  resetControlsTimeout();
+                }
+              }}
               onLoadedData={() => setVideoLoaded(true)}
               onLoadedMetadata={(e) => {
                 const d = e.currentTarget.duration;
@@ -538,57 +699,499 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
               }}
               onTimeUpdate={(e) => {
                 const t = e.currentTarget.currentTime;
-                setCurrentTime(t);
+                // Avoid state updates while dragging to prevent stutter
+                if (!isDraggingProgressRef.current) {
+                  setCurrentTime(t);
+                }
                 const effectiveDuration = duration > 0 ? duration : resolvedDuration;
                 if (videoId && effectiveDuration > 0) {
                   persistProgress(videoId, t, effectiveDuration);
                 }
               }}
+              onEnded={() => {
+                if (isAutoplayOn && nextVideo) {
+                  setShowNextOverlay(true);
+                  setNextCountdown(8);
+                  setIsAutoplayCancelled(false); // Reset on new end
+                } else {
+                  setIsPlaying(false);
+                }
+              }}
+              onPlay={() => {
+                setIsPlaying(true);
+                setShowNextOverlay(false);
+                setIsAutoplayCancelled(false);
+                setIsBuffering(false);
+              }}
+              onPause={() => setIsPlaying(false)}
+              onWaiting={() => setIsBuffering(true)}
+              onPlaying={() => setIsBuffering(false)}
+              onSeeked={() => setIsBuffering(false)}
             >
               <source src={videoSrc} type="video/mp4" />
             </video>
           )}
-          
-          {/* Custom Progress Bar with Hover Timeline */}
+
+          {/* Buffering Loader - Thick rounded-pill style */}
+          {isBuffering && (
+            <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/10 pointer-events-none">
+              <div className="relative w-16 h-16">
+                <svg className="animate-spin w-full h-full" viewBox="0 0 50 50">
+                  <circle 
+                    cx="25" cy="25" r="20" 
+                    fill="none" 
+                    stroke="white" 
+                    strokeWidth="6" 
+                    strokeLinecap="round"
+                    strokeDasharray="90, 150"
+                    className="opacity-90"
+                  />
+                </svg>
+              </div>
+            </div>
+          )}
+
+          {/* Central Play/Pause Feedback Animation */}
+          {playbackFeedback && (
+            <div className="absolute inset-0 z-40 flex items-center justify-center pointer-events-none">
+              <div className="w-16 h-16 bg-black/40 rounded-full flex items-center justify-center animate-ping-once">
+                {playbackFeedback === 'play' ? (
+                  <Play size={32} className="text-white fill-current ml-1" />
+                ) : (
+                  <Pause size={32} className="text-white fill-current" />
+                )}
+              </div>
+              <style>{`
+                @keyframes ping-once {
+                  0% { transform: scale(0.8); opacity: 0; }
+                  50% { transform: scale(1.2); opacity: 1; }
+                  100% { transform: scale(1.5); opacity: 0; }
+                }
+                .animate-ping-once {
+                  animation: ping-once 0.5s cubic-bezier(0, 0, 0.2, 1) forwards;
+                }
+              `}</style>
+            </div>
+          )}          {/* Central Mobile Controls - Permanent when showing */}
+          {showMobileControls && !showNextOverlay && (
+            <div className="absolute inset-0 z-50 flex items-center justify-center gap-12 bg-transparent pointer-events-none animate-in fade-in duration-300">
+               <button 
+                  onClick={(e) => {
+                    togglePlay(e);
+                  }}
+                  className="w-20 h-20 bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center pointer-events-auto hover:bg-black/60 active:scale-95 transition-all shadow-2xl border border-white/10"
+               >
+                  {isPlaying ? (
+                    <Pause size={42} className="text-white fill-current" />
+                  ) : (
+                    <Play size={42} className="text-white fill-current ml-2" />
+                  )}
+               </button>
+            </div>
+          )}
+
+          {/* Autoplay Next Overlay - Redesigned to match YouTube exactly */}
+          {showNextOverlay && nextVideo && (
+            <div className={`absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/70 backdrop-blur-md pointer-events-auto animate-in fade-in duration-500 ${isAutoplayCancelled ? 'pb-10' : 'pb-20'}`}>
+              <div className="text-white flex flex-col items-center gap-4 max-w-md w-full px-8">
+                 {!isAutoplayCancelled && (
+                   <div className="text-zinc-300 text-sm font-medium">Up next in {nextCountdown}</div>
+                 )}
+                 
+                 {/* Large Thumbnail with Duration */}
+                 <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-2xl border border-white/5 mt-2 bg-zinc-900">
+                    <img 
+                      src={nextVideo.thumbnail_url || '/placeholder-thumb.jpg'} 
+                      alt="Next video"
+                      className="w-full h-full object-cover"
+                    />
+                    {nextVideo.duration && (
+                      <div className="absolute bottom-2 right-2 px-1.5 py-0.5 bg-black/80 rounded-sm text-[11px] font-bold">
+                        {nextVideo.duration}
+                      </div>
+                    )}
+                 </div>
+
+                 <div className="text-center mt-3 space-y-1">
+                    <h3 className="text-xl font-bold line-clamp-2 leading-tight tracking-tight">{nextVideo.title}</h3>
+                    <p className="text-zinc-400 text-sm font-medium">{nextVideo.channel_name}</p>
+                 </div>
+
+                 {/* pill-shaped action buttons */}
+                 <div className="flex items-center gap-3 w-full mt-6">
+                    {!isAutoplayCancelled ? (
+                      <>
+                        <button 
+                          onClick={() => setIsAutoplayCancelled(true)}
+                          className="flex-1 py-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold transition-all uppercase text-sm tracking-wide"
+                        >
+                          CANCEL
+                        </button>
+                        <button 
+                          onClick={() => router.push(`/watch/${nextVideo.id}`)}
+                          className="flex-1 py-2.5 rounded-full bg-white text-black font-bold transition-all hover:bg-zinc-200 uppercase text-sm tracking-wide"
+                        >
+                          PLAY NOW
+                        </button>
+                      </>
+                    ) : (
+                      <div className="flex flex-col gap-3 w-full">
+                        <button 
+                          onClick={() => router.push(`/watch/${nextVideo.id}`)}
+                          className="w-full py-3 rounded-full bg-white text-black font-bold transition-all hover:bg-zinc-200 uppercase text-sm tracking-wide flex items-center justify-center gap-2"
+                        >
+                          <Play className="w-4 h-4 fill-current" />
+                          Play Next Video
+                        </button>
+                        <button 
+                          onClick={() => setShowNextOverlay(false)}
+                          className="w-full py-2 text-zinc-400 hover:text-white transition-colors text-xs font-bold uppercase tracking-widest"
+                        >
+                          Dismiss
+                        </button>
+                      </div>
+                    )}
+                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* YouTube CUSTOM CONTROLS OVERLAY */}
           {hasStarted && videoLoaded && duration > 0 && (
-            <div
-              className="absolute bottom-0 left-0 right-0 h-1.5 bg-white/20 cursor-pointer group/progress z-20 hover:h-2 transition-all"
+            <div 
               onClick={(e) => {
-                const rect = e.currentTarget.getBoundingClientRect();
-                const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-                if (videoRef.current && resolvedDuration > 0) {
-                  videoRef.current.currentTime = pct * resolvedDuration;
+                // Toggle controls on background click
+                if (showMobileControls) {
+                  setShowMobileControls(false);
+                } else {
+                  resetControlsTimeout();
                 }
               }}
-              onMouseMove={(e) => {
-                const rect = e.currentTarget.getBoundingClientRect();
-                const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-                const hoverEl = e.currentTarget.querySelector('.hover-preview') as HTMLElement;
-                const tooltipEl = e.currentTarget.querySelector('.hover-tooltip') as HTMLElement;
-                if (hoverEl) hoverEl.style.left = `${pct * 100}%`;
-                if (tooltipEl) {
-                  tooltipEl.style.left = `${pct * 100}%`;
-                  tooltipEl.textContent = formatTime(pct * resolvedDuration);
-                }
-              }}
+              className={`absolute inset-0 z-40 flex flex-col justify-end transition-opacity duration-300 ${ (showNextOverlay || (showMobileControls)) ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
             >
-              {/* Progress fill */}
-              <div
-                className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-r"
-                style={{ width: `${progressPct}%` }}
-              />
-              
-              {/* Hover preview line */}
-              <div className="hover-preview absolute top-0 bottom-0 w-0.5 bg-white/70 opacity-0 group-hover/progress:opacity-100 transition-opacity pointer-events-none" />
-              
-              {/* Hover time tooltip */}
-              <div className="hover-tooltip absolute -top-9 px-2 py-1 bg-black/90 text-white text-xs rounded transform -translate-x-1/2 opacity-0 group-hover/progress:opacity-100 transition-opacity pointer-events-none whitespace-nowrap" />
-              
-              {/* Seek handle */}
-              <div
-                className="absolute top-1/2 w-4 h-4 bg-white rounded-full shadow-lg opacity-0 group-hover/progress:opacity-100 transition-opacity -translate-y-1/2 -translate-x-1/2"
-                style={{ left: `${progressPct}%` }}
-              />
+              <div 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  resetControlsTimeout();
+                }} // Prevent controls bar from toggling/hiding
+                className="bg-gradient-to-t from-black/80 via-black/20 to-transparent p-3 pt-8 pb-1 flex flex-col gap-0.5"
+              >
+                
+                {/* 1. Progress Bar (the thin line) with Dragging and Visual Preview */}
+                <div 
+                  className="relative w-full h-[5px] group/bar cursor-pointer flex items-center mb-4 mt-2"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    setIsDraggingProgress(true);
+                    isDraggingProgressRef.current = true;
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                    if (videoRef.current && resolvedDuration > 0) {
+                      videoRef.current.currentTime = pct * resolvedDuration;
+                    }
+                  }}
+                  onMouseMove={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                    const newHoverTime = pct * resolvedDuration;
+                    setHoverTime(newHoverTime);
+                    setHoverX(e.clientX - rect.left);
+
+                    // Update preview video
+                    if (previewVideoRef.current) {
+                      previewVideoRef.current.currentTime = newHoverTime;
+                    }
+
+                    if (isDraggingProgressRef.current && videoRef.current && resolvedDuration > 0) {
+                      // Ultra-smooth seek via requestAnimationFrame
+                      window.requestAnimationFrame(() => {
+                        if (progressFillRef.current) progressFillRef.current.style.transform = `scaleX(${pct})`;
+                        if (seekDotRef.current) seekDotRef.current.style.left = `${pct * 100}%`;
+                        if (videoRef.current) videoRef.current.currentTime = pct * resolvedDuration;
+                      });
+                    }
+                  }}
+                  onMouseUp={() => {
+                    if (isDraggingProgressRef.current && videoRef.current) {
+                      setCurrentTime(videoRef.current.currentTime);
+                    }
+                    setIsDraggingProgress(false);
+                    isDraggingProgressRef.current = false;
+                  }}
+                  onMouseLeave={() => {
+                    setHoverTime(null);
+                  }}
+                >
+                  {/* Visual Hover Preview Card (Thumbnail) */}
+                  {hoverTime !== null && (
+                    <div 
+                      className="absolute bottom-8 w-32 aspect-video bg-black rounded-lg border-2 border-white/20 overflow-hidden shadow-2xl pointer-events-none opacity-0 group-hover/bar:opacity-100 transition-opacity z-50 flex flex-col"
+                      style={{ left: `${hoverX}px`, transform: 'translateX(-50%)' }}
+                    >
+                      <video 
+                        ref={previewVideoRef}
+                        src={videoSrc}
+                        muted
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="bg-black/60 text-white text-[10px] font-bold py-0.5 text-center">
+                        {formatTime(hoverTime)}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Track (Darker background) */}
+                  <div className="absolute inset-0 bg-white/10 h-[3px] rounded-full overflow-hidden transition-all group-hover/bar:h-[5px]">
+                    {/* Buffer Line */}
+                    <div 
+                      className="h-full bg-white/20 transition-all duration-300" 
+                      style={{ width: `${(videoRef.current?.buffered.length ? videoRef.current.buffered.end(0) / resolvedDuration : 0) * 100}%` }} 
+                    />
+                  </div>
+                  {/* Progress Fill (Playra Theme - BLUE) */}
+                  <div 
+                    ref={progressFillRef}
+                    className="absolute inset-0 h-[3px] bg-gradient-to-r from-blue-600 to-indigo-500 origin-left scale-x-0 transition-all group-hover/bar:h-[5px]"
+                    style={{ transform: `scaleX(${progressPct / 100})`, width: '100%' }}
+                  />
+                  {/* Seek Head (The Blue Dot) */}
+                  <div 
+                    ref={seekDotRef}
+                    className={`absolute top-1/2 -translate-y-1/2 w-[13px] h-[13px] bg-blue-500 rounded-full shadow-lg border-2 border-white/20 transition-all z-10 
+                      ${isDraggingProgress ? 'scale-125 opacity-100' : 'opacity-0 lg:group-hover/player:opacity-100'}`}
+                    style={{ left: `${progressPct}%`, marginLeft: '-6.5px' }}
+                  />
+                </div>
+
+                {/* Window listeners for dragging outside */}
+                {isDraggingProgress && (
+                  <div 
+                    className="fixed inset-0 z-[9999] cursor-pointer"
+                    onMouseMove={(e) => {
+                      const bar = document.querySelector('.group\\/bar');
+                      if (bar && videoRef.current && resolvedDuration > 0 && isDraggingProgressRef.current) {
+                        const rect = bar.getBoundingClientRect();
+                        const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                        
+                        window.requestAnimationFrame(() => {
+                          if (progressFillRef.current) progressFillRef.current.style.transform = `scaleX(${pct})`;
+                          if (seekDotRef.current) seekDotRef.current.style.left = `${pct * 100}%`;
+                          if (videoRef.current) videoRef.current.currentTime = pct * resolvedDuration;
+                        });
+                      }
+                    }}
+                    onMouseUp={() => {
+                      if (isDraggingProgressRef.current && videoRef.current) {
+                        setCurrentTime(videoRef.current.currentTime);
+                      }
+                      setIsDraggingProgress(false);
+                      isDraggingProgressRef.current = false;
+                    }}
+                  />
+                )}
+
+                {/* 2. Controls Bar (The Icons) */}
+                <div className="flex items-center justify-between text-white pb-2 px-1">
+                  <div className="flex items-center gap-2">
+                    {/* Play Button Enclosure */}
+                    <button 
+                      onClick={togglePlay} 
+                      className="flex items-center justify-center w-10 h-10 rounded-full bg-white/15 backdrop-blur-md hover:bg-white/25 transition-all active:scale-95 shadow-sm"
+                    >
+                      {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" className="ml-1" />}
+                    </button>
+
+                    {/* Volume Button Enclosure */}
+                    <div className="flex items-center gap-0 group/vol bg-white/15 backdrop-blur-md rounded-full px-1 py-1 pr-2 hover:pr-3 transition-all">
+                      <button 
+                        onClick={toggleMute} 
+                        className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-white/10 transition-colors"
+                      >
+                        {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+                      </button>
+                      <input 
+                        type="range" 
+                        min="0" max="1" step="0.05" 
+                        value={isMuted ? 0 : volume} 
+                        onChange={(e) => changeVolume(parseFloat(e.target.value))}
+                        className="w-0 group-hover/vol:w-16 transition-all accent-white cursor-pointer h-1 opacity-0 group-hover/vol:opacity-100 ml-0 hover:ml-1"
+                      />
+                    </div>
+
+                    {/* Time Enclosure (Pill) - Clickable for toggle */}
+                    <div 
+                      className="bg-white/15 backdrop-blur-md rounded-full px-4 py-2 text-[12px] font-bold tracking-tight shadow-sm ml-1 cursor-pointer select-none hover:bg-white/25 active:scale-95 transition-all min-w-[60px] text-center"
+                      onClick={() => setShowRemainingTime(!showRemainingTime)}
+                    >
+                       {showRemainingTime ? (
+                         `-${formatTime(Math.max(0, resolvedDuration - currentTime))}`
+                       ) : (
+                         <>
+                           {formatTime(currentTime)}
+                           <span className="opacity-70 mx-1">/</span>
+                           <span className="opacity-70">{formatTime(resolvedDuration)}</span>
+                         </>
+                       )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {/* Right side clusters in a pill */}
+                    <div className="flex items-center gap-3 bg-white/15 backdrop-blur-md rounded-full px-4 py-1.5 shadow-sm">
+                        {/* YouTube Autoplay Toggle Style - Pixel Exact */}
+                        <div 
+                          className={`relative w-9 h-[18px] rounded-full cursor-pointer transition-all duration-200 ${isAutoplayOn ? 'bg-white' : 'bg-white/30'}`} 
+                          onClick={() => setIsAutoplayOn(!isAutoplayOn)}
+                        >
+                           <div className={`absolute top-[2px] w-[14px] h-[14px] rounded-full transition-all duration-200 flex items-center justify-center ${isAutoplayOn ? 'left-[20px] bg-black' : 'left-[2px] bg-white shadow-sm'}`}>
+                              {isAutoplayOn ? (
+                                <svg className="w-[8px] h-[8px] translate-x-[0.5px]" viewBox="0 0 10 10">
+                                   <path d="M3 2L8 5L3 8V2Z" fill="white" />
+                                </svg>
+                              ) : (
+                                <svg className="w-[8px] h-[8px]" viewBox="0 0 10 10">
+                                   <rect x="3" y="3" width="4" height="4" fill="#52525b" />
+                                </svg>
+                              )}
+                           </div>
+                        </div>
+
+                        <button 
+                          onClick={() => setIsSubtitlesOn(!isSubtitlesOn)}
+                          className={`relative hover:scale-110 transition-all duration-300 p-0.5 ${isSubtitlesOn ? 'opacity-100' : 'opacity-40 hover:opacity-100'}`}
+                          title={isSubtitlesOn ? "Turn off subtitles" : "Turn on subtitles"}
+                        >
+                          <Subtitles size={19} className="text-white" />
+                          {isSubtitlesOn && <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-4 h-[2px] bg-red-600 rounded-full shadow-glow-red" />}
+                        </button>
+                        <div className="relative">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); setIsSettingsOpen(!isSettingsOpen); }} 
+                            className={`hover:scale-110 transition-all duration-300 opacity-90 hover:opacity-100 p-0.5 ${isSettingsOpen ? 'rotate-90 text-blue-400' : 'rotate-0 text-white'}`}
+                            title="Settings"
+                          >
+                            <Settings size={19} />
+                          </button>
+
+                          {/* Settings Popup - ENSURING TOP-TIER Z-INDEX */}
+                          {isSettingsOpen && (
+                            <div 
+                              className="absolute bottom-10 right-0 z-[100] animate-in fade-in zoom-in slide-in-from-bottom-2 duration-200 min-w-[420px] h-64"
+                              onMouseLeave={() => setActiveSubMenu(null)}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {/* Main Menu Panel (Left-side of popup) */}
+                              <div className="absolute right-40 bottom-0 w-64 bg-[#0f0f0f]/95 backdrop-blur-xl rounded-xl border border-white/10 shadow-2xl py-2 overflow-hidden flex-shrink-0">
+                                {/* Subtitles */}
+                                <button 
+                                  className={`w-full flex items-center justify-between px-4 py-2.5 transition-colors text-white text-sm group ${activeSubMenu === 'subtitles' ? 'bg-white/10' : 'hover:bg-white/5'}`}
+                                  onMouseEnter={() => setActiveSubMenu('subtitles')}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <Subtitles size={18} className={`${activeSubMenu === 'subtitles' ? 'text-white' : 'text-zinc-400'} group-hover:text-white`} />
+                                    <span>Subtitles/CC</span>
+                                  </div>
+                                  <div className="flex items-center gap-1 text-zinc-400">
+                                    <span>{isSubtitlesOn ? 'On' : 'Off'}</span>
+                                    <ChevronRight size={14} className={activeSubMenu === 'subtitles' ? 'translate-x-1 transition-transform' : ''} />
+                                  </div>
+                                </button>
+
+                                {/* Playback speed */}
+                                <button 
+                                  className={`w-full flex items-center justify-between px-4 py-2.5 transition-colors text-white text-sm group ${activeSubMenu === 'speed' ? 'bg-white/10' : 'hover:bg-white/5'}`}
+                                  onMouseEnter={() => setActiveSubMenu('speed')}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <div className={`w-[18px] h-[18px] border-2 rounded-full flex items-center justify-center text-[8px] font-bold ${activeSubMenu === 'speed' ? 'border-white text-white' : 'border-zinc-400 text-zinc-400'} group-hover:border-white group-hover:text-white`}>
+                                      {playbackSpeed}x
+                                    </div>
+                                    <span>Playback speed</span>
+                                  </div>
+                                  <div className="flex items-center gap-1 text-zinc-400">
+                                    <span>{playbackSpeed === 1 ? 'Normal' : `${playbackSpeed}x`}</span>
+                                    <ChevronRight size={14} className={activeSubMenu === 'speed' ? 'translate-x-1 transition-transform' : ''} />
+                                  </div>
+                                </button>
+
+                                {/* Quality */}
+                                <button 
+                                  className={`w-full flex items-center justify-between px-4 py-2.5 transition-colors text-white text-sm group ${activeSubMenu === 'quality' ? 'bg-white/10' : 'hover:bg-white/5'}`}
+                                  onMouseEnter={() => setActiveSubMenu('quality')}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-[18px] h-[18px] flex flex-col items-center justify-center gap-[2px]">
+                                       <div className={`w-full h-[1.5px] rounded-full ${activeSubMenu === 'quality' ? 'bg-white' : 'bg-zinc-400'} group-hover:bg-white`} />
+                                       <div className={`w-2/3 h-[1.5px] rounded-full ${activeSubMenu === 'quality' ? 'bg-white' : 'bg-zinc-400'} group-hover:bg-white`} />
+                                       <div className={`w-full h-[1.5px] rounded-full ${activeSubMenu === 'quality' ? 'bg-white' : 'bg-zinc-400'} group-hover:bg-white`} />
+                                    </div>
+                                    <span>Quality</span>
+                                  </div>
+                                  <div className="flex items-center gap-1 text-zinc-400">
+                                    <span>{quality}</span>
+                                    <ChevronRight size={14} className={activeSubMenu === 'quality' ? 'translate-x-1 transition-transform' : ''} />
+                                  </div>
+                                </button>
+                              </div>
+
+                              {/* Sub Menu Panel (Right-side of popup) */}
+                              {activeSubMenu && (
+                                <div className="absolute right-0 bottom-0 w-36 bg-[#1a1a1a]/95 backdrop-blur-xl rounded-xl border border-white/10 shadow-2xl py-2 animate-in fade-in slide-in-from-left-2 duration-150 max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
+                                  {activeSubMenu === 'subtitles' && ['On', 'Off'].map(opt => (
+                                    <button 
+                                      key={opt}
+                                      onClick={() => setIsSubtitlesOn(opt === 'On')}
+                                      className={`w-full text-left px-4 py-2 hover:bg-white/10 text-sm flex items-center justify-between ${ (opt === 'On' && isSubtitlesOn) || (opt === 'Off' && !isSubtitlesOn) ? 'text-blue-400 font-bold' : 'text-white' }`}
+                                    >
+                                      {opt}
+                                      {((opt === 'On' && isSubtitlesOn) || (opt === 'Off' && !isSubtitlesOn)) && <div className="w-1.5 h-1.5 bg-blue-400 rounded-full" />}
+                                    </button>
+                                  ))}
+                                  {activeSubMenu === 'speed' && [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map(speed => (
+                                    <button 
+                                      key={speed}
+                                      onClick={() => {
+                                        if (videoRef.current) videoRef.current.playbackRate = speed;
+                                        setPlaybackSpeed(speed);
+                                      }}
+                                      className={`w-full text-left px-4 py-2 hover:bg-white/10 text-sm flex items-center justify-between ${playbackSpeed === speed ? 'text-blue-400 font-bold' : 'text-white'}`}
+                                    >
+                                      {speed === 1 ? 'Normal' : `${speed}x`}
+                                      {playbackSpeed === speed && <div className="w-1.5 h-1.5 bg-blue-400 rounded-full" />}
+                                    </button>
+                                  ))}
+                                  {activeSubMenu === 'quality' && ['Full HD', '1080p', '720p', '480p', '360p', '240p', '144p', 'Auto'].map(q => (
+                                    <button 
+                                      key={q}
+                                      onClick={() => setQuality(q)}
+                                      className={`w-full text-left px-4 py-2 hover:bg-white/10 text-sm flex items-center justify-between ${quality === q ? 'text-blue-400 font-bold' : 'text-white'}`}
+                                    >
+                                      {q}
+                                      {quality === q && <div className="w-1.5 h-1.5 bg-blue-400 rounded-full" />}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        <button onClick={toggleTheatreMode} className="hover:scale-110 transition-transform opacity-90 hover:opacity-100 p-0.5" title={isTheatreMode ? "Default view" : "Theatre mode"}>
+                          {isTheatreMode ? (
+                            <div className="relative w-[22px] h-[16px] border-2 border-white rounded-sm overflow-hidden flex">
+                              <div className="flex-1 border-r border-white/30" />
+                              <div className="w-[6px] bg-white/20" />
+                            </div>
+                          ) : (
+                            <Monitor size={19} />
+                          )}
+                        </button>
+                        <button onClick={toggleFullscreen} className="hover:scale-110 transition-transform opacity-90 hover:opacity-100 p-0.5">
+                          <Maximize size={19} />
+                        </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -689,17 +1292,35 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
             </div>
 
             {/* Description Box */}
-            <div className="bg-white/5 hover:bg-white/10 rounded-xl p-3 transition-colors cursor-pointer group mb-6 min-h-[100px]">
+            <div 
+              className="bg-white/5 hover:bg-white/10 rounded-xl p-3 transition-colors mb-6 min-h-[100px] cursor-default"
+              onClick={() => {
+                if (needsExpansion) setIsDescriptionExpanded(!isDescriptionExpanded);
+              }}
+            >
               {video ? (
                 <>
                   <div className="flex items-center gap-3 text-[14px] font-bold mb-1 text-white">
                     <span>{videoViews}</span>
                     <span>{videoDate}</span>
                   </div>
-                  <p className="text-[14px] text-zinc-200 leading-relaxed whitespace-pre-wrap line-clamp-2 group-hover:line-clamp-none transition-all">
+                  <p 
+                    ref={descriptionTextRef}
+                    className={`text-[14px] text-zinc-200 leading-relaxed whitespace-pre-wrap transition-all ${isDescriptionExpanded ? '' : 'line-clamp-2'}`}
+                  >
                     {videoDescription}
                   </p>
-                  <button className="text-[14px] font-bold text-zinc-400 mt-2">...more</button>
+                  {needsExpansion && (
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsDescriptionExpanded(!isDescriptionExpanded);
+                      }}
+                      className="text-[14px] font-bold text-white mt-2 hover:bg-white/10 rounded px-1 -mx-1"
+                    >
+                      {isDescriptionExpanded ? 'show less' : '...more'}
+                    </button>
+                  )}
                 </>
               ) : (
                 <div className="flex flex-col gap-2">
@@ -728,11 +1349,12 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
       </div>
 
       {/* Related Videos Sidebar */}
-      <div className="lg:w-96 flex flex-col gap-3 px-4 lg:px-0">
+      <div className={`${isTheatreMode ? 'w-full max-w-[1200px] mx-auto xl:max-w-none' : 'lg:w-96'} flex flex-col gap-3 px-4 lg:px-0 mt-4 lg:mt-0`}>
         <RelatedVideos
           videoId={watchId}
           category={video?.category}
           channelId={video?.channel_id}
+          onVideosLoaded={setRelatedVideos}
         />
       </div>
       {isSaveOpen && (

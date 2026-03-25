@@ -6,6 +6,7 @@ import { getVideos, Video } from '@/lib/supabase';
 import { formatDistanceToNow } from 'date-fns';
 import { getActiveProfile, getBatchProfiles } from '@/app/actions/profile';
 import CommunityPostCard from '@/components/CommunityPostCard';
+import { Clock, MoreVertical } from 'lucide-react';
 
 const SKELETON_BATCH = Array.from({ length: 8 });
 
@@ -170,6 +171,24 @@ function VideoCard({
               {computedDuration || video.duration || '0:00'}
             </div>
           )}
+
+          {/* YouTube-style hover icons */}
+          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-2 z-40">
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); /* Logic to toggle watch later */ }}
+              className="bg-black/80 p-1.5 rounded-md text-white hover:bg-black transition-colors"
+              title="Watch Later"
+            >
+              <Clock size={16} />
+            </button>
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); /* Logic to show more options */ }}
+              className="bg-black/80 p-1.5 rounded-md text-white hover:bg-black transition-colors"
+              title="More"
+            >
+              <MoreVertical size={16} />
+            </button>
+          </div>
         </div>
       </Link>
 

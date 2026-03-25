@@ -162,6 +162,18 @@ export async function initDatabase() {
             );
         `);
 
+        // Coming Soon Table
+        await turso.execute(`
+            CREATE TABLE IF NOT EXISTS coming_soon (
+                id TEXT PRIMARY KEY,
+                title TEXT NOT NULL,
+                description TEXT,
+                release_date DATETIME, -- Optional
+                is_premier BOOLEAN DEFAULT 0,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
         console.log("Turso tables initialized successfully.");
     } catch (error) {
         console.error("Error initializing database:", error);

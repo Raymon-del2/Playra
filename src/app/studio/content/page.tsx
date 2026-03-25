@@ -674,22 +674,22 @@ export default function ChannelContent() {
                         className="absolute inset-0"
                         onClick={() => setIsUploadModalOpen(false)}
                     />
-
-                    <div className="relative w-full max-w-[800px] aspect-[16/10] bg-[#282828] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+                    {/* UPDATED COMPACT MODAL DESIGN - MATCHING IMAGE */}
+                    <div className={`relative w-full ${uploadStep === 'idle' ? 'max-w-xl' : 'max-w-[800px] aspect-[16/10]'} bg-[#282828] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200 transition-all`}>
                         {/* Modal Header */}
-                        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
-                            <h2 className="text-[20px] font-bold text-white">Upload videos</h2>
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 select-none">
+                            <h2 className="text-[15px] font-bold text-white uppercase tracking-tight">Upload videos</h2>
                             <div className="flex items-center gap-2">
-                                <button className="p-2 hover:bg-white/10 rounded-full transition-colors">
-                                    <svg className="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <button className="p-2 hover:bg-white/10 rounded-full transition-colors group">
+                                    <svg className="w-5 h-5 text-zinc-400 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                                     </svg>
                                 </button>
                                 <button
-                                    onClick={() => setIsUploadModalOpen(false)}
-                                    className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                                    onClick={() => resetModal()}
+                                    className="p-2 hover:bg-white/10 rounded-full transition-colors group"
                                 >
-                                    <svg className="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-5 h-5 text-zinc-400 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                                     </svg>
                                 </button>
@@ -700,31 +700,41 @@ export default function ChannelContent() {
                         <div className="flex-1 flex flex-col overflow-y-auto">
                             {uploadStep === 'idle' ? (
                                 <div
-                                    className={`flex-1 flex flex-col items-center justify-center p-8 transition-colors ${isDragging ? 'bg-white/5' : ''
+                                    className={`flex-1 flex flex-col items-center justify-center py-16 px-8 transition-colors ${isDragging ? 'bg-white/5' : ''
                                         }`}
                                     onDragOver={handleDragOver}
                                     onDragLeave={handleDragLeave}
                                     onDrop={handleDrop}
                                 >
-                                    <div className="w-24 h-24 bg-[#1f1f1f] rounded-full flex items-center justify-center mb-6">
-                                        <svg className="w-10 h-10 text-zinc-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                    <div 
+                                      onClick={() => document.getElementById('studio-upload-input')?.click()}
+                                      className="w-32 h-32 bg-[#1f1f1f] hover:bg-[#252525] rounded-full flex items-center justify-center mb-8 cursor-pointer transition-all shadow-inner group"
+                                    >
+                                        <svg className="w-12 h-12 text-zinc-500 group-hover:text-white group-hover:-translate-y-1 transition-all" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                                         </svg>
                                     </div>
 
-                                    <h3 className="text-[15px] font-bold text-white mb-2">Drag and drop video files to upload</h3>
-                                    <p className="text-[13px] text-zinc-400 mb-8">Your videos will be private until you publish them.</p>
+                                    <h3 className="text-[15px] font-bold text-white mb-6 select-none">Drag and drop video files to upload</h3>
+                                    
+                                    <input 
+                                      id="studio-upload-input"
+                                      type="file" 
+                                      className="hidden" 
+                                      accept="video/*" 
+                                      onChange={handleFileSelect} 
+                                    />
 
-                                    <label className="px-6 py-2 bg-white text-black rounded-full text-sm font-bold hover:bg-zinc-200 transition-colors cursor-pointer">
+                                    <button 
+                                      onClick={() => document.getElementById('studio-upload-input')?.click()}
+                                      className="px-6 py-2 bg-white text-black rounded-full text-sm font-bold hover:bg-zinc-200 transition-colors uppercase tracking-wide"
+                                    >
                                         Select files
-                                        <input type="file" className="hidden" accept="video/*" onChange={handleFileSelect} />
-                                    </label>
+                                    </button>
 
-                                    <div className="mt-12 text-center">
-                                        <p className="text-[11px] text-zinc-500 leading-relaxed max-w-[600px] mx-auto px-10">
-                                            By submitting your videos to Playra, you acknowledge that you agree to Playra's <span className="text-blue-400 cursor-pointer hover:underline">Terms of Service</span> and <span className="text-blue-400 cursor-pointer hover:underline">Community Guidelines</span>.
-                                            <br />
-                                            Please be sure not to violate others' copyright or privacy rights. <span className="text-blue-400 cursor-pointer hover:underline">Learn more</span>
+                                    <div className="mt-12 text-center opacity-40 hover:opacity-100 transition-opacity">
+                                        <p className="text-[10px] text-zinc-500 leading-relaxed max-w-[400px] mx-auto uppercase tracking-tighter">
+                                            Your videos will be private until you publish them.
                                         </p>
                                     </div>
                                 </div>
@@ -733,68 +743,81 @@ export default function ChannelContent() {
                                     {/* Left: Details Form */}
                                     <div className="flex-1 space-y-6">
                                         <h2 className="text-xl font-bold">Details</h2>
+                                            <div className="space-y-4">
+                                                {/* Video Type / Section Selection */}
+                                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+                                                    {[
+                                                        { id: 'video', label: 'Video', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg> },
+                                                        { id: 'music', label: 'Music', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" /></svg> },
+                                                        { id: 'styles', label: 'Styles', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
+                                                        { id: 'post', label: 'Post', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" /></svg> }
+                                                    ].map((type) => (
+                                                        <button
+                                                            key={type.id}
+                                                            onClick={() => {
+                                                                if (type.id === 'video') { setSelectedCategory('general'); setActiveTab('Videos'); }
+                                                                if (type.id === 'music') { setSelectedCategory('music'); setActiveTab('Music'); }
+                                                                if (type.id === 'styles') { setActiveTab('Styles'); }
+                                                                if (type.id === 'post') { setActiveTab('Posts'); }
+                                                            }}
+                                                            className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all gap-1.5 ${
+                                                                (type.id === 'video' && activeTab === 'Videos' && selectedCategory !== 'music') ||
+                                                                (type.id === 'music' && selectedCategory === 'music') ||
+                                                                (type.id === 'styles' && activeTab === 'Styles') ||
+                                                                (type.id === 'post' && activeTab === 'Posts')
+                                                                    ? 'bg-white/10 border-white text-white'
+                                                                    : 'bg-transparent border-white/5 text-zinc-500 hover:border-white/20'
+                                                            }`}
+                                                        >
+                                                            {type.icon}
+                                                            <span className="text-[10px] font-bold uppercase tracking-widest">{type.label}</span>
+                                                        </button>
+                                                    ))}
+                                                </div>
 
-                                        <div className="space-y-4">
-                                            <div className="relative group">
-                                                <div className="absolute inset-0 border border-zinc-700 group-focus-within:border-blue-500 rounded p-2 pointer-events-none transition-colors" />
-                                                <label className="block text-[12px] text-zinc-500 px-2 pt-1 group-focus-within:text-blue-500 transition-colors">Title (required)</label>
-                                                <input
-                                                    type="text"
-                                                    value={videoTitle}
-                                                    onChange={(e) => setVideoTitle(e.target.value)}
-                                                    placeholder="Add a title that describes your video"
-                                                    className="w-full bg-transparent p-2 text-sm outline-none placeholder-zinc-600"
-                                                />
-                                            </div>
-
-                                            <div className="relative group">
-                                                <div className="absolute inset-0 border border-zinc-700 group-focus-within:border-blue-500 rounded p-2 pointer-events-none transition-colors" />
-                                                <label className="block text-[12px] text-zinc-500 px-2 pt-1 group-focus-within:text-blue-500 transition-colors">Description</label>
-                                                <textarea
-                                                    rows={6}
-                                                    value={videoDescription}
-                                                    onChange={(e) => setVideoDescription(e.target.value)}
-                                                    placeholder="Tell viewers about your video"
-                                                    className="w-full bg-transparent p-2 text-sm outline-none resize-none placeholder-zinc-600"
-                                                />
                                                 <div className="relative group">
                                                     <div className="absolute inset-0 border border-zinc-700 group-focus-within:border-blue-500 rounded p-2 pointer-events-none transition-colors" />
-                                                    <label className="block text-[12px] text-zinc-500 px-2 pt-1 group-focus-within:text-blue-500 transition-colors">Category</label>
-                                                    <select
-                                                        value={selectedCategory}
-                                                        onChange={(e) => setSelectedCategory(e.target.value as any)}
-                                                        className="w-full bg-transparent p-2 text-sm outline-none placeholder-zinc-600 appearance-none"
-                                                    >
-                                                        <option value="general" className="bg-[#282828]">General</option>
-                                                        <option value="family" className="bg-[#282828]">Family</option>
-                                                        <option value="kids" className="bg-[#282828]">Kids</option>
-                                                        <option value="adults" className="bg-[#282828]">Adults (18+)</option>
-                                                    </select>
-                                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                                                        <svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                                                    </div>
+                                                    <label className="block text-[12px] text-zinc-500 px-2 pt-1 group-focus-within:text-blue-500 transition-colors">Title (required)</label>
+                                                    <input
+                                                        type="text"
+                                                        value={videoTitle}
+                                                        onChange={(e) => setVideoTitle(e.target.value)}
+                                                        placeholder="Add a title that describes your content"
+                                                        className="w-full bg-transparent p-2 text-sm outline-none placeholder-zinc-600"
+                                                    />
+                                                </div>
+
+                                                <div className="relative group">
+                                                    <div className="absolute inset-0 border border-zinc-700 group-focus-within:border-blue-500 rounded p-2 pointer-events-none transition-colors" />
+                                                    <label className="block text-[12px] text-zinc-500 px-2 pt-1 group-focus-within:text-blue-500 transition-colors">Description</label>
+                                                    <textarea
+                                                        rows={4}
+                                                        value={videoDescription}
+                                                        onChange={(e) => setVideoDescription(e.target.value)}
+                                                        placeholder="Tell viewers about your content"
+                                                        className="w-full bg-transparent p-2 text-sm outline-none resize-none placeholder-zinc-600"
+                                                    />
                                                 </div>
                                             </div>
-                                        </div>
 
-                                        <div className="space-y-2">
-                                            <h3 className="text-sm font-bold text-white">Thumbnail</h3>
-                                            <p className="text-[12px] text-zinc-400">Select or upload a picture that shows what's in your video. A good thumbnail stands out and draws viewers' attention.</p>
-                                            <label className="w-36 aspect-video bg-zinc-800 border-2 border-dashed border-zinc-700 rounded flex flex-col items-center justify-center cursor-pointer hover:border-zinc-500 transition-colors overflow-hidden">
-                                                {thumbnailData ? (
-                                                    <img src={thumbnailData} alt="Thumbnail preview" className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <>
-                                                        <svg className="w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                        </svg>
-                                                        <span className="text-[10px] text-zinc-500 mt-2">Upload thumbnail</span>
-                                                    </>
-                                                )}
-                                                <input type="file" accept="image/*" className="hidden" onChange={handleThumbnailSelect} />
-                                            </label>
+                                            <div className="space-y-2 pt-4">
+                                                <h3 className="text-sm font-bold text-white">Thumbnail</h3>
+                                                <p className="text-[12px] text-zinc-400">Select or upload a picture that shows what's in your video.</p>
+                                                <label className="w-36 aspect-video bg-zinc-800 border-2 border-dashed border-zinc-700 rounded flex flex-col items-center justify-center cursor-pointer hover:border-zinc-500 transition-colors overflow-hidden">
+                                                    {thumbnailData ? (
+                                                        <img src={thumbnailData} alt="Preview" className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <>
+                                                            <svg className="w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                            </svg>
+                                                            <span className="text-[10px] text-zinc-500 mt-2">Upload thumbnail</span>
+                                                        </>
+                                                    )}
+                                                    <input type="file" accept="image/*" className="hidden" onChange={handleThumbnailSelect} />
+                                                </label>
+                                            </div>
                                         </div>
-                                    </div>
 
                                     {/* Right: Preview & Progress */}
                                     <div className="w-full lg:w-[300px] space-y-4">

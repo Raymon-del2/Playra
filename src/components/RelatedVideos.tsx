@@ -4,14 +4,16 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { getRelatedVideos, Video } from '@/lib/supabase';
 import { formatDistanceToNow } from 'date-fns';
+import { Clock, MoreVertical } from 'lucide-react';
 
 interface RelatedVideosProps {
     videoId: string;
     category?: string;
     channelId?: string;
+    onVideosLoaded?: (videos: Video[]) => void;
 }
 
-export default function RelatedVideos({ videoId, category, channelId }: RelatedVideosProps) {
+export default function RelatedVideos({ videoId, category, channelId, onVideosLoaded }: RelatedVideosProps) {
     const [videos, setVideos] = useState<Video[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -24,6 +26,7 @@ export default function RelatedVideos({ videoId, category, channelId }: RelatedV
             setIsLoading(true);
             const data = await getRelatedVideos(videoId, category, channelId, 20);
             setVideos(data);
+            if (onVideosLoaded) onVideosLoaded(data);
         } catch (error) {
             console.error('Failed to load related videos:', error);
         } finally {
@@ -111,6 +114,24 @@ export default function RelatedVideos({ videoId, category, channelId }: RelatedV
                                     <img src="/styles-icon.svg?v=blue" alt="Style" className="w-4 h-4" />
                                 </div>
                             )}
+
+                            {/* YouTube-style hover icons */}
+                            <div className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1.5 z-20">
+                                <button
+                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); /* Logic to toggle watch later */ }}
+                                    className="bg-black/80 p-1.5 rounded-md text-white hover:bg-black transition-colors"
+                                    title="Watch Later"
+                                >
+                                    <Clock size={16} />
+                                </button>
+                                <button
+                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); /* Logic to show more options */ }}
+                                    className="bg-black/80 p-1.5 rounded-md text-white hover:bg-black transition-colors"
+                                    title="More"
+                                >
+                                    <MoreVertical size={16} />
+                                </button>
+                            </div>
                         </div>
 
                         {/* Info */}

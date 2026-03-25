@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import ComingSoonSection from './ComingSoonSection';
 
 type SidebarProps = {
   isCollapsed: boolean;
@@ -189,6 +190,10 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
                 </div>
               </>
             )}
+
+            <div suppressHydrationWarning className="h-px bg-white/10 my-3 mx-3" />
+            
+            <ComingSoonSection isCollapsed={isCollapsed} activeProfile={activeProfile} />
 
             <div suppressHydrationWarning className="h-px bg-white/10 my-3 mx-3" />
 
