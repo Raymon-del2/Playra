@@ -10,7 +10,8 @@ function getPostPreview(description: string): string {
     try {
         const data = JSON.parse(description || '{}');
         if (data.text) return data.text;
-        if (data.question) return `Poll: ${data.question}`;
+        if (data._post_type === 'quiz') return `Quiz: ${data.question}`;
+        if (data.question) return data._post_type === 'poll' ? `Poll: ${data.question}` : `Post: ${data.question}`;
         return 'Community Post';
     } catch {
         return description?.substring(0, 100) || 'Community Post';

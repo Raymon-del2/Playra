@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import ComingSoonSection from './ComingSoonSection';
 
 type SidebarProps = {
   isCollapsed: boolean;
@@ -109,9 +108,6 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
         <Link
           suppressHydrationWarning
           href={item.protected && !isUserAuthenticated ? '/signin' : item.path}
-          onClick={(e) => {
-            if (item.comingSoon) e.preventDefault();
-          }}
           className={`w-full transition-all duration-200 outline-none flex ${isCollapsed
             ? 'flex-col items-center justify-center py-4 px-0'
             : 'items-center space-x-5 px-3 py-2.5 rounded-xl'
@@ -130,13 +126,6 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
             {item.label}
           </span>
         </Link>
-        {item.comingSoon && (
-          <div suppressHydrationWarning className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-50">
-            <div suppressHydrationWarning className="bg-[#1f1f1f] text-white text-xs font-semibold px-2 py-1 rounded shadow-xl whitespace-nowrap border border-white/10">
-              Coming soon
-            </div>
-          </div>
-        )}
       </li>
     );
   };
@@ -192,8 +181,6 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
             )}
 
             <div suppressHydrationWarning className="h-px bg-white/10 my-3 mx-3" />
-            
-            <ComingSoonSection isCollapsed={isCollapsed} activeProfile={activeProfile} />
 
             <div suppressHydrationWarning className="h-px bg-white/10 my-3 mx-3" />
 

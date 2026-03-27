@@ -13,6 +13,7 @@ interface PollOption {
     id: string;
     text: string;
     imageUrl?: string;
+    file?: File;
 }
 
 interface QuizAnswer {
@@ -110,7 +111,7 @@ export default function CreatePostPage() {
     };
 
     const handleAddPollOption = () => {
-        if (pollOptions.length < 5) {
+        if (pollOptions.length < 4) {
             setPollOptions([...pollOptions, { id: Date.now().toString(), text: '' }]);
         }
     };
@@ -161,9 +162,20 @@ export default function CreatePostPage() {
                     content = { text: text.trim() };
                     break;
                 case 'poll':
+                    // Upload option images if needed
+                    const finalOptions = await Promise.all(pollOptions.filter(o => o.text.trim()).map(async (option) => {
+                        let finalImageUrl = option.imageUrl;
+                        if (option.file) {
+                            const [uploadedUrl] = await uploadPostImages([option.file], profile.id);
+                            finalImageUrl = uploadedUrl;
+                        }
+                        return { text: option.text.trim(), imageUrl: finalImageUrl };
+                    }));
+
                     content = {
                         question: text.trim() || 'Poll',
-                        options: pollOptions.filter(o => o.text.trim()).map(o => o.text.trim()),
+                        poll_type: pollType,
+                        options: finalOptions,
                     };
                     break;
                 case 'quiz':
@@ -305,29 +317,63 @@ export default function CreatePostPage() {
                                 </button>
                             </div>
                         </div>
-                        {pollOptions.map((option, index) => (
-                            <div key={option.id} className="flex items-center gap-3">
-                                <div className="flex-1 bg-zinc-900 border border-white/10 rounded-2xl px-4 py-3">
-                                    <input
-                                        type="text"
-                                        value={option.text}
-                                        onChange={(e) => setPollOptions(pollOptions.map(o => o.id === option.id ? { ...o, text: e.target.value } : o))}
-                                        placeholder={`Option ${index + 1}`}
-                                        className="w-full bg-transparent text-white outline-none text-sm"
-                                    />
+                        <div className={`grid ${pollType === 'image' ? 'grid-cols-2' : 'grid-cols-1'} gap-3`}>
+                            {pollOptions.map((option, index) => (
+                                <div key={option.id} className="relative group">
+                                    <div className={`bg-zinc-900 border border-white/10 rounded-2xl flex flex-col overflow-hidden transition-all ${pollType === 'image' ? 'aspect-square' : 'px-4 py-3'}`}>
+                                        {pollType === 'image' && (
+                                            <div 
+                                              className="flex-1 bg-zinc-800 flex items-center justify-center relative group"
+                                              onClick={() => document.getElementById(`poll-file-${option.id}`)?.click()}
+                                            >
+                                                {option.imageUrl ? (
+                                                    <img src={option.imageUrl} className="w-full h-full object-cover" alt="" />
+                                                ) : (
+                                                    <div className="flex flex-col items-center gap-1 opacity-40 group-hover:opacity-100 transition-opacity">
+                                                        <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                                                        </svg>
+                                                        <span className="text-[10px] font-bold uppercase">Add Image</span>
+                                                    </div>
+                                                )}
+                                                <input 
+                                                  id={`poll-file-${option.id}`}
+                                                  type="file"
+                                                  accept="image/*"
+                                                  className="hidden"
+                                                  onChange={(e) => {
+                                                    const f = e.target.files?.[0];
+                                                    if (f) {
+                                                        const url = URL.createObjectURL(f);
+                                                        setPollOptions(pollOptions.map(o => o.id === option.id ? { ...o, imageUrl: url, file: f } : o));
+                                                    }
+                                                  }}
+                                                />
+                                            </div>
+                                        )}
+                                        <div className={`flex items-center gap-2 ${pollType === 'image' ? 'p-2 pt-1' : ''}`}>
+                                            <input
+                                                type="text"
+                                                value={option.text}
+                                                onChange={(e) => setPollOptions(pollOptions.map(o => o.id === option.id ? { ...o, text: e.target.value } : o))}
+                                                placeholder={`Option ${index + 1}`}
+                                                className={`w-full bg-transparent text-white outline-none text-sm ${pollType === 'image' ? 'text-center' : ''}`}
+                                            />
+                                        </div>
+                                    </div>
+                                    {pollOptions.length > 2 && (
+                                        <button
+                                            onClick={() => handleRemovePollOption(option.id)}
+                                            className="absolute -top-2 -right-2 p-1.5 bg-zinc-800 border border-white/5 rounded-full text-zinc-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all z-10"
+                                        >
+                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    )}
                                 </div>
-                                {pollOptions.length > 2 && (
-                                    <button
-                                        onClick={() => handleRemovePollOption(option.id)}
-                                        className="p-2 text-zinc-500 hover:text-red-400 transition-colors"
-                                    >
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </button>
-                                )}
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                         {pollOptions.length < 5 && (
                             <button
                                 onClick={handleAddPollOption}

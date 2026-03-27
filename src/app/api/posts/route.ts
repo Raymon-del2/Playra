@@ -21,7 +21,8 @@ export async function POST(request: Request) {
       case 'poll':
         finalContent = {
           question: content.question,
-          options: content.options, // Array of strings
+          options: content.options,
+          poll_type: content.poll_type || 'text',
           votes: new Array(content.options.length).fill(0),
         };
         break;
@@ -30,6 +31,7 @@ export async function POST(request: Request) {
           question: content.question,
           options: content.options,
           correct_index: content.correct_index,
+          votes: new Array(content.options.length).fill(0),
         };
         break;
       case 'image':
@@ -78,6 +80,28 @@ export async function POST(request: Request) {
 
     if (error) throw error;
 
+    // 5. If it's a quiz, also insert into Turso
+    if (post_type === 'quiz') {
+      try {
+        const { turso } = await import('@/lib/turso');
+        const { v4: uuidv4 } = await import('uuid');
+        await turso.execute({
+          sql: 'INSERT INTO quizzes (id, post_id, profile_id, question, options, correct_index) VALUES (?, ?, ?, ?, ?, ?)',
+          args: [
+            uuidv4(),
+            data.id,
+            profile.id,
+            content.question,
+            JSON.stringify(content.options),
+            content.correct_index
+          ]
+        });
+      } catch (tursoError) {
+        console.error('Failed to sync quiz to Turso:', tursoError);
+        // We continue since the Supabase part succeeded
+      }
+    }
+
     return NextResponse.json(data, { status: 201 });
 
   } catch (err) {
@@ -98,7 +122,7 @@ export async function GET(request: Request) {
     let query = supabase
       .from('videos')
       .select('*')
-      .is('video_url', '') // Posts have empty video_url
+      .eq('video_url', '') // Posts have empty video_url
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 

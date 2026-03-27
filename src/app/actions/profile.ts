@@ -205,16 +205,6 @@ export async function getActiveProfile() {
             account_type: row.account_type as string || 'general',
             created_at: String(row.created_at)
         };
-
-        // Best-effort: push latest avatar to Supabase videos so cards show the updated profile photo
-        try {
-            if (profile.avatar) {
-                await updateChannelAvatarInVideos(profile.id, profile.avatar);
-            }
-        } catch (err) {
-            console.warn('Avatar sync to videos skipped', err);
-        }
-
         return profile;
     } catch (error) {
         console.error("Error fetching active profile:", error);

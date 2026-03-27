@@ -33,7 +33,31 @@ export async function initDatabase() {
                 last_order INTEGER DEFAULT 0
             );
         `);
-        
+               // Quizzes Table
+        await turso.execute(`
+            CREATE TABLE IF NOT EXISTS quizzes (
+                id TEXT PRIMARY KEY,
+                post_id TEXT NOT NULL, -- Corresponds to the video/post ID in Supabase
+                profile_id TEXT NOT NULL,
+                question TEXT NOT NULL,
+                options TEXT NOT NULL, -- JSON array of strings
+                correct_index INTEGER NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        // Quiz Votes Table
+        await turso.execute(`
+            CREATE TABLE IF NOT EXISTS quiz_votes (
+                id TEXT PRIMARY KEY,
+                quiz_id TEXT NOT NULL,
+                profile_id TEXT NOT NULL,
+                selected_index INTEGER NOT NULL,
+                is_correct BOOLEAN NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(quiz_id, profile_id)
+            );
+        `);
         // Initialize counter if not exists
         await turso.execute(`
             INSERT OR IGNORE INTO join_order_counter (id, last_order) VALUES (1, 0);
@@ -162,17 +186,6 @@ export async function initDatabase() {
             );
         `);
 
-        // Coming Soon Table
-        await turso.execute(`
-            CREATE TABLE IF NOT EXISTS coming_soon (
-                id TEXT PRIMARY KEY,
-                title TEXT NOT NULL,
-                description TEXT,
-                release_date DATETIME, -- Optional
-                is_premier BOOLEAN DEFAULT 0,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            );
-        `);
 
         console.log("Turso tables initialized successfully.");
     } catch (error) {

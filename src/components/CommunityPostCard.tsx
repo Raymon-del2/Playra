@@ -28,9 +28,17 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
   const [votedOption, setVotedOption] = useState<number | null>(null);
   const [quizAnswer, setQuizAnswer] = useState<number | null>(null);
   const [showQuizResult, setShowQuizResult] = useState(false);
+  const [localVotes, setLocalVotes] = useState<number[] | null>(null);
 
   // Parse post data from description
-  const postData = parsePostData(post.description);
+  const postDataRaw = parsePostData(post.description);
+  const postType = postDataRaw._post_type || postDataRaw.type || (postDataRaw.options ? (postDataRaw.correct_index !== undefined ? 'quiz' : 'poll') : 'text');
+  
+  const postData = {
+    ...postDataRaw,
+    type: postType
+  };
+  
   const isMobile = useIsMobile();
 
   const handleShare = async () => {
@@ -53,11 +61,53 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
     }
   };
 
-  const handleQuizAnswer = (index: number) => {
-    if (quizAnswer !== null) return;
+  const handleQuizAnswer = async (index: number) => {
+    if (quizAnswer !== null || !postData || !post.channel_id) return;
+    
+    // Optimistic UI
     setQuizAnswer(index);
     setShowQuizResult(true);
-    onQuizAnswer?.(post.id, index);
+
+    try {
+      // Find current user profile
+      const activeProf = await (await import('@/app/actions/profile')).getActiveProfile();
+      if (!activeProf) {
+        alert('Please select a profile to vote');
+        return;
+      }
+
+      const isCorrect = postData.correct_index === index;
+
+      const res = await fetch('/api/posts/quiz/vote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          postId: post.id,
+          quizId: post.id,
+          optionIndex: index,
+          profileId: activeProf.id,
+          isCorrect: isCorrect
+        })
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error('Server error response:', errText);
+        throw new Error(`Failed to record vote: ${errText}`);
+      }
+
+      const result = await res.json();
+      // Synchronize with server truth
+      if (result.votes) {
+        setLocalVotes(result.votes);
+      }
+      console.log('Quiz Recorded:', result.log);
+
+    } catch (error) {
+       console.error('Quiz vote failed:', error);
+       // Rollback? Optional - typically we keep it shown if server failed unless it was a fatal error
+    }
+
     // Haptic feedback
     if (navigator.vibrate && isMobile) {
       navigator.vibrate(100);
@@ -124,21 +174,47 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
         {/* Poll */}
         {postData.type === 'poll' && postData.options && (
           <div className="post-poll">
-            <h4 className="poll-question">{postData.question}</h4>
-            <div className="poll-options">
-              {postData.options.map((option: string, index: number) => (
-                <PollOption
-                  key={index}
-                  option={option}
-                  index={index}
-                  totalVotes={postData.votes?.reduce((a: number, b: number) => a + b, 0) || 0}
-                  votes={postData.votes?.[index] || 0}
-                  isSelected={votedOption === index}
-                  hasVoted={votedOption !== null}
-                  onClick={() => handleVote(index)}
-                  isMobile={isMobile}
-                />
-              ))}
+            <h4 className="poll-question">{postData.question || 'Poll'}</h4>
+            <div className={`poll-options ${postData.poll_type === 'image' ? 'image-grid' : 'text-stack'}`}>
+              {postData.options.map((option: any, index: number) => {
+                const totalVotes = postData.votes?.reduce((a: number, b: number) => a + b, 0) || 0;
+                const votes = postData.votes?.[index] || 0;
+                const percentage = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
+                const isSelected = votedOption === index;
+                const hasVoted = votedOption !== null;
+
+                return (
+                  <button
+                    key={index}
+                    onClick={() => handleVote(index)}
+                    disabled={hasVoted}
+                    className={`poll-option-yt ${postData.poll_type === 'image' ? 'image-type' : 'text-type'} ${isSelected ? 'selected' : ''} ${hasVoted ? 'voted' : ''}`}
+                  >
+                    {postData.poll_type === 'image' && (
+                      <div className="poll-img-container">
+                        <img src={option.imageUrl || 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=200'} alt="" />
+                        <div className="poll-img-overlay" />
+                      </div>
+                    )}
+                    
+                    <div className="poll-bar-bg-yt">
+                      {hasVoted && (
+                        <div 
+                          className="poll-bar-fill-yt" 
+                          style={{ width: `${percentage}%` }}
+                        />
+                      )}
+                    </div>
+
+                    <div className="poll-option-content-yt">
+                      <span className="poll-option-text-yt">{typeof option === 'string' ? option : option.text}</span>
+                      {hasVoted && (
+                        <span className="poll-percentage-yt">{percentage}%</span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
             {votedOption !== null && (
               <p className="poll-total-votes">
@@ -148,32 +224,42 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
           </div>
         )}
 
-        {/* Quiz */}
+        {/* Quiz - Redesigned as short rectangular curved card */}
         {postData.type === 'quiz' && postData.options && (
-          <div className="post-quiz">
-            <h4 className="quiz-question">{postData.question}</h4>
-            <div className="quiz-options">
-              {postData.options.map((option: string, index: number) => (
-                <QuizOption
-                  key={index}
-                  option={option}
-                  index={index}
-                  isCorrect={postData.correct_index === index}
-                  isSelected={quizAnswer === index}
-                  showResult={showQuizResult}
-                  onClick={() => handleQuizAnswer(index)}
-                />
-              ))}
-            </div>
-            {showQuizResult && (
-              <div className={`quiz-result ${quizAnswer === postData.correct_index ? 'correct' : 'incorrect'}`}>
-                {quizAnswer === postData.correct_index ? (
-                  <><span className="result-icon">✓</span> Correct!</>
-                ) : (
-                  <><span className="result-icon">✗</span> Wrong! Answer was: {postData.options[postData.correct_index]}</>
-                )}
+          <div className="post-quiz-container">
+            <div className="quiz-card">
+              <h4 className="quiz-question">{postData.question}</h4>
+              <div className="quiz-options-grid">
+                {postData.options.map((option: string, index: number) => {
+                  const currentVotes = localVotes || postData.votes || [];
+                  // Adjust for optimistic selection if not already in localVotes
+                  let displayVotes = [...currentVotes];
+                  if (!localVotes && quizAnswer === index && displayVotes[index] !== undefined) {
+                    displayVotes[index]++;
+                  }
+
+                  const totalVotes = displayVotes.reduce((a: number, b: number) => a + b, 0);
+                  const optionVotes = displayVotes[index] || 0;
+                  const percentage = totalVotes > 0 ? Math.round((optionVotes / totalVotes) * 100) : 0;
+                  
+                  return (
+                    <QuizOption
+                      key={index}
+                      option={option}
+                      index={index}
+                      isCorrect={postData.correct_index === index}
+                      isSelected={quizAnswer === index}
+                      showResult={showQuizResult}
+                      percentage={percentage}
+                      totalVotes={totalVotes}
+                      onClick={() => handleQuizAnswer(index)}
+                    />
+                  );
+                })}
               </div>
-            )}
+              
+              {/* Footer Removed - Clean Look */}
+            </div>
           </div>
         )}
 
@@ -272,40 +358,167 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
           cursor: pointer;
         }
 
-        /* Poll Styles */
-        .post-poll {
-          margin: 12px 0;
-        }
-
-        .poll-question {
-          color: white;
-          font-size: 16px;
-          font-weight: 600;
-          margin-bottom: 12px;
-        }
-
-        .poll-options {
+        /* YouTube-Style Polls */
+        .poll-options.text-stack {
           display: flex;
           flex-direction: column;
-          gap: 8px;
+          gap: 12px;
         }
 
-        /* Quiz Styles */
-        .post-quiz {
-          margin: 12px 0;
+        .poll-options.image-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+        }
+
+        .poll-option-yt {
+          position: relative;
+          background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 12px;
+          overflow: hidden;
+          cursor: pointer;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+          width: 100%;
+          text-align: left;
+          padding: 0;
+        }
+
+        .poll-option-yt.text-type {
+          height: 48px;
+        }
+
+        .poll-option-yt.image-type {
+          aspect-ratio: 1/1.1;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .poll-option-yt:hover:not(:disabled) {
+          background: rgba(255,255,255,0.08);
+          border-color: rgba(255,255,255,0.15);
+        }
+
+        .poll-option-yt.selected {
+          border-color: #3b82f6;
+          background: rgba(59, 130, 246, 0.05);
+        }
+
+        .poll-img-container {
+          flex: 1;
+          position: relative;
+          overflow: hidden;
+          background: #1a1a1a;
+        }
+
+        .poll-img-container img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .poll-img-overlay {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.6));
+        }
+
+        .poll-bar-bg-yt {
+          position: absolute;
+          inset: 0;
+          z-index: 0;
+        }
+
+        .poll-bar-fill-yt {
+          height: 100%;
+          background: rgba(255,255,255,0.08);
+          transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .poll-option-yt.selected .poll-bar-fill-yt {
+          background: rgba(59, 130, 246, 0.2);
+        }
+
+        .poll-option-content-yt {
+          position: relative;
+          z-index: 1;
+          padding: 0 16px;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          width: 100%;
+        }
+
+        .image-type .poll-option-content-yt {
+           height: 42px;
+           padding: 0 10px;
+           background: rgba(0,0,0,0.3);
+           backdrop-filter: blur(4px);
+        }
+
+        .poll-option-text-yt {
+          color: white;
+          font-size: 14px;
+          font-weight: 500;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .poll-percentage-yt {
+          color: rgba(255,255,255,0.5);
+          font-size: 13px;
+          font-weight: 700;
+          font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Quiz Redesign - Premium Look */
+        .post-quiz-container {
+          margin: 16px 0;
+          perspective: 1000px;
+        }
+
+        .quiz-card {
+           background: linear-gradient(165deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.01) 100%);
+           backdrop-filter: blur(12px);
+           -webkit-backdrop-filter: blur(12px);
+           border: 1px solid rgba(255,255,255,0.08);
+           border-radius: 24px;
+           padding: 24px;
+           box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+           transition: transform 0.3s ease;
         }
 
         .quiz-question {
           color: white;
-          font-size: 16px;
-          font-weight: 600;
-          margin-bottom: 12px;
+          font-size: 20px;
+          font-weight: 800;
+          margin-bottom: 24px;
+          line-height: 1.35;
+          text-align: center;
+          letter-spacing: -0.02em;
         }
 
-        .quiz-options {
+        .quiz-options-grid {
           display: flex;
           flex-direction: column;
-          gap: 8px;
+          gap: 12px;
+        }
+
+        .quiz-footer-stats {
+          margin-top: 20px;
+          text-align: center;
+          padding-top: 14px;
+          border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .stats-label {
+          font-size: 10px;
+          color: rgba(255,255,255,0.25);
+          font-family: 'JetBrains Mono', monospace;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
         }
 
         .quiz-result {
@@ -593,7 +806,7 @@ function PollOption({ option, index, totalVotes, votes, isSelected, hasVoted, on
   );
 }
 
-function QuizOption({ option, index, isCorrect, isSelected, showResult, onClick }: any) {
+function QuizOption({ option, index, isCorrect, isSelected, showResult, percentage, totalVotes, onClick }: any) {
   const getClassName = () => {
     if (!showResult) return '';
     if (isCorrect) return 'correct';
@@ -607,84 +820,146 @@ function QuizOption({ option, index, isCorrect, isSelected, showResult, onClick 
       disabled={showResult}
       className={`quiz-option ${getClassName()} ${isSelected ? 'selected' : ''}`}
     >
+      {showResult && (
+        <div 
+          className="quiz-percentage-bar" 
+          style={{ width: `${percentage}%` }}
+        />
+      )}
       <div className="quiz-indicator">
         {showResult && isCorrect && <span className="indicator-icon">✓</span>}
         {showResult && isSelected && !isCorrect && <span className="indicator-icon">✗</span>}
         {!showResult && <span className="indicator-letter">{String.fromCharCode(65 + index)}</span>}
       </div>
-      <span className="quiz-option-text">{option}</span>
+      <div className="quiz-option-content">
+        <span className="quiz-option-text">{option}</span>
+        {showResult && (
+          <span className="quiz-percentage-label">{percentage}% choosing this</span>
+        )}
+      </div>
       
       <style jsx>{`
         .quiz-option {
+          position: relative;
           display: flex;
           align-items: center;
-          gap: 12px;
-          padding: 12px 16px;
-          background: rgba(255,255,255,0.05);
-          border: 2px solid transparent;
-          border-radius: 8px;
+          gap: 14px;
+          padding: 16px 20px;
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.06);
+          border-radius: 16px;
           text-align: left;
           cursor: pointer;
-          transition: all 0.2s;
+          transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+          overflow: hidden;
+          width: 100%;
+        }
+
+        .quiz-percentage-bar {
+          position: absolute;
+          left: 0;
+          top: 0;
+          bottom: 0;
+          background: rgba(255,255,255,0.06);
+          z-index: 0;
+          transition: width 1.2s cubic-bezier(0.23, 1, 0.32, 1);
         }
 
         .quiz-option:hover:not(:disabled) {
-          background: rgba(255,255,255,0.1);
+          background: rgba(255,255,255,0.08);
+          border-color: rgba(255,255,255,0.15);
+          transform: translateX(4px);
         }
 
         .quiz-option.selected {
-          border-color: var(--primary, #3b82f6);
+          border-color: #3b82f6;
+          background: rgba(59, 130, 246, 0.08);
         }
 
         .quiz-option.correct {
           border-color: #22c55e;
-          background: rgba(34, 197, 94, 0.1);
+          background: rgba(34, 197, 94, 0.08);
+        }
+        
+        .quiz-option.correct .quiz-percentage-bar {
+           background: rgba(34, 197, 94, 0.2);
         }
 
         .quiz-option.incorrect {
           border-color: #ef4444;
-          background: rgba(239, 68, 68, 0.1);
+          background: rgba(239, 68, 68, 0.08);
+        }
+        
+        .quiz-option.incorrect .quiz-percentage-bar {
+           background: rgba(239, 68, 68, 0.2);
         }
 
         .quiz-option.dimmed {
           opacity: 0.5;
+          filter: grayscale(0.5);
         }
 
         .quiz-indicator {
-          width: 28px;
-          height: 28px;
-          border-radius: 50%;
+          position: relative;
+          z-index: 1;
+          width: 30px;
+          height: 30px;
+          border-radius: 10px;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: rgba(255,255,255,0.1);
+          background: rgba(255,255,255,0.08);
           flex-shrink: 0;
+          font-size: 14px;
+          font-weight: 800;
+          transition: all 0.3s ease;
         }
 
         .quiz-option.correct .quiz-indicator {
           background: #22c55e;
           color: white;
+          transform: scale(1.1);
         }
 
         .quiz-option.incorrect .quiz-indicator {
           background: #ef4444;
           color: white;
+          transform: scale(1.1);
         }
 
-        .indicator-icon {
-          font-size: 16px;
-          font-weight: bold;
-        }
-
-        .indicator-letter {
-          font-size: 14px;
-          font-weight: 600;
-          color: var(--text-muted, #aaa);
+        .quiz-option-content {
+          position: relative;
+          z-index: 1;
+          flex: 1;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
         }
 
         .quiz-option-text {
           color: white;
-          font-weight: 500;
+          font-size: 15px;
+          font-weight: 600;
+        }
+
+        .quiz-percentage-label {
+          font-size: 12px;
+          font-weight: 700;
+          color: rgba(255,255,255,0.3);
+          transition: color 0.3s ease;
+        }
+        
+        .quiz-option.correct .quiz-percentage-label {
+           color: rgba(34, 197, 94, 0.8);
+        }
+
+        .indicator-icon {
+          font-size: 16px;
+          line-height: 1;
+        }
+
+        .indicator-letter {
+          color: rgba(255,255,255,0.5);
         }
       `}</style>
     </button>

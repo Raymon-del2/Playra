@@ -590,32 +590,18 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
         >
           {/* Splash Screen / Play Button overlay */}
           {!hasStarted && video && (
-            <div className="absolute inset-0 z-30 flex items-center justify-center bg-transparent group/player">
-              {/* Animation Background Ripple */}
-              <div className={`absolute inset-0 bg-white rounded-full transition-all duration-700 ease-out pointer-events-none 
-                ${isAnimatingPlay ? 'scale-[4] opacity-0' : 'scale-0 opacity-0'}`} />
-
+            <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40 group/player overflow-hidden">
               {/* Animated Splash Triangle Loader */}
-              <div className={`relative transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) transform 
-                ${isAnimatingPlay ? 'scale-[2] opacity-0' : 'scale-100 opacity-100 hover:scale-110 active:scale-95'}`}
+              <div className={`relative transition-all duration-500 transform 
+                ${isAnimatingPlay ? 'scale-[2.5] opacity-0' : 'scale-100 opacity-100 hover:scale-110 active:scale-95'}`}
               >
-                <svg className="w-24 h-24 overflow-visible" viewBox="0 0 100 100">
+                <svg className="w-20 h-20 lg:w-24 lg:h-24 overflow-visible" viewBox="0 0 100 100">
                   <defs>
                     <linearGradient id="playGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                       <stop offset="0%" stopColor="#3B82F6" />
                       <stop offset="100%" stopColor="#A855F7" />
                     </linearGradient>
                   </defs>
-                  {/* Outer Glow */}
-                  <path 
-                    d="M35,25 L75,50 L35,75 Z" 
-                    fill="none" 
-                    stroke="url(#playGrad)" 
-                    strokeWidth="4" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round"
-                    className="opacity-30 blur-sm"
-                  />
                   {/* Drawing Path */}
                   <path 
                     d="M35,25 L75,50 L35,75 Z" 
@@ -624,11 +610,10 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                     strokeWidth="3.5" 
                     strokeLinecap="round" 
                     strokeLinejoin="round" 
-                    className="transition-colors duration-200"
                     style={{ 
                       strokeDasharray: 200, 
                       strokeDashoffset: 200,
-                      animation: 'drawTri 1.5s ease-out forwards' 
+                      animation: 'drawTri 1.2s ease-out forwards' 
                     }}
                   />
                   <style>{`
@@ -675,14 +660,18 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
               poster={video?.thumbnail_url}
               preload="metadata"
               onClick={(e) => {
-                // Toggle controls on mobile/touch
-                if (window.innerWidth < 1024) {
+                const isTouch = window.matchMedia('(pointer: coarse)').matches;
+                const isMobileView = window.innerWidth < 1024;
+                
+                if (isTouch || isMobileView) {
+                  // Mobile/Touch: Toggle controls visibility
                   if (showMobileControls) {
                     setShowMobileControls(false);
                   } else {
                     resetControlsTimeout();
                   }
                 } else {
+                  // Desktop: Toggle play/pause
                   togglePlay();
                 }
               }}
@@ -750,46 +739,6 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
               </div>
             </div>
           )}
-
-          {/* Central Play/Pause Feedback Animation */}
-          {playbackFeedback && (
-            <div className="absolute inset-0 z-40 flex items-center justify-center pointer-events-none">
-              <div className="w-16 h-16 bg-black/40 rounded-full flex items-center justify-center animate-ping-once">
-                {playbackFeedback === 'play' ? (
-                  <Play size={32} className="text-white fill-current ml-1" />
-                ) : (
-                  <Pause size={32} className="text-white fill-current" />
-                )}
-              </div>
-              <style>{`
-                @keyframes ping-once {
-                  0% { transform: scale(0.8); opacity: 0; }
-                  50% { transform: scale(1.2); opacity: 1; }
-                  100% { transform: scale(1.5); opacity: 0; }
-                }
-                .animate-ping-once {
-                  animation: ping-once 0.5s cubic-bezier(0, 0, 0.2, 1) forwards;
-                }
-              `}</style>
-            </div>
-          )}          {/* Central Mobile Controls - Permanent when showing */}
-          {showMobileControls && !showNextOverlay && (
-            <div className="absolute inset-0 z-50 flex items-center justify-center gap-12 bg-transparent pointer-events-none animate-in fade-in duration-300">
-               <button 
-                  onClick={(e) => {
-                    togglePlay(e);
-                  }}
-                  className="w-20 h-20 bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center pointer-events-auto hover:bg-black/60 active:scale-95 transition-all shadow-2xl border border-white/10"
-               >
-                  {isPlaying ? (
-                    <Pause size={42} className="text-white fill-current" />
-                  ) : (
-                    <Play size={42} className="text-white fill-current ml-2" />
-                  )}
-               </button>
-            </div>
-          )}
-
           {/* Autoplay Next Overlay - Redesigned to match YouTube exactly */}
           {showNextOverlay && nextVideo && (
             <div className={`absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/70 backdrop-blur-md pointer-events-auto animate-in fade-in duration-500 ${isAutoplayCancelled ? 'pb-10' : 'pb-20'}`}>
@@ -854,27 +803,40 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                  </div>
               </div>
             </div>
-          )}
-
-          {/* YouTube CUSTOM CONTROLS OVERLAY */}
+          )}          {/* YouTube CUSTOM CONTROLS OVERLAY - Consolodated Mobile UI */}
           {hasStarted && videoLoaded && duration > 0 && (
             <div 
               onClick={(e) => {
-                // Toggle controls on background click
-                if (showMobileControls) {
-                  setShowMobileControls(false);
-                } else {
-                  resetControlsTimeout();
-                }
+                e.stopPropagation();
+                // Clicking anywhere on the player overlay dismisses the UI
+                setShowMobileControls(false);
               }}
-              className={`absolute inset-0 z-40 flex flex-col justify-end transition-opacity duration-300 ${ (showNextOverlay || (showMobileControls)) ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+              className={`absolute inset-0 z-40 bg-black/40 transition-opacity duration-300 ${ (showNextOverlay || showMobileControls) ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
             >
+              {/* CENTER: Mobile Play/Pause Button - Centered but separate from layout flow */}
+              {showMobileControls && !showNextOverlay && (
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    togglePlay(e);
+                  }}
+                  className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-24 lg:-translate-y-8 w-16 h-16 bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center pointer-events-auto hover:bg-white/10 active:scale-90 transition-all shadow-2xl border border-white/10"
+                >
+                  {isPlaying ? (
+                    <Pause size={32} className="text-white fill-current" />
+                  ) : (
+                    <Play size={32} className="text-white fill-current ml-1" />
+                  )}
+                </button>
+              )}
+
+              {/* BOTTOM: Timeline & Controls Bar */}
               <div 
                 onClick={(e) => {
-                  e.stopPropagation();
+                  e.stopPropagation(); // Stop bubbling to prevent dismissal when clicking controls bar background
                   resetControlsTimeout();
-                }} // Prevent controls bar from toggling/hiding
-                className="bg-gradient-to-t from-black/80 via-black/20 to-transparent p-3 pt-8 pb-1 flex flex-col gap-0.5"
+                }} 
+                className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent px-2 lg:px-4 pt-10 pb-2 lg:pb-1 flex flex-col gap-0.5 pointer-events-auto"
               >
                 
                 {/* 1. Progress Bar (the thin line) with Dragging and Visual Preview */}
@@ -882,6 +844,7 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                   className="relative w-full h-[5px] group/bar cursor-pointer flex items-center mb-4 mt-2"
                   onMouseDown={(e) => {
                     e.preventDefault();
+                    e.stopPropagation(); // Prevent dismissal when dragging
                     setIsDraggingProgress(true);
                     isDraggingProgressRef.current = true;
                     const rect = e.currentTarget.getBoundingClientRect();
@@ -922,8 +885,8 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                     setHoverTime(null);
                   }}
                 >
-                  {/* Visual Hover Preview Card (Thumbnail) */}
-                  {hoverTime !== null && (
+                  {/* Visual Hover Preview Card (Thumbnail) - Only on Desktop */}
+                  {hoverTime !== null && typeof window !== 'undefined' && window.innerWidth >= 1024 && (
                     <div 
                       className="absolute bottom-8 w-32 aspect-video bg-black rounded-lg border-2 border-white/20 overflow-hidden shadow-2xl pointer-events-none opacity-0 group-hover/bar:opacity-100 transition-opacity z-50 flex flex-col"
                       style={{ left: `${hoverX}px`, transform: 'translateX(-50%)' }}
@@ -990,21 +953,22 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                   />
                 )}
 
-                {/* 2. Controls Bar (The Icons) */}
-                <div className="flex items-center justify-between text-white pb-2 px-1">
-                  <div className="flex items-center gap-2">
-                    {/* Play Button Enclosure */}
+                {/* 2. Controls Bar (The Icons) - Redesigned for better mobile fit */}
+                <div className="flex items-center justify-between text-white pb-3 lg:pb-2 px-1 lg:px-2 select-none relative z-[60]">
+                  {/* Left Side: Play, Volume, Time */}
+                  <div className="flex items-center gap-1 lg:gap-2">
+                    {/* Play Button */}
                     <button 
-                      onClick={togglePlay} 
-                      className="flex items-center justify-center w-10 h-10 rounded-full bg-white/15 backdrop-blur-md hover:bg-white/25 transition-all active:scale-95 shadow-sm"
+                      onClick={(e) => { e.stopPropagation(); togglePlay(); }} 
+                      className="flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-white/10 lg:bg-white/15 backdrop-blur-md hover:bg-white/25 transition-all active:scale-95 shadow-sm"
                     >
-                      {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" className="ml-1" />}
+                      {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" className="ml-1" />}
                     </button>
 
-                    {/* Volume Button Enclosure */}
-                    <div className="flex items-center gap-0 group/vol bg-white/15 backdrop-blur-md rounded-full px-1 py-1 pr-2 hover:pr-3 transition-all">
+                    {/* Volume Button Enclosure - Hide slider on mobile to save space */}
+                    <div className="flex items-center gap-0 group/vol bg-white/15 backdrop-blur-md rounded-full px-1 py-1 pr-1 lg:pr-2 lg:hover:pr-3 transition-all">
                       <button 
-                        onClick={toggleMute} 
+                        onClick={(e) => { e.stopPropagation(); toggleMute(); }} 
                         className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-white/10 transition-colors"
                       >
                         {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
@@ -1014,42 +978,42 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                         min="0" max="1" step="0.05" 
                         value={isMuted ? 0 : volume} 
                         onChange={(e) => changeVolume(parseFloat(e.target.value))}
-                        className="w-0 group-hover/vol:w-16 transition-all accent-white cursor-pointer h-1 opacity-0 group-hover/vol:opacity-100 ml-0 hover:ml-1"
+                        className="w-0 lg:group-hover/vol:w-16 transition-all accent-white cursor-pointer h-1 opacity-0 lg:group-hover/vol:opacity-100 ml-0 hover:ml-1 hidden lg:block"
                       />
                     </div>
 
-                    {/* Time Enclosure (Pill) - Clickable for toggle */}
+                    {/* Time Pill - More compact on mobile */}
                     <div 
-                      className="bg-white/15 backdrop-blur-md rounded-full px-4 py-2 text-[12px] font-bold tracking-tight shadow-sm ml-1 cursor-pointer select-none hover:bg-white/25 active:scale-95 transition-all min-w-[60px] text-center"
-                      onClick={() => setShowRemainingTime(!showRemainingTime)}
+                      className="bg-white/10 lg:bg-white/15 backdrop-blur-md rounded-full px-3 lg:px-4 py-1.5 lg:py-2 text-[11px] lg:text-[12px] font-bold tracking-tight shadow-sm cursor-pointer select-none hover:bg-white/25 active:scale-95 transition-all text-center min-w-[50px] lg:min-w-[60px]"
+                      onClick={(e) => { e.stopPropagation(); setShowRemainingTime(!showRemainingTime); }}
                     >
                        {showRemainingTime ? (
                          `-${formatTime(Math.max(0, resolvedDuration - currentTime))}`
                        ) : (
                          <>
                            {formatTime(currentTime)}
-                           <span className="opacity-70 mx-1">/</span>
-                           <span className="opacity-70">{formatTime(resolvedDuration)}</span>
+                           <span className="opacity-60 mx-1 hidden lg:inline">/</span>
+                           <span className="opacity-60 hidden lg:inline">{formatTime(resolvedDuration)}</span>
                          </>
                        )}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    {/* Right side clusters in a pill */}
-                    <div className="flex items-center gap-3 bg-white/15 backdrop-blur-md rounded-full px-4 py-1.5 shadow-sm">
+                  {/* Right Side: Autoplay, Settings, etc. */}
+                  <div className="flex items-center gap-1 lg:gap-2">
+                    <div className="flex items-center gap-2 lg:gap-3 bg-white/10 lg:bg-white/15 backdrop-blur-md rounded-full px-3 lg:px-4 py-1.5 shadow-sm">
                         {/* YouTube Autoplay Toggle Style - Pixel Exact */}
                         <div 
-                          className={`relative w-9 h-[18px] rounded-full cursor-pointer transition-all duration-200 ${isAutoplayOn ? 'bg-white' : 'bg-white/30'}`} 
-                          onClick={() => setIsAutoplayOn(!isAutoplayOn)}
+                          className={`relative w-8 lg:w-9 h-[16px] lg:h-[18px] rounded-full cursor-pointer transition-all duration-200 flex-shrink-0 ${isAutoplayOn ? 'bg-white' : 'bg-white/30'}`} 
+                          onClick={(e) => { e.stopPropagation(); setIsAutoplayOn(!isAutoplayOn); }}
                         >
-                           <div className={`absolute top-[2px] w-[14px] h-[14px] rounded-full transition-all duration-200 flex items-center justify-center ${isAutoplayOn ? 'left-[20px] bg-black' : 'left-[2px] bg-white shadow-sm'}`}>
+                           <div className={`absolute top-[2px] w-[12px] lg:w-[14px] h-[12px] lg:h-[14px] rounded-full transition-all duration-200 flex items-center justify-center ${isAutoplayOn ? 'left-[18px] lg:left-[20px] bg-black' : 'left-[2px] bg-white shadow-sm'}`}>
                               {isAutoplayOn ? (
-                                <svg className="w-[8px] h-[8px] translate-x-[0.5px]" viewBox="0 0 10 10">
+                                <svg className="w-[6px] lg:w-[8px] h-[6px] lg:h-[8px] translate-x-[0.5px]" viewBox="0 0 10 10">
                                    <path d="M3 2L8 5L3 8V2Z" fill="white" />
                                 </svg>
                               ) : (
-                                <svg className="w-[8px] h-[8px]" viewBox="0 0 10 10">
+                                <svg className="w-[6px] lg:w-[8px] h-[6px] lg:h-[8px]" viewBox="0 0 10 10">
                                    <rect x="3" y="3" width="4" height="4" fill="#52525b" />
                                 </svg>
                               )}
@@ -1175,7 +1139,7 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                             </div>
                           )}
                         </div>
-                        <button onClick={toggleTheatreMode} className="hover:scale-110 transition-transform opacity-90 hover:opacity-100 p-0.5" title={isTheatreMode ? "Default view" : "Theatre mode"}>
+                        <button onClick={(e) => { e.stopPropagation(); toggleTheatreMode(); }} className="hidden lg:flex hover:scale-110 transition-transform opacity-90 hover:opacity-100 p-0.5" title={isTheatreMode ? "Default view" : "Theatre mode"}>
                           {isTheatreMode ? (
                             <div className="relative w-[22px] h-[16px] border-2 border-white rounded-sm overflow-hidden flex">
                               <div className="flex-1 border-r border-white/30" />
@@ -1185,7 +1149,7 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                             <Monitor size={19} />
                           )}
                         </button>
-                        <button onClick={toggleFullscreen} className="hover:scale-110 transition-transform opacity-90 hover:opacity-100 p-0.5">
+                        <button onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }} className="hover:scale-110 transition-transform opacity-90 hover:opacity-100 p-0.5">
                           <Maximize size={19} />
                         </button>
                     </div>

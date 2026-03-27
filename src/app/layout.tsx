@@ -3,6 +3,7 @@ import "./globals.css";
 import LayoutShell from "@/components/LayoutShell";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
   title: "Playra - Next-Gen Video Discovery & Creation Platform",
   description: "Discover, create, and share amazing videos on Playra. Join a community of creators and viewers exploring the future of video content. Upload videos, engage with polls, quizzes, and more!",
   icons: {

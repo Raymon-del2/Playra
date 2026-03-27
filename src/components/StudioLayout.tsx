@@ -15,7 +15,6 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
-    const [popoverMessage, setPopoverMessage] = useState<string | null>(null);
     const popoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
@@ -69,17 +68,6 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
         return icons[icon] || icons.dashboard;
     };
 
-    const showComingSoon = (label: string) => {
-        setPopoverMessage(`${label} is coming soon`);
-        if (popoverTimeoutRef.current) clearTimeout(popoverTimeoutRef.current);
-        popoverTimeoutRef.current = setTimeout(() => setPopoverMessage(null), 2400);
-    };
-
-    useEffect(() => {
-        return () => {
-            if (popoverTimeoutRef.current) clearTimeout(popoverTimeoutRef.current);
-        };
-    }, []);
 
     return (
         <div className="min-h-screen bg-[#0f0f0f] text-white flex">
@@ -163,17 +151,10 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
                 {/* Menu Items */}
                 <nav className="flex-1 py-2">
                     {menuItems.map(item => {
-                        const isComingSoon = item.path === '/studio/comments' || item.path === '/studio/subtitles';
                         return (
                             <Link
                                 key={item.path}
-                                href={isComingSoon ? '#' : item.path}
-                                onClick={(e) => {
-                                    if (isComingSoon) {
-                                        e.preventDefault();
-                                        showComingSoon(item.label);
-                                    }
-                                }}
+                                href={item.path}
                                 className={`relative flex items-center gap-4 px-4 py-2.5 transition-colors ${pathname === item.path
                                         ? 'bg-white/10 text-white'
                                         : 'text-zinc-400 hover:bg-white/5 hover:text-white'
@@ -189,17 +170,10 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
                 {/* Bottom Items */}
                 <div className="border-t border-white/10 py-2">
                     {bottomItems.map(item => {
-                        const isComingSoon = item.path === '/studio/settings' || item.path === '/studio/feedback';
                         return (
                             <Link
                                 key={item.path}
-                                href={isComingSoon ? '#' : item.path}
-                                onClick={(e) => {
-                                    if (isComingSoon) {
-                                        e.preventDefault();
-                                        showComingSoon(item.label);
-                                    }
-                                }}
+                                href={item.path}
                                 className={`flex items-center gap-4 px-4 py-2.5 text-zinc-400 hover:bg-white/5 hover:text-white transition-colors ${(isMobile ? !isMobileSidebarOpen : isSidebarCollapsed) ? 'justify-center' : ''}`}
                             >
                                 {getIcon(item.icon)}
@@ -221,11 +195,6 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
                 {children}
             </main>
 
-            {popoverMessage && (
-                <div className="fixed left-4 bottom-6 z-50 px-4 py-2 rounded-lg bg-white text-black text-sm font-semibold shadow-lg border border-black/10">
-                    {popoverMessage}
-                </div>
-            )}
         </div>
     );
 }
