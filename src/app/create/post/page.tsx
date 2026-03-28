@@ -93,12 +93,17 @@ export default function CreatePostPage() {
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
-            const filesArray = Array.from(e.target.files).slice(0, 10); // Max 10 images
-            setSelectedFiles(filesArray);
+            const newFiles = Array.from(e.target.files);
+            // Append new files to existing ones (max 10 total)
+            const combined = [...selectedFiles, ...newFiles].slice(0, 10);
+            setSelectedFiles(combined);
             
-            // Generate previews
-            const previews = filesArray.map(file => URL.createObjectURL(file));
-            setImagePreviews(previews);
+            // Generate previews for new files
+            const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+            setImagePreviews([...imagePreviews, ...newPreviews].slice(0, 10));
+            
+            // Reset input so same file can be selected again
+            e.target.value = '';
         }
     };
 
