@@ -37,6 +37,7 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
   const [postingComment, setPostingComment] = useState(false);
   const [commentsCount, setCommentsCount] = useState(post.comments || 0);
   const [carouselIndex, setCarouselIndex] = useState(0);
+  const [isCheckingQuizVote, setIsCheckingQuizVote] = useState(false);
 
   // Parse post data from description
   const postDataRaw = parsePostData(post.description);
@@ -61,7 +62,8 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
   // Check if user already voted on quiz
   useEffect(() => {
     if (postData.type === 'quiz' && post.id) {
-      checkQuizVote();
+      setIsCheckingQuizVote(true);
+      checkQuizVote().finally(() => setIsCheckingQuizVote(false));
     }
   }, [postData.type, post.id]);
 
@@ -136,7 +138,7 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
   };
 
   const handleQuizAnswer = async (index: number) => {
-    if (quizAnswer !== null || !postData || !post.channel_id) return;
+    if (quizAnswer !== null || isCheckingQuizVote || !postData || !post.channel_id) return;
     
     // Optimistic UI
     setQuizAnswer(index);
@@ -329,6 +331,7 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
                       votes={optionVotes}
                       totalVotes={totalVotes}
                       onClick={() => handleQuizAnswer(index)}
+                      disabled={isCheckingQuizVote || quizAnswer !== null}
                     />
                   );
                 })}
@@ -1192,7 +1195,7 @@ function PollOption({ option, index, totalVotes, votes, isSelected, hasVoted, on
   );
 }
 
-function QuizOption({ option, index, isCorrect, isSelected, showResult, votes, totalVotes, onClick }: any) {
+function QuizOption({ option, index, isCorrect, isSelected, showResult, votes, totalVotes, onClick, disabled }: any) {
   const percentage = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
   
   const getClassName = () => {
@@ -1205,8 +1208,8 @@ function QuizOption({ option, index, isCorrect, isSelected, showResult, votes, t
   return (
     <button
       onClick={onClick}
-      disabled={showResult}
-      className={`quiz-option ${getClassName()} ${isSelected ? 'selected' : ''}`}
+      disabled={showResult || disabled}
+      className={`quiz-option ${getClassName()} ${isSelected ? 'selected' : ''} ${disabled ? 'disabled' : ''}`}
     >
         {showResult && (
           <div 
