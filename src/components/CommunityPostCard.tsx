@@ -254,54 +254,62 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
           <div className="post-poll">
             <h4 className="poll-question">{postData.question || 'Poll'}</h4>
             <div className="poll-options-stack">
-              {postData.options.map((option: any, index: number) => {
-                // Initialize votes array if not present
+              {(() => {
+                // Calculate votes once before mapping
                 const baseVotes = postData.votes || new Array(postData.options.length).fill(0);
                 const currentVotes = localVotes || baseVotes;
-                
-                // Optimistic update: add 1 to selected option if just voted
-                let displayVotes = [...currentVotes];
-                if (votedOption === index && !localVotes) {
-                  displayVotes[index] = (displayVotes[index] || 0) + 1;
+                const displayVotes = [...currentVotes];
+                if (votedOption !== null && !localVotes) {
+                  displayVotes[votedOption] = (displayVotes[votedOption] || 0) + 1;
                 }
-                
                 const totalVotes = displayVotes.reduce((a: number, b: number) => a + (b || 0), 0);
-                const votes = displayVotes[index] || 0;
-                const percentage = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
-                const isSelected = votedOption === index;
-                const hasVoted = votedOption !== null;
+                
+                return postData.options.map((option: any, index: number) => {
+                  const votes = displayVotes[index] || 0;
+                  const percentage = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
+                  const isSelected = votedOption === index;
+                  const hasVoted = votedOption !== null;
 
-                return (
-                  <button
-                    key={index}
-                    onClick={() => handleVote(index)}
-                    disabled={hasVoted}
-                    className={`poll-option-new ${isSelected ? 'selected' : ''} ${hasVoted ? 'voted' : ''}`}
-                  >
-                    {/* Animated vote bar */}
-                    {hasVoted && (
-                      <div 
-                        className="poll-vote-bar" 
-                        style={{ width: `${percentage}%` }}
-                      />
-                    )}
-                    
-                    <div className="poll-option-content">
-                      {option.image_url && (
-                        <img src={option.image_url} className="poll-option-img" alt="" />
-                      )}
-                      <span className="poll-option-text">{typeof option === 'string' ? option : option.text}</span>
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => handleVote(index)}
+                      disabled={hasVoted}
+                      className={`poll-option-new ${isSelected ? 'selected' : ''} ${hasVoted ? 'voted' : ''}`}
+                    >
+                      {/* Animated vote bar */}
                       {hasVoted && (
-                        <span className="poll-votes-label">{votes} chose this</span>
+                        <div 
+                          className="poll-vote-bar" 
+                          style={{ width: `${percentage}%` }}
+                        />
                       )}
-                    </div>
-                  </button>
-                );
-              })}
+                      
+                      <div className="poll-option-content">
+                        {option.image_url && (
+                          <img src={option.image_url} className="poll-option-img" alt="" />
+                        )}
+                        <span className="poll-option-text">{typeof option === 'string' ? option : option.text}</span>
+                        {hasVoted && (
+                          <span className="poll-votes-label">{votes} chose this</span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                });
+              })()}
             </div>
             {votedOption !== null && (
               <p className="poll-total-votes">
-                {(localVotes || postData.votes || []).reduce((a: number, b: number) => a + b, 0).toLocaleString()} total votes
+                {(() => {
+                  const baseVotes = postData.votes || new Array(postData.options.length).fill(0);
+                  const currentVotes = localVotes || baseVotes;
+                  const displayVotes = [...currentVotes];
+                  if (votedOption !== null && !localVotes) {
+                    displayVotes[votedOption] = (displayVotes[votedOption] || 0) + 1;
+                  }
+                  return displayVotes.reduce((a: number, b: number) => a + (b || 0), 0).toLocaleString();
+                })()} total votes
               </p>
             )}
           </div>
@@ -695,8 +703,7 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
         }
 
         .poll-option-new.selected {
-          border-color: #3b82f6;
-          background: rgba(59, 130, 246, 0.08);
+          background: rgba(255,255,255,0.12);
         }
 
         .poll-option-new:disabled {
