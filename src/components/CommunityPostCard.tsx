@@ -268,17 +268,19 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
                     disabled={hasVoted}
                     className={`poll-option-new ${isSelected ? 'selected' : ''} ${hasVoted ? 'voted' : ''}`}
                   >
+                    {/* Animated vote bar */}
                     {hasVoted && (
                       <div 
-                        className="poll-bar-fill" 
+                        className="poll-vote-bar" 
                         style={{ width: `${percentage}%` }}
                       />
                     )}
+                    
                     <div className="poll-option-content">
-                      <span className="poll-option-text">{typeof option === 'string' ? option : option.text}</span>
                       {option.image_url && (
                         <img src={option.image_url} className="poll-option-img" alt="" />
                       )}
+                      <span className="poll-option-text">{typeof option === 'string' ? option : option.text}</span>
                       {hasVoted && (
                         <span className="poll-votes-label">{votes} chose this</span>
                       )}
@@ -691,18 +693,19 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
           cursor: default;
         }
 
-        .poll-option-new .poll-bar-fill {
+        .poll-vote-bar {
           position: absolute;
           left: 0;
           top: 0;
           bottom: 0;
-          background: rgba(255,255,255,0.06);
+          background: linear-gradient(90deg, rgba(59, 130, 246, 0.3) 0%, rgba(59, 130, 246, 0.1) 100%);
+          border-radius: 16px;
           z-index: 0;
-          transition: width 1s cubic-bezier(0.23, 1, 0.32, 1);
+          transition: width 1.2s cubic-bezier(0.23, 1, 0.32, 1);
         }
 
-        .poll-option-new.selected .poll-bar-fill {
-          background: rgba(59, 130, 246, 0.15);
+        .poll-option-new.selected .poll-vote-bar {
+          background: linear-gradient(90deg, rgba(34, 197, 94, 0.4) 0%, rgba(34, 197, 94, 0.15) 100%);
         }
 
         .poll-option-content {
