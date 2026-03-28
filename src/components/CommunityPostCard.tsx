@@ -1046,11 +1046,28 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
           height: 6px;
           border-radius: 50%;
           background: rgba(255,255,255,0.3);
-          transition: background 0.2s;
+          transition: all 0.2s;
         }
 
-        .carousel-dot:first-child {
+        .carousel-dot.active {
           background: white;
+          transform: scale(1.2);
+        }
+
+        .carousel-images {
+          display: flex;
+          overflow-x: auto;
+          scroll-snap-type: x mandatory;
+          gap: 0;
+          border-radius: 12px;
+          flex: 1;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+
+        .carousel-images::-webkit-scrollbar {
+          display: none;
         }
       `}</style>
     </article>
