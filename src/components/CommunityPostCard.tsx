@@ -255,14 +255,17 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
             <h4 className="poll-question">{postData.question || 'Poll'}</h4>
             <div className="poll-options-stack">
               {postData.options.map((option: any, index: number) => {
-                const currentVotes = localVotes || postData.votes || [];
+                // Initialize votes array if not present
+                const baseVotes = postData.votes || new Array(postData.options.length).fill(0);
+                const currentVotes = localVotes || baseVotes;
+                
                 // Optimistic update: add 1 to selected option if just voted
                 let displayVotes = [...currentVotes];
-                if (!localVotes && votedOption === index && displayVotes[index] !== undefined) {
+                if (votedOption === index && !localVotes) {
                   displayVotes[index] = (displayVotes[index] || 0) + 1;
                 }
                 
-                const totalVotes = displayVotes.reduce((a: number, b: number) => a + b, 0) || 0;
+                const totalVotes = displayVotes.reduce((a: number, b: number) => a + (b || 0), 0);
                 const votes = displayVotes[index] || 0;
                 const percentage = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
                 const isSelected = votedOption === index;
