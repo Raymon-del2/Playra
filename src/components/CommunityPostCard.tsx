@@ -51,12 +51,31 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
   const isTextPost = postData.type === 'text';
   const isImagePost = postData.type === 'image';
 
-  // Load comments
+  // Load comments and quiz votes
   useEffect(() => {
     if (showComments && (isTextPost || isImagePost)) {
       loadComments();
     }
   }, [showComments, isTextPost, isImagePost]);
+
+  // Check if user already voted on quiz
+  useEffect(() => {
+    if (postData.type === 'quiz' && post.id) {
+      checkQuizVote();
+    }
+  }, [postData.type, post.id]);
+
+  const checkQuizVote = async () => {
+    try {
+      const res = await fetch(`/api/posts/engagement?postId=${post.id}`);
+      const data = await res.json();
+      // Check if user voted on any option
+      if (data.userVotedIndex !== undefined && data.userVotedIndex !== null) {
+        setQuizAnswer(data.userVotedIndex);
+        setShowQuizResult(true);
+      }
+    } catch (e) { /* ignore */ }
+  };
 
   const loadComments = async () => {
     try {
@@ -158,9 +177,11 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
       }
       console.log('Quiz Recorded:', result.log);
 
-    } catch (error) {
-       console.error('Quiz vote failed:', error);
-       // Rollback? Optional - typically we keep it shown if server failed unless it was a fatal error
+    } catch (error: any) {
+      // Silently handle "Already voted" - don't show error to user
+      if (!error.message?.includes('Already voted')) {
+        console.error('Quiz vote failed:', error);
+      }
     }
 
     // Haptic feedback

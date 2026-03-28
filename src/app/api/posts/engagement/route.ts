@@ -119,11 +119,26 @@ export async function GET(req: Request) {
       }
     }
 
+    // Check if user voted on quiz
+    let userVotedIndex: number | null = null;
+    if (profileId) {
+      try {
+        const quizVoteRes = await turso.execute({
+          sql: `SELECT selected_index FROM quiz_votes WHERE quiz_id = ? AND profile_id = ?`,
+          args: [postId, profileId],
+        });
+        if (quizVoteRes.rows?.[0]) {
+          userVotedIndex = Number(quizVoteRes.rows[0].selected_index);
+        }
+      } catch (e) { /* ignore */ }
+    }
+
     return NextResponse.json({ 
       likes: likesCount, 
       userLiked, 
       comments,
-      currentUserId: profileId 
+      currentUserId: profileId,
+      userVotedIndex
     });
   } catch (error: any) {
     console.error('Post engagement error', error);
