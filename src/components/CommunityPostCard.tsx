@@ -320,20 +320,26 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
 
         {/* Images - For image posts show as carousel */}
         {isImagePost && postData.images && postData.images.length > 0 && (
-          <div className="image-post-carousel">
+          <div className="image-post-carousel group">
             <div className="carousel-container">
-              {/* Left arrow for laptop */}
-              {!isMobile && postData.images.length > 1 && (
+              {/* Left arrow - appears on hover for laptop */}
+              {postData.images.length > 1 && (
                 <button 
-                  className="carousel-arrow carousel-arrow-left"
-                  onClick={() => setCarouselIndex(Math.max(0, carouselIndex - 1))}
+                  className="carousel-arrow carousel-arrow-left opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={() => {
+                    const newIdx = Math.max(0, carouselIndex - 1);
+                    setCarouselIndex(newIdx);
+                    const el = document.getElementById(`carousel-${post.id}`);
+                    if (el) el.scrollTo({ left: newIdx * el.offsetWidth, behavior: 'smooth' });
+                  }}
                 >
                   ‹
                 </button>
               )}
               
               <div 
-                className="carousel-images"
+                id={`carousel-${post.id}`}
+                className="carousel-images snap-x snap-mandatory"
                 onScroll={(e) => {
                   const el = e.currentTarget;
                   const idx = Math.round(el.scrollLeft / el.offsetWidth);
@@ -341,17 +347,22 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
                 }}
               >
                 {postData.images.map((img: string, idx: number) => (
-                  <div key={idx} className="carousel-slide">
+                  <div key={idx} className="carousel-slide snap-center">
                     <img src={img} alt="" className="carousel-image" />
                   </div>
                 ))}
               </div>
               
-              {/* Right arrow for laptop */}
-              {!isMobile && postData.images.length > 1 && (
+              {/* Right arrow - appears on hover for laptop */}
+              {postData.images.length > 1 && (
                 <button 
-                  className="carousel-arrow carousel-arrow-right"
-                  onClick={() => setCarouselIndex(Math.min(postData.images.length - 1, carouselIndex + 1))}
+                  className="carousel-arrow carousel-arrow-right opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={() => {
+                    const newIdx = Math.min(postData.images.length - 1, carouselIndex + 1);
+                    setCarouselIndex(newIdx);
+                    const el = document.getElementById(`carousel-${post.id}`);
+                    if (el) el.scrollTo({ left: newIdx * el.offsetWidth, behavior: 'smooth' });
+                  }}
                 >
                   ›
                 </button>
