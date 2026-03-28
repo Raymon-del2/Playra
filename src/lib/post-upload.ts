@@ -36,6 +36,11 @@ const compressImage = async (file: File): Promise<Blob> => {
 };
 
 export const uploadPostImages = async (files: File[], userId: string) => {
+  // Ensure bucket exists first
+  try {
+    await fetch('/api/ensure-bucket');
+  } catch (e) { /* ignore */ }
+  
   const uploadPromises = files.map(async (file, index) => {
     // Compress image first
     let fileToUpload: File | Blob = file;
