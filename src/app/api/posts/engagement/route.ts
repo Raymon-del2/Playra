@@ -12,7 +12,7 @@ async function ensureTables() {
         id SERIAL PRIMARY KEY,
         post_id TEXT NOT NULL,
         profile_id TEXT NOT NULL,
-        created_at TIMESTAMP DEFAULT NOW(),
+        created_at TEXT DEFAULT (datetime('now')),
         UNIQUE(post_id, profile_id)
       )`,
       args: []
@@ -27,7 +27,7 @@ async function ensureTables() {
         post_id TEXT NOT NULL,
         profile_id TEXT NOT NULL,
         content TEXT NOT NULL,
-        created_at TIMESTAMP DEFAULT NOW()
+        created_at TEXT DEFAULT (datetime('now'))
       )`,
       args: []
     });
@@ -168,7 +168,7 @@ export async function POST(req: Request) {
       } else {
         // Like
         await turso.execute({
-          sql: `INSERT INTO post_likes (post_id, profile_id, created_at) VALUES (?, ?, NOW())`,
+          sql: `INSERT INTO post_likes (post_id, profile_id, created_at) VALUES (?, ?, datetime('now'))`,
           args: [postId, profileId],
         });
         console.log('Like inserted for postId:', postId, 'profileId:', profileId);
@@ -181,7 +181,7 @@ export async function POST(req: Request) {
       if (!content?.trim()) return NextResponse.json({ error: 'content required' }, { status: 400 });
 
       const result = await turso.execute({
-        sql: `INSERT INTO post_comments (post_id, profile_id, content, created_at) VALUES (?, ?, ?, NOW())`,
+        sql: `INSERT INTO post_comments (post_id, profile_id, content, created_at) VALUES (?, ?, ?, datetime('now'))`,
         args: [postId, profileId, content.trim()],
       });
 
