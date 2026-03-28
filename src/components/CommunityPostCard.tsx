@@ -48,6 +48,7 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
   
   const isMobile = useIsMobile();
   const isTextPost = postData.type === 'text';
+  const isImagePost = postData.type === 'image';
 
   // Load comments
   useEffect(() => {
@@ -316,8 +317,28 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
           </div>
         )}
 
-        {/* Images */}
-        {postData.images && postData.images.length > 0 && (
+        {/* Images - For image posts show as carousel */}
+        {isImagePost && postData.images && postData.images.length > 0 && (
+          <div className="image-post-carousel">
+            <div className="carousel-images">
+              {postData.images.map((img: string, idx: number) => (
+                <div key={idx} className="carousel-slide">
+                  <img src={img} alt="" className="carousel-image" />
+                </div>
+              ))}
+            </div>
+            {postData.images.length > 1 && (
+              <div className="carousel-dots">
+                {postData.images.map((_: any, idx: number) => (
+                  <span key={idx} className="carousel-dot" />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Images - For other posts use gallery */}
+        {!isImagePost && postData.images && postData.images.length > 0 && (
           <ImageGallery 
             images={postData.images} 
             currentIndex={currentImageIndex}
@@ -898,6 +919,56 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
         .comment-time {
           color: rgba(255,255,255,0.4);
           font-size: 11px;
+        }
+
+        /* Image Post Carousel */
+        .image-post-carousel {
+          margin-top: 12px;
+        }
+
+        .carousel-images {
+          display: flex;
+          overflow-x: auto;
+          scroll-snap-type: x mandatory;
+          gap: 0;
+          border-radius: 12px;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        .carousel-images::-webkit-scrollbar {
+          display: none;
+        }
+
+        .carousel-slide {
+          flex: 0 0 100%;
+          scroll-snap-align: start;
+          aspect-ratio: 1;
+          position: relative;
+        }
+
+        .carousel-image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .carousel-dots {
+          display: flex;
+          justify-content: center;
+          gap: 6px;
+          margin-top: 8px;
+        }
+
+        .carousel-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: rgba(255,255,255,0.3);
+          transition: background 0.2s;
+        }
+
+        .carousel-dot:first-child {
+          background: white;
         }
       `}</style>
     </article>

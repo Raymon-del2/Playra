@@ -1,14 +1,57 @@
 import { supabase } from './supabase';
 
+const compressImage = async (file: File): Promise<Blob> => {
+  return new Promise((resolve, reject) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    img.onload = () => {
+      // Calculate new dimensions (max 1200px, maintain aspect ratio)
+      const maxDim = 1200;
+      let { width, height } = img;
+      
+      if (width > height && width > maxDim) {
+        height = (height * maxDim) / width;
+        width = maxDim;
+      } else if (height > maxDim) {
+        width = (width * maxDim) / height;
+        height = maxDim;
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      
+      // Draw and compress as JPEG at 80% quality
+      ctx?.drawImage(img, 0, 0, width, height);
+      canvas.toBlob((blob) => {
+        if (blob) resolve(blob);
+        else reject(new Error('Failed to compress'));
+      }, 'image/jpeg', 0.8);
+    };
+    
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = URL.createObjectURL(file);
+  });
+};
+
 export const uploadPostImages = async (files: File[], userId: string) => {
-  const uploadPromises = files.map(async (file) => {
+  const uploadPromises = files.map(async (file, index) => {
+    // Compress image first
+    let fileToUpload: File | Blob = file;
+    try {
+      const compressed = await compressImage(file);
+      fileToUpload = new File([compressed], `image_${index}.jpg`, { type: 'image/jpeg' });
+    } catch (e) {
+      console.warn('Compression failed, using original:', e);
+    }
+    
     // Create a unique path: userId/timestamp-filename
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
     
     const { data, error } = await supabase.storage
       .from('posts')
-      .upload(fileName, file);
+      .upload(fileName, fileToUpload);
 
     if (error) throw error;
 

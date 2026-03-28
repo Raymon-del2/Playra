@@ -93,7 +93,7 @@ export default function CreatePostPage() {
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
-            const filesArray = Array.from(e.target.files).slice(0, 5);
+            const filesArray = Array.from(e.target.files).slice(0, 10); // Max 10 images
             setSelectedFiles(filesArray);
             
             // Generate previews
@@ -136,7 +136,7 @@ export default function CreatePostPage() {
         if (mode === 'text') return text.trim().length > 0;
         if (mode === 'poll') return pollOptions.filter(o => o.text.trim()).length >= 2;
         if (mode === 'quiz') return quizQuestion.trim() && quizAnswers.filter(a => a.text.trim()).length >= 2 && quizAnswers.some(a => a.isCorrect);
-        if (mode === 'image') return selectedFiles.length > 0 || text.trim().length > 0;
+        if (mode === 'image') return selectedFiles.length >= 1 && selectedFiles.length <= 10;
         return false;
     };
 
@@ -439,29 +439,43 @@ export default function CreatePostPage() {
                     </div>
                 )}
 
-                {mode === 'image' && imagePreviews.length > 0 && (
-                    <div className="mt-6 grid grid-cols-2 gap-2">
-                        {imagePreviews.map((img, index) => (
-                            <div key={index} className="relative aspect-square rounded-2xl overflow-hidden bg-zinc-900">
-                                <img src={img} alt="" className="w-full h-full object-cover" />
-                                <button
-                                    onClick={() => handleRemoveImage(index)}
-                                    className="absolute top-2 right-2 p-1.5 bg-black/60 rounded-full hover:bg-black/80 transition-colors"
-                                >
-                                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
+                {mode === 'image' && (
+                    <div className="mt-6">
+                        {imagePreviews.length > 0 ? (
+                            <div className="grid grid-cols-2 gap-2">
+                                {imagePreviews.map((img, index) => (
+                                    <div key={index} className="relative aspect-square rounded-2xl overflow-hidden bg-zinc-900">
+                                        <img src={img} alt="" className="w-full h-full object-cover" />
+                                        <button
+                                            onClick={() => handleRemoveImage(index)}
+                                            className="absolute top-2 right-2 p-1.5 bg-black/60 rounded-full hover:bg-black/80 transition-colors"
+                                        >
+                                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                ))}
+                                {imagePreviews.length < 10 && (
+                                    <button
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className="aspect-square rounded-2xl border-2 border-dashed border-zinc-700 flex items-center justify-center text-zinc-500 hover:border-zinc-500 hover:text-zinc-400 transition-colors"
+                                    >
+                                        <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                        </svg>
+                                    </button>
+                                )}
                             </div>
-                        ))}
-                        {imagePreviews.length < 5 && (
+                        ) : (
                             <button
                                 onClick={() => fileInputRef.current?.click()}
-                                className="aspect-square rounded-2xl border-2 border-dashed border-zinc-700 flex items-center justify-center text-zinc-500 hover:border-zinc-500 hover:text-zinc-400 transition-colors"
+                                className="w-full py-12 border-2 border-dashed border-zinc-700 rounded-2xl flex flex-col items-center gap-3 text-zinc-500 hover:border-zinc-500 hover:text-zinc-400 transition-colors"
                             >
-                                <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                <svg className="w-12 h-12" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
                                 </svg>
+                                <span className="font-bold">Select 1-10 images</span>
                             </button>
                         )}
                     </div>
@@ -492,10 +506,7 @@ export default function CreatePostPage() {
                     </button>
 
                     <button
-                        onClick={() => {
-                            handleModeChange('image');
-                            fileInputRef.current?.click();
-                        }}
+                        onClick={() => handleModeChange('image')}
                         className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${mode === 'image' ? 'text-green-400' : 'text-zinc-500 hover:text-zinc-300'}`}
                     >
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
