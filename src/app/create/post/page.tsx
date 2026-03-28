@@ -138,7 +138,7 @@ export default function CreatePostPage() {
 
     const isPostValid = () => {
         if (mode === 'text') return text.trim().length > 0;
-        if (mode === 'poll') return pollOptions.filter(o => o.text.trim()).length >= 2;
+        if (mode === 'poll') return pollOptions.filter(o => o.text.trim() || o.imageUrl).length >= 2;
         if (mode === 'quiz') return quizQuestion.trim() && quizAnswers.filter(a => a.text.trim()).length >= 2 && quizAnswers.some(a => a.isCorrect);
         if (mode === 'image') return selectedFiles.length >= 1 && selectedFiles.length <= 10;
         return false;
@@ -166,12 +166,22 @@ export default function CreatePostPage() {
                     content = { text: text.trim() };
                     break;
                 case 'poll':
-                    const finalOptions = pollOptions
-                        .filter(o => o.text.trim())
-                        .slice(0, 4)
-                        .map(option => ({
-                            text: option.text.trim(),
-                        }));
+                    const finalOptions = await Promise.all(
+                        pollOptions
+                            .filter(o => o.text.trim() || o.imageUrl)
+                            .slice(0, 4)
+                            .map(async (option) => {
+                                let finalImageUrl = option.imageUrl;
+                                if (option.file) {
+                                    const [uploadedUrl] = await uploadPostImages([option.file], profile.id);
+                                    finalImageUrl = uploadedUrl;
+                                }
+                                return {
+                                    text: option.text.trim() || 'Option',
+                                    image_url: finalImageUrl,
+                                };
+                            })
+                    );
 
                     content = {
                         question: text.trim() || 'Poll',
@@ -306,16 +316,44 @@ export default function CreatePostPage() {
                             <div className="space-y-2">
                                 {pollOptions.map((option, index) => (
                                     <div key={option.id} className="flex items-center gap-2">
-                                        {/* Text input */}
-                                        <div className="flex-1 bg-zinc-900 border border-white/10 rounded-2xl px-4 py-3">
+                                        {/* Text input with image preview on left */}
+                                        <div className="flex-1 bg-zinc-900 border border-white/10 rounded-2xl px-4 py-3 flex items-center gap-3">
+                                            {option.imageUrl && (
+                                                <img src={option.imageUrl} className="w-8 h-8 object-cover rounded-lg flex-shrink-0" alt="" />
+                                            )}
                                             <input
                                                 type="text"
                                                 value={option.text}
                                                 onChange={(e) => setPollOptions(pollOptions.map(o => o.id === option.id ? { ...o, text: e.target.value } : o))}
                                                 placeholder={`Option ${index + 1}`}
-                                                className="w-full bg-transparent text-white outline-none text-sm"
+                                                className="flex-1 bg-transparent text-white outline-none text-sm"
                                             />
                                         </div>
+
+                                        {/* Image upload button */}
+                                        <button
+                                            type="button"
+                                            onClick={() => document.getElementById(`poll-file-${option.id}`)?.click()}
+                                            className="p-2 text-zinc-500 hover:text-white transition-colors flex-shrink-0"
+                                            title="Add image"
+                                        >
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                                            </svg>
+                                        </button>
+                                        <input 
+                                            id={`poll-file-${option.id}`}
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                const f = e.target.files?.[0];
+                                                if (f) {
+                                                    const url = URL.createObjectURL(f);
+                                                    setPollOptions(pollOptions.map(o => o.id === option.id ? { ...o, imageUrl: url, file: f } : o));
+                                                }
+                                            }}
+                                        />
 
                                         {/* Remove button */}
                                         {pollOptions.length > 2 && (
