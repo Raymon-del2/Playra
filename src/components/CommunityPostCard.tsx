@@ -981,10 +981,14 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
           display: flex;
           overflow-x: auto;
           scroll-snap-type: x mandatory;
+          scroll-behavior: smooth;
           gap: 0;
           border-radius: 12px;
           flex: 1;
           -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+          overscroll-behavior-x: contain;
         }
 
         .carousel-images::-webkit-scrollbar {
@@ -993,15 +997,23 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
 
         .carousel-slide {
           flex: 0 0 100%;
-          scroll-snap-align: start;
+          min-width: 100%;
+          scroll-snap-align: center;
+          scroll-snap-stop: always;
           aspect-ratio: 1;
           position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #0f0f0f;
         }
 
         .carousel-image {
           width: 100%;
           height: 100%;
-          object-fit: cover;
+          object-fit: contain;
+          max-width: 100%;
+          max-height: 100%;
         }
 
         .carousel-arrow {
