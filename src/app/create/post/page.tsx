@@ -187,7 +187,7 @@ export default function CreatePostPage() {
                     );
 
                     content = {
-                        question: pollQuestion.trim() || 'Poll',
+                        question: text.trim() || 'Poll',
                         options: finalOptions,
                     };
                     break;
@@ -313,20 +313,6 @@ export default function CreatePostPage() {
                 {/* Mode-specific content */}
                 {mode === 'poll' && (
                     <div className="mt-6 space-y-4">
-                        {/* Poll Question */}
-                        <div>
-                            <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Poll Question</span>
-                            <div className="bg-zinc-900 border border-white/10 rounded-2xl px-4 py-3">
-                                <input
-                                    type="text"
-                                    value={pollQuestion}
-                                    onChange={(e) => setPollQuestion(e.target.value)}
-                                    placeholder="What do you think?"
-                                    className="w-full bg-transparent text-white outline-none text-base"
-                                />
-                            </div>
-                        </div>
-
                         {/* Poll Options */}
                         <div>
                             <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Options (up to 4)</span>
@@ -335,6 +321,7 @@ export default function CreatePostPage() {
                                     <div key={option.id} className="flex items-center gap-2">
                                         {/* Image upload button */}
                                         <button
+                                            type="button"
                                             onClick={() => document.getElementById(`poll-file-${option.id}`)?.click()}
                                             className={`flex-shrink-0 w-10 h-10 rounded-xl border border-white/10 flex items-center justify-center transition-colors ${option.imageUrl ? 'bg-zinc-800' : 'bg-zinc-900 hover:bg-zinc-800'}`}
                                         >
@@ -371,10 +358,15 @@ export default function CreatePostPage() {
                                             />
                                         </div>
 
-                                        {/* Remove button */}
+                                        {/* Clear button */}
                                         <button
-                                            onClick={() => handleRemovePollOption(option.id)}
-                                            className="p-2 text-zinc-600 hover:text-red-400 transition-colors"
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                setPollOptions(prev => prev.map(o => o.id === option.id ? { ...o, text: '', imageUrl: undefined, file: undefined } : o));
+                                            }}
+                                            className="p-2 text-zinc-600 hover:text-red-400 transition-colors flex-shrink-0"
                                             title="Clear option"
                                         >
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
