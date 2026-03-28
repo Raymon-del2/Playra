@@ -253,7 +253,7 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
         {postData.type === 'poll' && postData.options && (
           <div className="post-poll">
             <h4 className="poll-question">{postData.question || 'Poll'}</h4>
-            <div className={`poll-options ${postData.poll_type === 'image' ? 'image-grid' : 'text-stack'}`}>
+            <div className="poll-options-stack">
               {postData.options.map((option: any, index: number) => {
                 const totalVotes = postData.votes?.reduce((a: number, b: number) => a + b, 0) || 0;
                 const votes = postData.votes?.[index] || 0;
@@ -266,28 +266,21 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
                     key={index}
                     onClick={() => handleVote(index)}
                     disabled={hasVoted}
-                    className={`poll-option-yt ${postData.poll_type === 'image' ? 'image-type' : 'text-type'} ${isSelected ? 'selected' : ''} ${hasVoted ? 'voted' : ''}`}
+                    className={`poll-option-new ${isSelected ? 'selected' : ''} ${hasVoted ? 'voted' : ''}`}
                   >
-                    {postData.poll_type === 'image' && (
-                      <div className="poll-img-container">
-                        <img src={option.imageUrl || 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=200'} alt="" />
-                        <div className="poll-img-overlay" />
-                      </div>
+                    {hasVoted && (
+                      <div 
+                        className="poll-bar-fill" 
+                        style={{ width: `${percentage}%` }}
+                      />
                     )}
-                    
-                    <div className="poll-bar-bg-yt">
-                      {hasVoted && (
-                        <div 
-                          className="poll-bar-fill-yt" 
-                          style={{ width: `${percentage}%` }}
-                        />
+                    <div className="poll-option-content">
+                      <span className="poll-option-text">{typeof option === 'string' ? option : option.text}</span>
+                      {option.image_url && (
+                        <img src={option.image_url} className="poll-option-img" alt="" />
                       )}
-                    </div>
-
-                    <div className="poll-option-content-yt">
-                      <span className="poll-option-text-yt">{typeof option === 'string' ? option : option.text}</span>
                       {hasVoted && (
-                        <span className="poll-percentage-yt">{percentage}%</span>
+                        <span className="poll-votes-label">{votes} chose this</span>
                       )}
                     </div>
                   </button>
@@ -296,7 +289,7 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
             </div>
             {votedOption !== null && (
               <p className="poll-total-votes">
-                {postData.votes?.reduce((a: number, b: number) => a + b, 0).toLocaleString()} votes
+                {postData.votes?.reduce((a: number, b: number) => a + b, 0).toLocaleString()} total votes
               </p>
             )}
           </div>
@@ -657,7 +650,95 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
           color: rgba(255,255,255,0.5);
           font-size: 13px;
           font-weight: 700;
-          font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* New Poll Styling - Quiz-like */
+        .poll-options-stack {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          margin-top: 12px;
+        }
+
+        .poll-option-new {
+          position: relative;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 16px;
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 16px;
+          text-align: left;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          overflow: hidden;
+          width: 100%;
+          min-height: 64px;
+        }
+
+        .poll-option-new:hover:not(:disabled) {
+          background: rgba(255,255,255,0.08);
+          border-color: rgba(255,255,255,0.15);
+        }
+
+        .poll-option-new.selected {
+          border-color: #3b82f6;
+          background: rgba(59, 130, 246, 0.08);
+        }
+
+        .poll-option-new:disabled {
+          cursor: default;
+        }
+
+        .poll-option-new .poll-bar-fill {
+          position: absolute;
+          left: 0;
+          top: 0;
+          bottom: 0;
+          background: rgba(255,255,255,0.06);
+          z-index: 0;
+          transition: width 1s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .poll-option-new.selected .poll-bar-fill {
+          background: rgba(59, 130, 246, 0.15);
+        }
+
+        .poll-option-content {
+          position: relative;
+          z-index: 1;
+          flex: 1;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .poll-option-img {
+          width: 48px;
+          height: 48px;
+          object-fit: cover;
+          border-radius: 8px;
+          flex-shrink: 0;
+          order: -1;
+        }
+
+        .poll-option-text {
+          color: white;
+          font-size: 15px;
+          font-weight: 500;
+          flex: 1;
+        }
+
+        .poll-votes-label {
+          font-size: 13px;
+          font-weight: 600;
+          color: rgba(255,255,255,0.5);
+          flex-shrink: 0;
+        }
+
+        .poll-option-new.selected .poll-votes-label {
+          color: #3b82f6;
         }
 
         /* Quiz Redesign - Premium Look */
