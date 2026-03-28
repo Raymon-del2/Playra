@@ -52,28 +52,31 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
   const isTextPost = postData.type === 'text';
   const isImagePost = postData.type === 'image';
 
-  // Load comments and quiz votes
+  // Load comments and check existing votes
   useEffect(() => {
     if (showComments && (isTextPost || isImagePost)) {
       loadComments();
     }
   }, [showComments, isTextPost, isImagePost]);
 
-  // Check if user already voted on quiz
+  // Check if user already voted on poll or quiz
   useEffect(() => {
-    if (postData.type === 'quiz' && post.id) {
-      setIsCheckingQuizVote(true);
-      checkQuizVote().finally(() => setIsCheckingQuizVote(false));
+    if ((postData.type === 'poll' || postData.type === 'quiz') && post.id) {
+      checkExistingVote();
     }
   }, [postData.type, post.id]);
 
-  const checkQuizVote = async () => {
+  const checkExistingVote = async () => {
     try {
       const res = await fetch(`/api/posts/engagement?postId=${post.id}`);
       const data = await res.json();
-      // Check if user voted on any option
+      // Check poll vote
       if (data.userVotedIndex !== undefined && data.userVotedIndex !== null) {
-        setQuizAnswer(data.userVotedIndex);
+        setVotedOption(data.userVotedIndex);
+      }
+      // Check quiz vote
+      if (data.userQuizAnswer !== undefined && data.userQuizAnswer !== null) {
+        setQuizAnswer(data.userQuizAnswer);
         setShowQuizResult(true);
       }
     } catch (e) { /* ignore */ }
@@ -267,8 +270,8 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
                 
                 return postData.options.map((option: any, index: number) => {
                   const votes = displayVotes[index] || 0;
-                  // Scale bar: 1 vote = ~20%, 5 votes = 100% (cap at 100)
-                  const barWidth = Math.min(100, Math.max(15, votes * 20));
+                  // Scale bar: 1 vote = ~20%, 5 votes = 100%, 0 votes = 0%
+                  const barWidth = votes > 0 ? Math.min(100, Math.max(15, votes * 20)) : 0;
                   const isSelected = votedOption === index;
                   const hasVoted = votedOption !== null;
 

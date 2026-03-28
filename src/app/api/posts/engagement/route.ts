@@ -119,8 +119,9 @@ export async function GET(req: Request) {
       }
     }
 
-    // Check if user voted on quiz
+    // Check if user voted on poll or quiz
     let userVotedIndex: number | null = null;
+    let userQuizAnswer: number | null = null;
     if (profileId) {
       try {
         const quizVoteRes = await turso.execute({
@@ -128,9 +129,20 @@ export async function GET(req: Request) {
           args: [postId, profileId],
         });
         if (quizVoteRes.rows?.[0]) {
-          userVotedIndex = Number(quizVoteRes.rows[0].selected_index);
+          userQuizAnswer = Number(quizVoteRes.rows[0].selected_index);
         }
       } catch (e) { /* ignore */ }
+      
+      // Also check poll_votes table (need to create this)
+      try {
+        const pollVoteRes = await turso.execute({
+          sql: `SELECT selected_index FROM poll_votes WHERE post_id = ? AND profile_id = ?`,
+          args: [postId, profileId],
+        });
+        if (pollVoteRes.rows?.[0]) {
+          userVotedIndex = Number(pollVoteRes.rows[0].selected_index);
+        }
+      } catch (e) { /* table might not exist */ }
     }
 
     return NextResponse.json({ 
@@ -138,7 +150,8 @@ export async function GET(req: Request) {
       userLiked, 
       comments,
       currentUserId: profileId,
-      userVotedIndex
+      userVotedIndex,
+      userQuizAnswer
     });
   } catch (error: any) {
     console.error('Post engagement error', error);
