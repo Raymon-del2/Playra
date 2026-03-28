@@ -255,8 +255,15 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
             <h4 className="poll-question">{postData.question || 'Poll'}</h4>
             <div className="poll-options-stack">
               {postData.options.map((option: any, index: number) => {
-                const totalVotes = postData.votes?.reduce((a: number, b: number) => a + b, 0) || 0;
-                const votes = postData.votes?.[index] || 0;
+                const currentVotes = localVotes || postData.votes || [];
+                // Optimistic update: add 1 to selected option if just voted
+                let displayVotes = [...currentVotes];
+                if (!localVotes && votedOption === index && displayVotes[index] !== undefined) {
+                  displayVotes[index] = (displayVotes[index] || 0) + 1;
+                }
+                
+                const totalVotes = displayVotes.reduce((a: number, b: number) => a + b, 0) || 0;
+                const votes = displayVotes[index] || 0;
                 const percentage = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
                 const isSelected = votedOption === index;
                 const hasVoted = votedOption !== null;
@@ -291,7 +298,7 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
             </div>
             {votedOption !== null && (
               <p className="poll-total-votes">
-                {postData.votes?.reduce((a: number, b: number) => a + b, 0).toLocaleString()} total votes
+                {(localVotes || postData.votes || []).reduce((a: number, b: number) => a + b, 0).toLocaleString()} total votes
               </p>
             )}
           </div>
@@ -698,14 +705,14 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
           left: 0;
           top: 0;
           bottom: 0;
-          background: linear-gradient(90deg, rgba(59, 130, 246, 0.3) 0%, rgba(59, 130, 246, 0.1) 100%);
+          background: rgba(255,255,255,0.12);
           border-radius: 16px;
           z-index: 0;
-          transition: width 1.2s cubic-bezier(0.23, 1, 0.32, 1);
+          transition: width 1s cubic-bezier(0.23, 1, 0.32, 1);
         }
 
         .poll-option-new.selected .poll-vote-bar {
-          background: linear-gradient(90deg, rgba(34, 197, 94, 0.4) 0%, rgba(34, 197, 94, 0.15) 100%);
+          background: rgba(255,255,255,0.25);
         }
 
         .poll-option-content {
