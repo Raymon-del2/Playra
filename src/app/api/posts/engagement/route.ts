@@ -87,26 +87,34 @@ export async function GET(req: Request) {
       content: r.content,
       created_at: r.created_at,
       profile_id: r.profile_id,
-      profile_name: 'User',
+      profile_name: null,
       profile_avatar: null,
     }));
 
-    // Fetch real profile names from Supabase
+    // Fetch real profile names from Turso channels table
     const profileIds = comments.map((c: any) => c.profile_id).filter(Boolean);
     if (profileIds.length > 0) {
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, name, avatar')
-        .in('id', profileIds);
-      
-      if (profiles) {
-        const profileMap = new Map(profiles.map((p: any) => [p.id, p]));
+      try {
+        const placeholders = profileIds.map(() => '?').join(',');
+        const channelResult = await turso.execute({
+          sql: `SELECT id, name, avatar FROM channels WHERE id IN (${placeholders})`,
+          args: profileIds
+        });
+        
+        const channelMap = new Map((channelResult.rows || []).map((c: any) => [c.id, c]));
         comments.forEach((c: any) => {
-          const profile = profileMap.get(c.profile_id);
-          if (profile) {
-            c.profile_name = profile.name || 'User';
-            c.profile_avatar = profile.avatar;
+          const channel = channelMap.get(c.profile_id);
+          if (channel) {
+            c.profile_name = channel.name || 'User';
+            c.profile_avatar = channel.avatar;
+          } else {
+            c.profile_name = 'User';
           }
+        });
+      } catch (e) {
+        console.warn('Failed to fetch channel names:', e);
+        comments.forEach((c: any) => {
+          c.profile_name = 'User';
         });
       }
     }
