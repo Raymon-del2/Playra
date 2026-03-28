@@ -29,6 +29,13 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
   const [quizAnswer, setQuizAnswer] = useState<number | null>(null);
   const [showQuizResult, setShowQuizResult] = useState(false);
   const [localVotes, setLocalVotes] = useState<number[] | null>(null);
+  
+  // Comments state
+  const [comments, setComments] = useState<any[]>([]);
+  const [showComments, setShowComments] = useState(false);
+  const [commentText, setCommentText] = useState('');
+  const [postingComment, setPostingComment] = useState(false);
+  const [commentsCount, setCommentsCount] = useState(post.comments || 0);
 
   // Parse post data from description
   const postDataRaw = parsePostData(post.description);
@@ -40,6 +47,52 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
   };
   
   const isMobile = useIsMobile();
+  const isTextPost = postData.type === 'text';
+
+  // Load comments
+  useEffect(() => {
+    if (showComments && isTextPost) {
+      loadComments();
+    }
+  }, [showComments, isTextPost]);
+
+  const loadComments = async () => {
+    try {
+      const res = await fetch(`/api/posts/engagement?postId=${post.id}`);
+      const data = await res.json();
+      if (data.comments) {
+        setComments(data.comments);
+        setCommentsCount(data.comments.length);
+      }
+    } catch (e) { console.log('Load comments error', e); }
+  };
+
+  const handlePostComment = async () => {
+    if (!commentText.trim() || postingComment) return;
+    setPostingComment(true);
+    
+    const tempComment = {
+      id: 'temp_' + Date.now(),
+      content: commentText,
+      profile_name: 'You',
+      created_at: new Date().toISOString()
+    };
+    setComments(prev => [tempComment, ...prev]);
+    setCommentText('');
+    
+    try {
+      await fetch('/api/posts/engagement', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ postId: post.id, action: 'comment', content: commentText })
+      });
+      await loadComments();
+    } catch (e) {
+      console.log('Post comment error', e);
+      setComments(prev => prev.filter(c => c.id !== tempComment.id));
+    }
+    setPostingComment(false);
+  };
 
   const handleShare = async () => {
     const url = `${window.location.origin}/community/${post.id}`;
@@ -276,12 +329,56 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
 
       {/* Engagement Bar */}
       <div className="post-engagement">
+        {isTextPost && isMobile && (
+          <button className="engage-btn" onClick={() => setShowComments(!showComments)}>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            <span>{commentsCount > 0 ? commentsCount : 'Comment'}</span>
+          </button>
+        )}
         <button className="engage-btn" onClick={handleShare}>
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
           </svg>
         </button>
       </div>
+
+      {/* Comments Dropdown for Text Posts on Mobile */}
+      {isTextPost && isMobile && showComments && (
+        <div className="post-comments-dropdown">
+          <div className="comments-input-row">
+            <input
+              type="text"
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              placeholder="Write a comment..."
+              className="comment-input"
+              onKeyDown={(e) => e.key === 'Enter' && handlePostComment()}
+            />
+            <button 
+              onClick={handlePostComment} 
+              disabled={!commentText.trim() || postingComment}
+              className="comment-submit"
+            >
+              {postingComment ? '...' : 'Post'}
+            </button>
+          </div>
+          <div className="comments-list">
+            {comments.length === 0 ? (
+              <p className="no-comments">No comments yet. Be the first!</p>
+            ) : (
+              comments.map((comment: any) => (
+                <div key={comment.id} className="comment-item">
+                  <span className="comment-author">{comment.profile_name || 'User'}</span>
+                  <span className="comment-content">{comment.content}</span>
+                  <span className="comment-time">{formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}</span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
 
       <style jsx>{`
         .community-post {
@@ -715,6 +812,92 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
             margin-top: 8px;
             text-align: center;
           }
+        }
+
+        /* Comments Dropdown */
+        .post-comments-dropdown {
+          border-top: 1px solid rgba(255,255,255,0.1);
+          padding: 12px;
+          background: rgba(0,0,0,0.2);
+        }
+
+        .comments-input-row {
+          display: flex;
+          gap: 8px;
+          margin-bottom: 12px;
+        }
+
+        .comment-input {
+          flex: 1;
+          background: rgba(255,255,255,0.1);
+          border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 20px;
+          padding: 8px 14px;
+          color: white;
+          font-size: 13px;
+        }
+
+        .comment-input::placeholder {
+          color: rgba(255,255,255,0.4);
+        }
+
+        .comment-input:focus {
+          outline: none;
+          border-color: #3b82f6;
+        }
+
+        .comment-submit {
+          padding: 8px 16px;
+          border-radius: 20px;
+          border: none;
+          background: #3b82f6;
+          color: white;
+          font-size: 13px;
+          font-weight: 500;
+          cursor: pointer;
+        }
+
+        .comment-submit:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .comments-list {
+          max-height: 200px;
+          overflow-y: auto;
+        }
+
+        .no-comments {
+          color: rgba(255,255,255,0.4);
+          font-size: 13px;
+          text-align: center;
+          padding: 16px 0;
+        }
+
+        .comment-item {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          margin-bottom: 12px;
+          padding-bottom: 12px;
+          border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .comment-author {
+          font-weight: 600;
+          color: #3b82f6;
+          font-size: 13px;
+        }
+
+        .comment-content {
+          color: white;
+          font-size: 14px;
+          line-height: 1.4;
+        }
+
+        .comment-time {
+          color: rgba(255,255,255,0.4);
+          font-size: 11px;
         }
       `}</style>
     </article>
