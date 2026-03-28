@@ -267,8 +267,8 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
                 
                 return postData.options.map((option: any, index: number) => {
                   const votes = displayVotes[index] || 0;
-                  // Scale bar based on max votes (so highest gets ~100%, others proportional)
-                  const barWidth = maxVotes > 0 ? Math.max(15, (votes / maxVotes) * 100) : 0;
+                  // Scale bar: 1 vote = ~20%, 5 votes = 100% (cap at 100)
+                  const barWidth = Math.min(100, Math.max(15, votes * 20));
                   const isSelected = votedOption === index;
                   const hasVoted = votedOption !== null;
 
