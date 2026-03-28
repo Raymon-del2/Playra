@@ -36,6 +36,7 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
   const [commentText, setCommentText] = useState('');
   const [postingComment, setPostingComment] = useState(false);
   const [commentsCount, setCommentsCount] = useState(post.comments || 0);
+  const [carouselIndex, setCarouselIndex] = useState(0);
 
   // Parse post data from description
   const postDataRaw = parsePostData(post.description);
@@ -52,10 +53,10 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
 
   // Load comments
   useEffect(() => {
-    if (showComments && isTextPost) {
+    if (showComments && (isTextPost || isImagePost)) {
       loadComments();
     }
-  }, [showComments, isTextPost]);
+  }, [showComments, isTextPost, isImagePost]);
 
   const loadComments = async () => {
     try {
@@ -320,17 +321,50 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
         {/* Images - For image posts show as carousel */}
         {isImagePost && postData.images && postData.images.length > 0 && (
           <div className="image-post-carousel">
-            <div className="carousel-images">
-              {postData.images.map((img: string, idx: number) => (
-                <div key={idx} className="carousel-slide">
-                  <img src={img} alt="" className="carousel-image" />
-                </div>
-              ))}
+            <div className="carousel-container">
+              {/* Left arrow for laptop */}
+              {!isMobile && postData.images.length > 1 && (
+                <button 
+                  className="carousel-arrow carousel-arrow-left"
+                  onClick={() => setCarouselIndex(Math.max(0, carouselIndex - 1))}
+                >
+                  ‹
+                </button>
+              )}
+              
+              <div 
+                className="carousel-images"
+                onScroll={(e) => {
+                  const el = e.currentTarget;
+                  const idx = Math.round(el.scrollLeft / el.offsetWidth);
+                  setCarouselIndex(idx);
+                }}
+              >
+                {postData.images.map((img: string, idx: number) => (
+                  <div key={idx} className="carousel-slide">
+                    <img src={img} alt="" className="carousel-image" />
+                  </div>
+                ))}
+              </div>
+              
+              {/* Right arrow for laptop */}
+              {!isMobile && postData.images.length > 1 && (
+                <button 
+                  className="carousel-arrow carousel-arrow-right"
+                  onClick={() => setCarouselIndex(Math.min(postData.images.length - 1, carouselIndex + 1))}
+                >
+                  ›
+                </button>
+              )}
             </div>
+            
             {postData.images.length > 1 && (
               <div className="carousel-dots">
                 {postData.images.map((_: any, idx: number) => (
-                  <span key={idx} className="carousel-dot" />
+                  <span 
+                    key={idx} 
+                    className={`carousel-dot ${idx === carouselIndex ? 'active' : ''}`}
+                  />
                 ))}
               </div>
             )}
@@ -350,7 +384,7 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
 
       {/* Engagement Bar */}
       <div className="post-engagement">
-        {isTextPost && (
+        {(isTextPost || isImagePost) && (
           <button className="engage-btn" onClick={() => setShowComments(!showComments)}>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -365,8 +399,8 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
         </button>
       </div>
 
-      {/* Comments Dropdown for Text Posts */}
-      {isTextPost && showComments && (
+      {/* Comments Dropdown for Text and Image Posts */}
+      {(isTextPost || isImagePost) && showComments && (
         <div className="post-comments-dropdown">
           <div className="comments-input-row">
             <input
@@ -926,12 +960,19 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
           margin-top: 12px;
         }
 
+        .carousel-container {
+          position: relative;
+          display: flex;
+          align-items: center;
+        }
+
         .carousel-images {
           display: flex;
           overflow-x: auto;
           scroll-snap-type: x mandatory;
           gap: 0;
           border-radius: 12px;
+          flex: 1;
           -webkit-overflow-scrolling: touch;
         }
 
@@ -950,6 +991,36 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
           width: 100%;
           height: 100%;
           object-fit: cover;
+        }
+
+        .carousel-arrow {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          background: rgba(0,0,0,0.6);
+          color: white;
+          font-size: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 10;
+          cursor: pointer;
+          border: none;
+        }
+
+        .carousel-arrow:hover {
+          background: rgba(0,0,0,0.8);
+        }
+
+        .carousel-arrow-left {
+          left: 8px;
+        }
+
+        .carousel-arrow-right {
+          right: 8px;
         }
 
         .carousel-dots {
