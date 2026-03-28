@@ -263,10 +263,12 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
                   displayVotes[votedOption] = (displayVotes[votedOption] || 0) + 1;
                 }
                 const totalVotes = displayVotes.reduce((a: number, b: number) => a + (b || 0), 0);
+                const maxVotes = Math.max(...displayVotes, 1); // At least 1 to avoid division by zero
                 
                 return postData.options.map((option: any, index: number) => {
                   const votes = displayVotes[index] || 0;
-                  const percentage = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
+                  // Scale bar based on max votes (so highest gets ~100%, others proportional)
+                  const barWidth = maxVotes > 0 ? Math.max(15, (votes / maxVotes) * 100) : 0;
                   const isSelected = votedOption === index;
                   const hasVoted = votedOption !== null;
 
@@ -281,7 +283,7 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
                       {hasVoted && (
                         <div 
                           className="poll-vote-bar" 
-                          style={{ width: `${percentage}%` }}
+                          style={{ width: `${barWidth}%` }}
                         />
                       )}
                       
