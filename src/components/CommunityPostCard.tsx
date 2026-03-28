@@ -305,7 +305,7 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
                       isCorrect={postData.correct_index === index}
                       isSelected={quizAnswer === index}
                       showResult={showQuizResult}
-                      percentage={percentage}
+                      votes={optionVotes}
                       totalVotes={totalVotes}
                       onClick={() => handleQuizAnswer(index)}
                     />
@@ -1171,7 +1171,9 @@ function PollOption({ option, index, totalVotes, votes, isSelected, hasVoted, on
   );
 }
 
-function QuizOption({ option, index, isCorrect, isSelected, showResult, percentage, totalVotes, onClick }: any) {
+function QuizOption({ option, index, isCorrect, isSelected, showResult, votes, totalVotes, onClick }: any) {
+  const percentage = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
+  
   const getClassName = () => {
     if (!showResult) return '';
     if (isCorrect) return 'correct';
@@ -1185,12 +1187,12 @@ function QuizOption({ option, index, isCorrect, isSelected, showResult, percenta
       disabled={showResult}
       className={`quiz-option ${getClassName()} ${isSelected ? 'selected' : ''}`}
     >
-      {showResult && (
-        <div 
-          className="quiz-percentage-bar" 
-          style={{ width: `${percentage}%` }}
-        />
-      )}
+        {showResult && (
+          <div 
+            className="quiz-percentage-bar" 
+            style={{ width: `${percentage}%` }}
+          />
+        )}
       <div className="quiz-indicator">
         {showResult && isCorrect && <span className="indicator-icon">✓</span>}
         {showResult && isSelected && !isCorrect && <span className="indicator-icon">✗</span>}
@@ -1199,7 +1201,7 @@ function QuizOption({ option, index, isCorrect, isSelected, showResult, percenta
       <div className="quiz-option-content">
         <span className="quiz-option-text">{option}</span>
         {showResult && (
-          <span className="quiz-percentage-label">{percentage}% choosing this</span>
+          <span className="quiz-votes-label">{votes} chose this</span>
         )}
       </div>
       
@@ -1307,15 +1309,19 @@ function QuizOption({ option, index, isCorrect, isSelected, showResult, percenta
           font-weight: 600;
         }
 
-        .quiz-percentage-label {
+        .quiz-votes-label {
           font-size: 12px;
           font-weight: 700;
-          color: rgba(255,255,255,0.3);
+          color: rgba(255,255,255,0.5);
           transition: color 0.3s ease;
         }
         
-        .quiz-option.correct .quiz-percentage-label {
-           color: rgba(34, 197, 94, 0.8);
+        .quiz-option.correct .quiz-votes-label {
+           color: rgba(34, 197, 94, 0.9);
+        }
+
+        .quiz-option.incorrect .quiz-votes-label {
+           color: rgba(239, 68, 68, 0.9);
         }
 
         .indicator-icon {
