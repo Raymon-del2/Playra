@@ -6,7 +6,7 @@ import { getVideos, Video } from '@/lib/supabase';
 import { formatDistanceToNow } from 'date-fns';
 import { getActiveProfile, getBatchProfiles } from '@/app/actions/profile';
 import CommunityPostCard from '@/components/CommunityPostCard';
-import { Clock, MoreVertical } from 'lucide-react';
+import { Clock, MoreVertical, Volume2, VolumeX } from 'lucide-react';
 import { useAmbientColor } from '@/hooks/useAmbientColor';
 
 const SKELETON_BATCH = Array.from({ length: 8 });
@@ -62,14 +62,36 @@ function VideoCard({
   const [durationSeconds, setDurationSeconds] = useState<number>(parseDurationToSeconds(video.duration));
   const [progressSeconds, setProgressSeconds] = useState<number>(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const previewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const progressKey = `watch_progress:${profileId || 'anon'}:${video.id}`;
   
   // Ambient glow color from thumbnail
-  const { color: glowColor } = useAmbientColor({ src: video.thumbnail_url });
+  const { color: extractedGlowColor } = useAmbientColor({ src: video.thumbnail_url });
+  const glowColor = extractedGlowColor !== 'rgba(100,100,100,0.2)' ? extractedGlowColor : 'rgba(150,150,150,0.3)';
 
   useEffect(() => {
     if (localVideoRef.current) localVideoRef.current.muted = isMuted;
   }, [isMuted]);
+
+  // 5 second delay before showing preview
+  useEffect(() => {
+    if (isHovered && !showPreview) {
+      previewTimerRef.current = setTimeout(() => {
+        setShowPreview(true);
+        localVideoRef.current?.play().catch(() => {});
+      }, 5000);
+    } else if (!isHovered) {
+      if (previewTimerRef.current) {
+        clearTimeout(previewTimerRef.current);
+      }
+      setShowPreview(false);
+      localVideoRef.current?.pause();
+    }
+    return () => {
+      if (previewTimerRef.current) clearTimeout(previewTimerRef.current);
+    };
+  }, [isHovered]);
 
   const handleLoadedMetadata = (e: React.SyntheticEvent<HTMLVideoElement>) => {
     const rawDur = e.currentTarget.duration;
@@ -81,38 +103,44 @@ function VideoCard({
 
   return (
     <div
-      className="group relative flex flex-col w-full"
+      className="group relative flex flex-col w-full p-3 -m-3 rounded-2xl transition-all duration-300 hover:bg-zinc-800/30"
       onMouseEnter={() => onHoverStart(video.id)}
       onMouseLeave={() => onHoverEnd(video.id)}
     >
-      {/* Ambient Glow Effect - Behind the card */}
+      {/* YouTube-Style Square Ambient Glow - Box Shadow */}
       <div 
-        className="absolute -inset-4 rounded-2xl blur-3xl opacity-0 group-hover:opacity-50 transition-opacity duration-700 -z-10 pointer-events-none"
-        style={{ backgroundColor: glowColor }}
+        className="absolute inset-0 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl pointer-events-none"
+        style={{
+          boxShadow: `0 0 60px 8px ${glowColor}60`,
+          backgroundColor: `${glowColor}10`,
+        }}
       />
-      
-      <Link href={video.is_short ? `/styles/${video.id}` : `/watch/${video.id}`} className="relative block w-full mb-3">
+
+      <Link href={video.is_short ? `/styles/${video.id}` : `/watch/${video.id}`} className="relative z-10 block w-full mb-3">
+        {/* Thumbnail */}
         <div className={`relative w-full overflow-hidden rounded-xl bg-zinc-900 ${video.is_short ? 'aspect-[9/16]' : 'aspect-video'} shadow-md transition-all duration-300`}>
           <img
             src={video.thumbnail_url || '/default-thumbnail.jpg'}
             alt={video.title}
-            className={`w-full h-full object-cover transition-opacity duration-300 ${isPreviewing ? 'opacity-0' : 'opacity-100'}`}
+            className={`w-full h-full object-cover transition-opacity duration-300 ${showPreview ? 'opacity-0' : 'opacity-100'}`}
           />
            <video
             ref={(el) => {
               localVideoRef.current = el;
               videoRef(el);
             }}
-            className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${isPreviewing ? 'opacity-100' : 'opacity-0'}`}
+            className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${showPreview ? 'opacity-100' : 'opacity-0'}`}
             src={video.video_url || undefined}
             muted={isMuted}
             playsInline
             loop
-            onLoadedMetadata={handleLoadedMetadata}
+            onTimeUpdate={(e) => {
+              setProgressSeconds(e.currentTarget.currentTime);
+            }}
           />
 
           {/* Red Splash Button Overlay */}
-          {!isPreviewing && (
+          {!showPreview && (
             <div 
               className="absolute inset-0 flex items-center justify-center bg-black/5 group-hover:bg-black/0 transition-colors z-30"
               onClick={(e) => {
@@ -166,11 +194,14 @@ function VideoCard({
               <img src="/styles-icon.svg?v=white" className="w-5 h-5 drop-shadow-md" alt="" />
             </div>
           )}
-          {/* Progress Bar */}
-          {isPreviewing && (
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20 z-30">
+          {/* Progress Bar - White (loaded) + Playra Color (playing) */}
+          {showPreview && (
+            <div className="absolute bottom-0 left-0 right-0 h-1 z-30">
+              {/* White background = loaded/buffered */}
+              <div className="absolute inset-0 bg-white/30" />
+              {/* Playra gradient = current progress */}
               <div 
-                className="h-full bg-red-600 transition-all duration-300"
+                className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-[#3B82F6] to-[#A855F7] transition-all duration-100"
                 style={{ width: `${(progressSeconds / durationSeconds) * 100}%` }}
               />
             </div>
@@ -182,8 +213,20 @@ function VideoCard({
             </div>
           )}
 
-          {/* YouTube-style hover icons */}
+          {/* YouTube-style hover icons with Mute */}
           <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-2 z-40">
+            {/* Mute/Unmute Button with X when muted */}
+            <button
+              onClick={(e) => { 
+                e.preventDefault(); 
+                e.stopPropagation(); 
+                onToggleMuted(video.id);
+              }}
+              className="bg-black/80 p-1.5 rounded-md text-white hover:bg-black transition-colors"
+              title={isMuted ? "Unmute" : "Mute"}
+            >
+              {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+            </button>
             <button
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); /* Logic to toggle watch later */ }}
               className="bg-black/80 p-1.5 rounded-md text-white hover:bg-black transition-colors"
@@ -202,7 +245,8 @@ function VideoCard({
         </div>
       </Link>
 
-      <div className="flex gap-3 px-2 sm:px-0">
+      {/* Text area - with ambient glow above */}
+      <div className="relative z-10 flex gap-3 px-2 sm:px-0">
         <Link href={`/channel/${video.channel_id}`} className="flex-shrink-0">
           <div className="w-9 h-9 rounded-full bg-zinc-800 overflow-hidden">
             <img

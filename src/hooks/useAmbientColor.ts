@@ -7,9 +7,8 @@ interface UseAmbientColorOptions {
   defaultColor?: string;
 }
 
-export function useAmbientColor({ src, defaultColor = 'rgba(255,255,255,0.1)' }: UseAmbientColorOptions) {
+export function useAmbientColor({ src, defaultColor = 'rgba(100,100,100,0.2)' }: UseAmbientColorOptions) {
   const [color, setColor] = useState(defaultColor);
-  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (!src) {
@@ -17,56 +16,76 @@ export function useAmbientColor({ src, defaultColor = 'rgba(255,255,255,0.1)' }:
       return;
     }
 
-    setIsLoading(true);
-    
     const img = new Image();
     img.crossOrigin = 'anonymous';
     
     img.onload = () => {
       try {
         const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
         if (!ctx) {
-          setIsLoading(false);
+          setColor(defaultColor);
           return;
         }
         
-        canvas.width = 100;
-        canvas.height = 100;
-        ctx.drawImage(img, 0, 0, 100, 100);
+        // Small canvas for performance
+        canvas.width = 50;
+        canvas.height = 50;
+        ctx.drawImage(img, 0, 0, 50, 50);
         
-        const imageData = ctx.getImageData(0, 0, 100, 100).data;
+        const imageData = ctx.getImageData(0, 0, 50, 50).data;
         let r = 0, g = 0, b = 0, count = 0;
         
-        for (let i = 0; i < imageData.length; i += 4) {
-          // Skip white/black pixels and transparent
+        // Sample every 4th pixel for performance
+        for (let i = 0; i < imageData.length; i += 16) {
+          const pixelR = imageData[i];
+          const pixelG = imageData[i + 1];
+          const pixelB = imageData[i + 2];
           const alpha = imageData[i + 3];
-          if (alpha > 200 && imageData[i] < 250 && imageData[i] > 10) {
-            r += imageData[i];
-            g += imageData[i + 1];
-            b += imageData[i + 2];
+          
+          // Skip transparent, white, black, and gray pixels
+          if (alpha > 100 && 
+              !(pixelR > 240 && pixelG > 240 && pixelB > 240) && // Not white
+              !(pixelR < 20 && pixelG < 20 && pixelB < 20) &&   // Not black
+              !(Math.abs(pixelR - pixelG) < 15 && Math.abs(pixelG - pixelB) < 15) // Not gray
+          ) {
+            r += pixelR;
+            g += pixelG;
+            b += pixelB;
             count++;
           }
         }
         
         if (count > 0) {
-          const dominantColor = `rgba(${Math.round(r/count)}, ${Math.round(g/count)}, ${Math.round(b/count)}, 0.4)`;
+          // Boost saturation
+          const avgR = r / count;
+          const avgG = g / count;
+          const avgB = b / count;
+          
+          // Find dominant color and boost it
+          const max = Math.max(avgR, avgG, avgB);
+          const boost = 1.3;
+          
+          const boostedR = Math.min(255, avgR * (avgR === max ? boost : 1));
+          const boostedG = Math.min(255, avgG * (avgG === max ? boost : 1));
+          const boostedB = Math.min(255, avgB * (avgB === max ? boost : 1));
+          
+          const dominantColor = `rgba(${Math.round(boostedR)}, ${Math.round(boostedG)}, ${Math.round(boostedB)}, 0.4)`;
           setColor(dominantColor);
+        } else {
+          setColor(defaultColor);
         }
       } catch (e) {
         setColor(defaultColor);
-      } finally {
-        setIsLoading(false);
       }
     };
 
     img.onerror = () => {
       setColor(defaultColor);
-      setIsLoading(false);
     };
 
     img.src = src;
   }, [src, defaultColor]);
 
-  return { color, isLoading };
+  return { color };
 }
