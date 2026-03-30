@@ -1,9 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { FastAverageColor } from 'fast-average-color';
-
-const fac = new FastAverageColor();
+import { useState, useEffect } from 'react';
 
 interface UseAmbientColorOptions {
   src: string | undefined;
@@ -27,13 +24,35 @@ export function useAmbientColor({ src, defaultColor = 'rgba(255,255,255,0.1)' }:
     
     img.onload = () => {
       try {
-        const result = fac.getColor(img, { 
-          algorithm: 'dominant',
-          mode: 'precision'
-        });
-        // Convert to RGBA with lower opacity for ambient glow
-        const rgba = result.rgb.replace('rgb', 'rgba').replace(')', ', 0.35)');
-        setColor(rgba);
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          setIsLoading(false);
+          return;
+        }
+        
+        canvas.width = 100;
+        canvas.height = 100;
+        ctx.drawImage(img, 0, 0, 100, 100);
+        
+        const imageData = ctx.getImageData(0, 0, 100, 100).data;
+        let r = 0, g = 0, b = 0, count = 0;
+        
+        for (let i = 0; i < imageData.length; i += 4) {
+          // Skip white/black pixels and transparent
+          const alpha = imageData[i + 3];
+          if (alpha > 200 && imageData[i] < 250 && imageData[i] > 10) {
+            r += imageData[i];
+            g += imageData[i + 1];
+            b += imageData[i + 2];
+            count++;
+          }
+        }
+        
+        if (count > 0) {
+          const dominantColor = `rgba(${Math.round(r/count)}, ${Math.round(g/count)}, ${Math.round(b/count)}, 0.4)`;
+          setColor(dominantColor);
+        }
       } catch (e) {
         setColor(defaultColor);
       } finally {

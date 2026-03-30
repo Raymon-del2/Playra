@@ -7,6 +7,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { getActiveProfile, getBatchProfiles } from '@/app/actions/profile';
 import CommunityPostCard from '@/components/CommunityPostCard';
 import { Clock, MoreVertical } from 'lucide-react';
+import { useAmbientColor } from '@/hooks/useAmbientColor';
 
 const SKELETON_BATCH = Array.from({ length: 8 });
 
@@ -62,6 +63,9 @@ function VideoCard({
   const [progressSeconds, setProgressSeconds] = useState<number>(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const progressKey = `watch_progress:${profileId || 'anon'}:${video.id}`;
+  
+  // Ambient glow color from thumbnail
+  const { color: glowColor } = useAmbientColor({ src: video.thumbnail_url });
 
   useEffect(() => {
     if (localVideoRef.current) localVideoRef.current.muted = isMuted;
@@ -81,6 +85,12 @@ function VideoCard({
       onMouseEnter={() => onHoverStart(video.id)}
       onMouseLeave={() => onHoverEnd(video.id)}
     >
+      {/* Ambient Glow Effect - Behind the card */}
+      <div 
+        className="absolute -inset-4 rounded-2xl blur-3xl opacity-0 group-hover:opacity-50 transition-opacity duration-700 -z-10 pointer-events-none"
+        style={{ backgroundColor: glowColor }}
+      />
+      
       <Link href={video.is_short ? `/styles/${video.id}` : `/watch/${video.id}`} className="relative block w-full mb-3">
         <div className={`relative w-full overflow-hidden rounded-xl bg-zinc-900 ${video.is_short ? 'aspect-[9/16]' : 'aspect-video'} shadow-md transition-all duration-300`}>
           <img
