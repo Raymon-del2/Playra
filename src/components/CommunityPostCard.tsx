@@ -276,30 +276,16 @@ export default function CommunityPostCard({ post, onVote, onQuizAnswer }: PostPr
                   const hasVoted = votedOption !== null;
 
                   return (
-                    <button
+                    <PollOptionWithGlow
                       key={index}
+                      option={option}
+                      index={index}
+                      votes={votes}
+                      barWidth={barWidth}
+                      isSelected={isSelected}
+                      hasVoted={hasVoted}
                       onClick={() => handleVote(index)}
-                      disabled={hasVoted}
-                      className={`poll-option-new ${isSelected ? 'selected' : ''} ${hasVoted ? 'voted' : ''}`}
-                    >
-                      {/* Animated vote bar */}
-                      {hasVoted && (
-                        <div 
-                          className="poll-vote-bar" 
-                          style={{ width: `${barWidth}%` }}
-                        />
-                      )}
-                      
-                      <div className="poll-option-content">
-                        {option.image_url && (
-                          <img src={option.image_url} className="poll-option-img" alt="" />
-                        )}
-                        <span className="poll-option-text">{typeof option === 'string' ? option : option.text}</span>
-                        {hasVoted && (
-                          <span className="poll-votes-label">{votes} chose this</span>
-                        )}
-                      </div>
-                    </button>
+                    />
                   );
                 });
               })()}
@@ -1677,4 +1663,133 @@ function useIsMobile() {
   }, []);
 
   return isMobile;
+}
+
+// Poll Option with Ambient Glow Effect
+function PollOptionWithGlow({ option, index, votes, barWidth, isSelected, hasVoted, onClick }: any) {
+  const [glowColor, setGlowColor] = useState('rgba(255,255,255,0.1)');
+  const [isHovered, setIsHovered] = useState(false);
+  
+  useEffect(() => {
+    if (!option.image_url) return;
+    
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        
+        canvas.width = 50;
+        canvas.height = 50;
+        ctx.drawImage(img, 0, 0, 50, 50);
+        
+        const imageData = ctx.getImageData(0, 0, 50, 50).data;
+        let r = 0, g = 0, b = 0, count = 0;
+        
+        for (let i = 0; i < imageData.length; i += 4) {
+          // Skip white/black pixels
+          if (imageData[i] < 250 && imageData[i] > 10) {
+            r += imageData[i];
+            g += imageData[i + 1];
+            b += imageData[i + 2];
+            count++;
+          }
+        }
+        
+        if (count > 0) {
+          const color = `rgba(${Math.round(r/count)}, ${Math.round(g/count)}, ${Math.round(b/count)}, 0.4)`;
+          setGlowColor(color);
+        }
+      } catch (e) {
+        // Fallback to default
+      }
+    };
+    
+    img.src = option.image_url;
+  }, [option.image_url]);
+
+  return (
+    <button
+      onClick={onClick}
+      disabled={hasVoted}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className={`poll-option-glow ${isSelected ? 'selected' : ''} ${hasVoted ? 'voted' : ''}`}
+    >
+      {/* Ambient Glow Layer */}
+      {option.image_url && (
+        <div 
+          className="ambient-glow"
+          style={{ 
+            backgroundColor: glowColor,
+            opacity: isHovered ? 0.6 : 0,
+          }}
+        />
+      )}
+      
+      {/* Animated vote bar */}
+      {hasVoted && (
+        <div 
+          className="poll-vote-bar" 
+          style={{ width: `${barWidth}%` }}
+        />
+      )}
+      
+      <div className="poll-option-content">
+        {option.image_url && (
+          <img src={option.image_url} className="poll-option-img" alt="" crossOrigin="anonymous" />
+        )}
+        <span className="poll-option-text">{typeof option === 'string' ? option : option.text}</span>
+        {hasVoted && (
+          <span className="poll-votes-label">{votes} chose this</span>
+        )}
+      </div>
+      
+      <style jsx>{`
+        .poll-option-glow {
+          position: relative;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 16px;
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 16px;
+          text-align: left;
+          cursor: pointer;
+          transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+          overflow: hidden;
+          width: 100%;
+          min-height: 64px;
+        }
+        
+        .poll-option-glow:hover:not(:disabled) {
+          background: rgba(255,255,255,0.08);
+          border-color: rgba(255,255,255,0.15);
+          transform: translateY(-2px);
+        }
+        
+        .poll-option-glow.selected {
+          background: rgba(255,255,255,0.12);
+        }
+        
+        .poll-option-glow:disabled {
+          cursor: default;
+        }
+        
+        .ambient-glow {
+          position: absolute;
+          inset: -20px;
+          filter: blur(30px);
+          border-radius: 30px;
+          z-index: 0;
+          transition: opacity 0.5s ease;
+          pointer-events: none;
+        }
+      `}</style>
+    </button>
+  );
 }
