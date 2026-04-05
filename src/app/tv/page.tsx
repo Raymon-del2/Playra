@@ -123,6 +123,11 @@ export default function TVPage() {
         </div>
       </div>
 
+      {/* Coming soon banner */}
+      <div className="bg-yellow-500/20 border-b border-yellow-500/30 px-8 py-3">
+        <p className="text-yellow-400 text-center font-medium">We will update the TV version soon</p>
+      </div>
+
       {/* Categories */}
       <div className={`px-8 py-4 flex gap-4 ${focusedSection === 'categories' ? 'bg-white/5' : ''}`}>
         {categories.map((cat, idx) => (
