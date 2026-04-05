@@ -17,7 +17,7 @@ async function migrateTable(tableName: string, batchSize = 10) {
   try {
     // Get total count
     const countResult = await turso.execute(`SELECT COUNT(*) as count FROM ${tableName}`);
-    const total = countResult.rows[0]?.count || 0;
+    const total = Number(countResult.rows[0]?.count) || 0;
     console.log(`  Total: ${total}`);
     
     if (total === 0) {
