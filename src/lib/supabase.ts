@@ -951,31 +951,43 @@ export async function getTopChannels(limit = 10): Promise<Channel[]> {
     const { data: profiles, error } = await engagementSupabase
         .from('profiles')
         .select('id, name, avatar')
-        .order('subscribers', { ascending: false })
         .limit(limit);
 
-    if (error) throw error;
+    if (error) {
+        console.error('getTopChannels error:', error);
+        return [];
+    }
 
-    // Get subscriber counts for each profile
-    const channelIds = profiles?.map(p => p.id) || [];
-    if (channelIds.length === 0) return [];
+    if (!profiles || profiles.length === 0) return [];
 
-    const { data: subs } = await engagementSupabase
-        .from('subscriptions')
-        .select('channel_id')
-        .in('channel_id', channelIds);
+    // Try to get subscriber counts from subscriptions table
+    const channelIds = profiles.map(p => p.id);
+    try {
+        const { data: subs } = await engagementSupabase
+            .from('subscriptions')
+            .select('channel_id')
+            .in('channel_id', channelIds);
 
-    const subscriberCounts = new Map<string, number>();
-    subs?.forEach(s => {
-        subscriberCounts.set(s.channel_id, (subscriberCounts.get(s.channel_id) || 0) + 1);
-    });
+        const subscriberCounts = new Map<string, number>();
+        subs?.forEach(s => {
+            subscriberCounts.set(s.channel_id, (subscriberCounts.get(s.channel_id) || 0) + 1);
+        });
 
-    return (profiles || []).map(p => ({
-        id: p.id,
-        name: p.name,
-        avatar: p.avatar,
-        subscribers: subscriberCounts.get(p.id) || 0
-    }));
+        return profiles.map(p => ({
+            id: p.id,
+            name: p.name,
+            avatar: p.avatar,
+            subscribers: subscriberCounts.get(p.id) || 0
+        }));
+    } catch {
+        // If subscriptions table doesn't exist or fails, return profiles with 0 subscribers
+        return profiles.map(p => ({
+            id: p.id,
+            name: p.name,
+            avatar: p.avatar,
+            subscribers: 0
+        }));
+    }
 }
 
 // ============== TRENDING ==============

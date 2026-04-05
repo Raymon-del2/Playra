@@ -21,6 +21,8 @@ export default function TVPage() {
           getVideos(50),
           getTopChannels(10)
         ]);
+        console.log('TV page - Videos loaded:', videosData?.length);
+        console.log('TV page - Channels loaded:', channelsData?.length);
         setVideos(videosData || []);
         setChannels(channelsData || []);
       } catch (error) {
@@ -43,6 +45,10 @@ export default function TVPage() {
     }
     return !v.is_short;
   });
+
+  useEffect(() => {
+    console.log('TV page - Total videos:', videos.length, 'Filtered:', filteredVideos.length);
+  }, [filteredVideos, videos.length]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     const maxIndex = focusedSection === 'categories' 
@@ -139,65 +145,73 @@ export default function TVPage() {
       {/* Videos Grid */}
       <div className="px-8 py-4">
         <h2 className="text-2xl font-bold mb-4">Videos</h2>
-        <div className="grid grid-cols-4 lg:grid-cols-6 gap-4">
-          {filteredVideos.slice(0, 12).map((video, idx) => (
-            <Link
-              key={video.id}
-              href={`/watch/${video.id}`}
-              className={`block transition-all ${
-                focusedSection === 'videos' && selectedIndex === idx ? 'ring-4 ring-white scale-105' : ''
-              }`}
-              onMouseEnter={() => { if (focusedSection !== 'categories') { setSelectedIndex(idx); setFocusedSection('videos'); } }}
-            >
-              <div className="relative aspect-video bg-zinc-800 rounded-lg overflow-hidden">
-                <img
-                  src={video.thumbnail_url || '/default-thumbnail.jpg'}
-                  alt={video.title}
-                  className="w-full h-full object-cover"
-                />
-                {video.duration && (
-                  <div className="absolute bottom-2 right-2 bg-black/80 text-white text-sm px-2 py-0.5 rounded">
-                    {video.duration}
-                  </div>
-                )}
-              </div>
-              <div className="mt-2">
-                <h3 className="font-semibold text-white line-clamp-2">{video.title}</h3>
-                <p className="text-zinc-400 text-sm mt-1">{video.channel_name}</p>
-                <p className="text-zinc-500 text-sm">{video.views?.toLocaleString()} views</p>
-              </div>
-            </Link>
-          ))}
-        </div>
+        {filteredVideos.length > 0 ? (
+          <div className="grid grid-cols-4 lg:grid-cols-6 gap-4">
+            {filteredVideos.slice(0, 12).map((video, idx) => (
+              <Link
+                key={video.id}
+                href={`/watch/${video.id}`}
+                className={`block transition-all ${
+                  focusedSection === 'videos' && selectedIndex === idx ? 'ring-4 ring-white scale-105' : ''
+                }`}
+                onMouseEnter={() => { if (focusedSection !== 'categories') { setSelectedIndex(idx); setFocusedSection('videos'); } }}
+              >
+                <div className="relative aspect-video bg-zinc-800 rounded-lg overflow-hidden">
+                  <img
+                    src={video.thumbnail_url || '/default-thumbnail.jpg'}
+                    alt={video.title}
+                    className="w-full h-full object-cover"
+                  />
+                  {video.duration && (
+                    <div className="absolute bottom-2 right-2 bg-black/80 text-white text-sm px-2 py-0.5 rounded">
+                      {video.duration}
+                    </div>
+                  )}
+                </div>
+                <div className="mt-2">
+                  <h3 className="font-semibold text-white line-clamp-2">{video.title}</h3>
+                  <p className="text-zinc-400 text-sm mt-1">{video.channel_name}</p>
+                  <p className="text-zinc-500 text-sm">{video.views?.toLocaleString()} views</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <p className="text-zinc-500 text-lg">No videos found</p>
+        )}
       </div>
 
       {/* Channels */}
       <div className="px-8 py-4 pb-12">
         <h2 className="text-2xl font-bold mb-4">Popular Channels</h2>
-        <div className="flex gap-6 overflow-x-auto pb-4">
-          {channels.map((channel, idx) => (
-            <Link
-              key={channel.id}
-              href={`/channel/${channel.id}`}
-              className={`flex-shrink-0 text-center transition-all ${
-                focusedSection === 'channels' && selectedIndex === idx ? 'ring-4 ring-white rounded-full' : ''
-              }`}
-              onMouseEnter={() => { setSelectedIndex(idx); setFocusedSection('channels'); }}
-            >
-              <div className="w-24 h-24 rounded-full bg-zinc-800 overflow-hidden mx-auto">
-                {channel.avatar ? (
-                  <img src={channel.avatar} alt={channel.name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-3xl font-bold text-zinc-500">
-                    {channel.name?.charAt(0).toUpperCase()}
-                  </div>
-                )}
-              </div>
-              <p className="mt-2 text-white font-medium text-sm truncate w-24">{channel.name}</p>
-              <p className="text-zinc-500 text-xs">{channel.subscribers?.toLocaleString()} subs</p>
-            </Link>
-          ))}
-        </div>
+        {channels.length > 0 ? (
+          <div className="flex gap-6 overflow-x-auto pb-4">
+            {channels.map((channel, idx) => (
+              <Link
+                key={channel.id}
+                href={`/channel/${channel.id}`}
+                className={`flex-shrink-0 text-center transition-all ${
+                  focusedSection === 'channels' && selectedIndex === idx ? 'ring-4 ring-white rounded-full' : ''
+                }`}
+                onMouseEnter={() => { setSelectedIndex(idx); setFocusedSection('channels'); }}
+              >
+                <div className="w-24 h-24 rounded-full bg-zinc-800 overflow-hidden mx-auto">
+                  {channel.avatar ? (
+                    <img src={channel.avatar} alt={channel.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-3xl font-bold text-zinc-500">
+                      {channel.name?.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                <p className="mt-2 text-white font-medium text-sm truncate w-24">{channel.name}</p>
+                <p className="text-zinc-500 text-xs">{channel.subscribers?.toLocaleString()} subs</p>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <p className="text-zinc-500 text-lg">No channels found</p>
+        )}
       </div>
     </div>
   );
