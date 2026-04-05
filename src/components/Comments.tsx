@@ -11,6 +11,7 @@ import {
     deleteComment,
     getCommentCount,
 } from '@/app/actions/comments';
+import { getActiveProfile } from '@/app/actions/profile';
 import FounderBadge from './FounderBadge';
 
 interface CommentsProps {
@@ -229,10 +230,31 @@ function Comments({ videoId, profileId, profileName, profileAvatar }: CommentsPr
     const [sortBy, setSortBy] = useState<'top' | 'newest'>('top');
     const [showSortMenu, setShowSortMenu] = useState(false);
     const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
+    
+    // Fetch current profile directly from cookie to get the latest active profile
+    const [currentProfileId, setCurrentProfileId] = useState<string | null>(null);
+    const [currentProfileName, setCurrentProfileName] = useState<string>('');
+    const [currentProfileAvatar, setCurrentProfileAvatar] = useState<string>('');
+
+    useEffect(() => {
+        // Fetch active profile directly
+        getActiveProfile().then(profile => {
+            if (profile) {
+                setCurrentProfileId(profile.id);
+                setCurrentProfileName(profile.name);
+                setCurrentProfileAvatar(profile.avatar || '');
+            }
+        }).catch(console.error);
+    }, []);
+
+    // Use currentProfileId for comment operations, fallback to prop
+    const effectiveProfileId = currentProfileId || profileId;
+    const effectiveProfileName = currentProfileName || profileName || '';
+    const effectiveProfileAvatar = currentProfileAvatar || profileAvatar || '';
 
     useEffect(() => {
         loadComments();
-    }, [videoId, profileId]);
+    }, [videoId, effectiveProfileId]);
 
     const loadComments = async () => {
         try {
@@ -240,7 +262,7 @@ function Comments({ videoId, profileId, profileName, profileAvatar }: CommentsPr
             console.log('Loading comments for video:', videoId);
             
             const [commentsData, count] = await Promise.all([
-                getVideoComments(videoId, profileId || undefined).catch(err => {
+                getVideoComments(videoId, effectiveProfileId || undefined).catch(err => {
                     console.error('getVideoComments error:', err);
                     return [];
                 }),
@@ -264,7 +286,7 @@ function Comments({ videoId, profileId, profileName, profileAvatar }: CommentsPr
     };
 
     const handleSubmitComment = async () => {
-        if (!profileId || !newComment.trim()) return;
+        if (!effectiveProfileId || !newComment.trim()) return;
 
         const content = newComment.trim();
         const tempId = `temp-${Date.now()}`;
@@ -273,14 +295,14 @@ function Comments({ videoId, profileId, profileName, profileAvatar }: CommentsPr
         const optimisticComment: Comment = {
             id: tempId,
             video_id: videoId,
-            profile_id: profileId,
+            profile_id: effectiveProfileId,
             parent_id: null,
-            profile_name: profileName || 'You',
-            profile_avatar: profileAvatar || undefined,
             content,
             likes: 0,
             dislikes: 0,
             created_at: new Date().toISOString(),
+            profile_name: effectiveProfileName,
+            profile_avatar: effectiveProfileAvatar || undefined,
             user_liked: false,
             user_disliked: false,
             replies: [],
@@ -293,7 +315,7 @@ function Comments({ videoId, profileId, profileName, profileAvatar }: CommentsPr
         
         // Save to DB in background (silent) - no reload needed
         try {
-            await addComment(videoId, profileId, content);
+            await addComment(videoId, effectiveProfileId, content);
             // Silent refresh to get real ID without UI flicker
             loadComments().catch(() => {});
         } catch (error) {
@@ -302,7 +324,7 @@ function Comments({ videoId, profileId, profileName, profileAvatar }: CommentsPr
     };
 
     const handleSubmitReply = async (parentId: string) => {
-        if (!profileId || !replyContent.trim()) return;
+        if (!effectiveProfileId || !replyContent.trim()) return;
 
         const content = replyContent.trim();
         const tempId = `temp-reply-${Date.now()}`;
@@ -311,10 +333,10 @@ function Comments({ videoId, profileId, profileName, profileAvatar }: CommentsPr
         const optimisticReply: Comment = {
             id: tempId,
             video_id: videoId,
-            profile_id: profileId,
+            profile_id: effectiveProfileId,
             parent_id: parentId,
-            profile_name: profileName || 'You',
-            profile_avatar: profileAvatar || undefined,
+            profile_name: effectiveProfileName || 'You',
+            profile_avatar: effectiveProfileAvatar || undefined,
             content,
             likes: 0,
             dislikes: 0,
@@ -340,7 +362,7 @@ function Comments({ videoId, profileId, profileName, profileAvatar }: CommentsPr
         
         // Save to DB in background (silent) - no reload needed
         try {
-            await addComment(videoId, profileId, content, parentId);
+            await addComment(videoId, effectiveProfileId, content, parentId);
             // Silent refresh to get real data without UI flicker
             loadComments().catch(() => {});
         } catch (error) {
@@ -349,7 +371,7 @@ function Comments({ videoId, profileId, profileName, profileAvatar }: CommentsPr
     };
 
     const handleLike = useCallback(async (commentId: string, currentlyLiked: boolean) => {
-        if (!profileId) return;
+        if (!effectiveProfileId) return;
         
         // Optimistic update - show immediately for both comments and replies
         setComments(prev => prev.map(c => {
@@ -384,14 +406,14 @@ function Comments({ videoId, profileId, profileName, profileAvatar }: CommentsPr
         
         // Save to DB in background (silent)
         try {
-            await engageComment(commentId, profileId, currentlyLiked ? null : 'like');
+            await engageComment(commentId, effectiveProfileId, currentlyLiked ? null : 'like');
         } catch (error) {
             console.error('Failed to like comment:', error);
         }
-    }, [profileId]);
+    }, [effectiveProfileId]);
 
     const handleDislike = useCallback(async (commentId: string, currentlyDisliked: boolean) => {
-        if (!profileId) return;
+        if (!effectiveProfileId) return;
         
         // Optimistic update - show immediately for both comments and replies
         setComments(prev => prev.map(c => {
@@ -428,21 +450,21 @@ function Comments({ videoId, profileId, profileName, profileAvatar }: CommentsPr
         
         // Save to DB in background (silent)
         try {
-            await engageComment(commentId, profileId, currentlyDisliked ? null : 'dislike');
+            await engageComment(commentId, effectiveProfileId, currentlyDisliked ? null : 'dislike');
         } catch (error) {
             console.error('Failed to dislike comment:', error);
         }
-    }, [profileId]);
+    }, [effectiveProfileId]);
 
     const handleDelete = useCallback(async (commentId: string) => {
-        if (!profileId) return;
+        if (!effectiveProfileId) return;
         try {
-            await deleteComment(commentId, profileId);
+            await deleteComment(commentId, effectiveProfileId);
             await loadComments();
         } catch (error) {
             console.error('Failed to delete comment:', error);
         }
-    }, [profileId]);
+    }, [effectiveProfileId]);
 
     const toggleReplies = useCallback((commentId: string) => {
         setExpandedReplies(prev => {

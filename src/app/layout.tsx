@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
+import { Anton } from "next/font/google";
 import "./globals.css";
 import LayoutShell from "@/components/LayoutShell";
+
+const anton = Anton({ weight: "400", subsets: ["latin"], variable: "--font-anton" });
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
@@ -63,7 +66,7 @@ export default async function RootLayout({
         <link rel="shortcut icon" href="/icon-192x192.png" />
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
       </head>
-      <body className="bg-[#0f0f0f] text-white selection:bg-blue-500/30" suppressHydrationWarning>
+      <body className={`bg-[#0f0f0f] text-white selection:bg-blue-500/30 ${anton.variable}`} suppressHydrationWarning>
         <LayoutShell activeProfile={activeProfile}>{children}</LayoutShell>
       </body>
     </html>

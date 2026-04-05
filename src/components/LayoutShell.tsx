@@ -8,7 +8,7 @@ import MobileDrawer from '@/components/MobileDrawer';
 import TopLoader from '@/components/TopLoader';
 import AppInstallBanner from '@/components/AppInstallBanner';
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
-import SplashScreen from '@/components/SplashScreen';
+import LoadingScreen from '@/components/LoadingScreen';
 import WhoIsWatchingOverlay from '@/components/WhoIsWatchingOverlay';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -56,14 +56,9 @@ export default function LayoutShell({ children, activeProfile }: LayoutShellProp
   useEffect(() => {
     setMounted(true);
 
-    // Initial load check
-    const hasSeenSplash = sessionStorage.getItem('playra_splash_seen');
-    if (!hasSeenSplash) {
-      setShowSplash(true);
-      sessionStorage.setItem('playra_splash_seen', 'true');
-    } else {
-      setIsFirstLoad(false);
-    }
+    // Initial load check - show every time for now
+    setShowSplash(true);
+    sessionStorage.setItem('playra_splash_seen', 'true');
 
     // Auth Listener
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
@@ -243,7 +238,7 @@ export default function LayoutShell({ children, activeProfile }: LayoutShellProp
       <ServiceWorkerRegister />
 
       {showSplash && (
-        <SplashScreen onFinish={handleSplashFinish} />
+        <LoadingScreen />
       )}
 
       {showWhoIsWatching && !showSplash && (

@@ -1,7 +1,10 @@
 'use server';
 
-import { turso } from "@/lib/turso";
-import { initDatabase } from "@/lib/db-setup";
+import { createClient } from '@supabase/supabase-js';
+
+const newSupabaseUrl = 'https://cbfybannksdcajiiwjfl.supabase.co';
+const newSupabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNiZnliYW5ua3NkY2FqaWl3amZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyMzkwNDAsImV4cCI6MjA5MDgxNTA0MH0.qN6dqfAR5qIOh1T4ctRacBv0J12TdXHc4-NiGe2nLe4';
+const newSupabase = createClient(newSupabaseUrl, newSupabaseAnonKey);
 
 export async function syncUserToDb(userData: {
     id: string;
@@ -10,57 +13,41 @@ export async function syncUserToDb(userData: {
     account_type?: string;
 }) {
     try {
-        // Ensure tables exist (one-time check essentially)
-        await initDatabase();
-
         const { id, email, username, account_type = 'adult' } = userData;
 
-        // Get and increment join_order atomically
-        const counterResult = await turso.execute({
-            sql: `UPDATE join_order_counter SET last_order = last_order + 1 WHERE id = 1 RETURNING last_order`,
-            args: []
-        });
-        
-        const joinOrder = counterResult.rows[0]?.last_order as number || 0;
+        // Check if user exists
+        const { data: existingUser } = await newSupabase
+            .from('users')
+            .select('id')
+            .eq('id', id)
+            .maybeSingle();
 
-        // Use an UPSERT pattern to create or update user
-        await turso.execute({
-            sql: `
-                INSERT INTO users (id, email, username, account_type, join_order)
-                VALUES (?, ?, ?, ?, ?)
-                ON CONFLICT(id) DO UPDATE SET
-                    email = excluded.email,
-                    username = COALESCE(excluded.username, users.username),
-                    account_type = COALESCE(excluded.account_type, users.account_type)
-            `,
-            args: [id, email, username || null, account_type, joinOrder]
-        });
+        if (!existingUser) {
+            // Create new user
+            await newSupabase.from('users').insert({
+                id,
+                email,
+                username: username || null,
+                account_type,
+                join_order: Math.floor(Math.random() * 10000)
+            });
 
-        // Only create a default channel if the user doesn't have any profiles
-        const existingChannels = await turso.execute({
-            sql: "SELECT COUNT(*) as count FROM channels WHERE user_id = ?",
-            args: [id]
-        });
-        
-        const hasProfiles = (existingChannels.rows[0]?.count as number || 0) > 0;
-        
-        if (!hasProfiles) {
-            // User has no profiles, create a default one
-            const channelId = `ch_${id}`;
-            const channelName = username || email.split('@')[0];
+            // Create default profile
+            const profileId = `ch_${id}`;
+            const profileName = username || email.split('@')[0];
 
-            await turso.execute({
-                sql: `
-                    INSERT INTO channels (id, user_id, name, account_type)
-                    VALUES (?, ?, ?, 'general')
-                `,
-                args: [channelId, id, channelName]
+            await newSupabase.from('profiles').insert({
+                id: profileId,
+                user_id: id,
+                name: profileName,
+                account_type: 'general',
+                verified: false
             });
         }
 
         return { success: true };
     } catch (error) {
-        console.error("Error syncing user to Turso:", error);
+        console.error("Error syncing user:", error);
         return { success: false, error: "Database synchronization failed" };
     }
 }
@@ -72,29 +59,19 @@ export async function updateUserProfile(userId: string, data: {
     try {
         const { username, bio } = data;
 
-        // Update user in Turso
-        await turso.execute({
-            sql: `
-                UPDATE users 
-                SET username = ?
-                WHERE id = ?
-            `,
-            args: [username, userId]
-        });
+        // Update user
+        await newSupabase.from('users')
+            .update({ username })
+            .eq('id', userId);
 
-        // Update channel name in Turso
-        await turso.execute({
-            sql: `
-                UPDATE channels
-                SET name = ?, description = ?
-                WHERE user_id = ?
-            `,
-            args: [username, bio || null, userId]
-        });
+        // Update profile name
+        await newSupabase.from('profiles')
+            .update({ name: username, description: bio || null })
+            .eq('user_id', userId);
 
         return { success: true };
     } catch (error) {
-        console.error("Error updating profile in Turso:", error);
+        console.error("Error updating profile:", error);
         return { success: false, error: "Profile synchronization failed" };
     }
 }

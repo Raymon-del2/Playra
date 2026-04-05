@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { turso } from '@/lib/turso';
 import { supabase } from '@/lib/supabase';
 
 export async function GET(
@@ -12,14 +11,17 @@ export async function GET(
   }
 
   try {
-    const result = await turso.execute({
-      sql: 'SELECT avatar FROM channels WHERE id = ?',
-      args: [channelId],
-    });
-    const avatar = (result.rows[0]?.avatar as string | null) || null;
+    // Get avatar from profiles table in Supabase
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('avatar')
+      .eq('id', channelId)
+      .maybeSingle();
+
+    const avatar = profile?.avatar || null;
 
     // Sync into Supabase videos so subsequent fetches use the fresh avatar
-    if (avatar && supabase) {
+    if (avatar) {
       await supabase
         .from('videos')
         .update({ channel_avatar: avatar })

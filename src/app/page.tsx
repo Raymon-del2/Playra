@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getVideos, Video } from '@/lib/supabase';
 import { formatDistanceToNow } from 'date-fns';
@@ -43,7 +44,7 @@ function VideoCard({
   isMuted,
   onHoverStart,
   onHoverEnd,
-  onToggleMuted,
+  onToggleMute,
   videoRef,
   profileId
 }: {
@@ -53,34 +54,35 @@ function VideoCard({
   isMuted: boolean;
   onHoverStart: (id: string) => void;
   onHoverEnd: (id: string) => void;
-  onToggleMuted: (id: string) => void;
+  onToggleMute: () => void;
   videoRef: (el: HTMLVideoElement | null) => void;
   profileId?: string | null;
 }) {
+  const router = useRouter();
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const [computedDuration, setComputedDuration] = useState<string | null>(video.duration || null);
   const [durationSeconds, setDurationSeconds] = useState<number>(parseDurationToSeconds(video.duration));
-  const [progressSeconds, setProgressSeconds] = useState<number>(0);
-  const [isAnimating, setIsAnimating] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [progressSeconds, setProgressSeconds] = useState<number>(0);
+  const [bufferedSeconds, setBufferedSeconds] = useState<number>(0);
+  const [hoverTime, setHoverTime] = useState<number | null>(null);
+  const [hoverX, setHoverX] = useState<number>(0);
+  const progressRef = useRef<HTMLDivElement>(null);
   const previewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const progressKey = `watch_progress:${profileId || 'anon'}:${video.id}`;
   
-  // Ambient glow color from thumbnail
   const { color: extractedGlowColor } = useAmbientColor({ src: video.thumbnail_url });
   const glowColor = extractedGlowColor !== 'rgba(100,100,100,0.2)' ? extractedGlowColor : 'rgba(150,150,150,0.3)';
+  // Extract just the RGB for hover background
+  const hoverBgColor = glowColor.replace('0.4)', '0.15)').replace('0.2)', '0.15)').replace('0.3)', '0.15)');
 
-  useEffect(() => {
-    if (localVideoRef.current) localVideoRef.current.muted = isMuted;
-  }, [isMuted]);
-
-  // 5 second delay before showing preview
+  // Play after 3 second delay on hover, muted by default
   useEffect(() => {
     if (isHovered && !showPreview) {
       previewTimerRef.current = setTimeout(() => {
         setShowPreview(true);
         localVideoRef.current?.play().catch(() => {});
-      }, 5000);
+      }, 3000);
     } else if (!isHovered) {
       if (previewTimerRef.current) {
         clearTimeout(previewTimerRef.current);
@@ -93,6 +95,14 @@ function VideoCard({
     };
   }, [isHovered]);
 
+  // Mute when hovering (preview mode), but allow user to unmute
+  useEffect(() => {
+    if (localVideoRef.current) {
+      // isMuted = false (default) = muted, isMuted = true = unmuted
+      localVideoRef.current.muted = !isMuted;
+    }
+  }, [isMuted, isHovered]);
+
   const handleLoadedMetadata = (e: React.SyntheticEvent<HTMLVideoElement>) => {
     const rawDur = e.currentTarget.duration;
     if (Number.isFinite(rawDur) && rawDur > 0) {
@@ -101,12 +111,43 @@ function VideoCard({
     }
   };
 
+  const handleProgressHover = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    if (!progressRef.current || durationSeconds === 0) return;
+    const rect = progressRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const percentage = Math.max(0, Math.min(1, x / rect.width));
+    const time = percentage * durationSeconds;
+    setHoverTime(time);
+    setHoverX(x);
+  };
+
+  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!localVideoRef.current || !progressRef.current || durationSeconds === 0) return;
+    const rect = progressRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const percentage = Math.max(0, Math.min(1, x / rect.width));
+    const time = percentage * durationSeconds;
+    localVideoRef.current.currentTime = time;
+    setProgressSeconds(time);
+  };
+
   return (
     <div
-      className="group relative flex flex-col w-full p-3 -m-3 rounded-2xl transition-all duration-300 hover:bg-zinc-800/30"
+      className="group relative flex flex-col w-full p-3 -m-3 rounded-2xl transition-all duration-300"
+      style={{ 
+        ['--hover-bg' as string]: hoverBgColor 
+      }}
       onMouseEnter={() => onHoverStart(video.id)}
       onMouseLeave={() => onHoverEnd(video.id)}
     >
+      {/* Hover background layer */}
+      <div 
+        className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+        style={{ backgroundColor: hoverBgColor }}
+      />
       {/* YouTube-Style Square Ambient Glow - Box Shadow */}
       <div 
         className="absolute inset-0 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl pointer-events-none"
@@ -116,9 +157,9 @@ function VideoCard({
         }}
       />
 
-      <Link href={video.is_short ? `/styles/${video.id}` : `/watch/${video.id}`} className="relative z-10 block w-full mb-3">
+      <div className="relative z-10 block w-full" onClick={() => router.push(video.is_short ? `/styles/${video.id}` : `/watch/${video.id}`)}>
         {/* Thumbnail */}
-        <div className={`relative w-full overflow-hidden rounded-xl bg-zinc-900 ${video.is_short ? 'aspect-[9/16]' : 'aspect-video'} shadow-md transition-all duration-300`}>
+        <div className={`relative w-full overflow-hidden rounded-xl bg-zinc-900 ${video.is_short ? 'aspect-[9/16]' : 'aspect-video'} shadow-md transition-all duration-300 cursor-pointer`}>
           <img
             src={video.thumbnail_url || '/default-thumbnail.jpg'}
             alt={video.title}
@@ -131,122 +172,87 @@ function VideoCard({
             }}
             className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${showPreview ? 'opacity-100' : 'opacity-0'}`}
             src={video.video_url || undefined}
-            muted={isMuted}
+            muted={!showPreview || isMuted}
             playsInline
             loop
             onTimeUpdate={(e) => {
               setProgressSeconds(e.currentTarget.currentTime);
+              const video = e.currentTarget;
+              if (video.buffered.length > 0) {
+                setBufferedSeconds(video.buffered.end(video.buffered.length - 1));
+              }
             }}
           />
 
-          {/* Red Splash Button Overlay */}
-          {!showPreview && (
+          {/* Progress Bar - At bottom of video thumbnail */}
+          {showPreview && durationSeconds > 0 && !video.is_short && (
             <div 
-              className="absolute inset-0 flex items-center justify-center bg-black/5 group-hover:bg-black/0 transition-colors z-30"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setIsAnimating(true);
-                setTimeout(() => {
-                  onHoverStart(video.id); // Triggers preview immediately
-                }, 400);
-              }}
+              ref={progressRef}
+              className="absolute bottom-0 left-0 right-0 h-1 bg-white/20 cursor-pointer"
+              onMouseMove={handleProgressHover}
+              onMouseLeave={(e) => { e.stopPropagation(); setHoverTime(null); }}
+              onClick={handleProgressClick}
             >
-                <div className={`relative transition-all duration-500 ease-out transform 
-                  ${isAnimating ? 'scale-[2.5] opacity-0' : 'scale-100 opacity-100'}`}>
-                  {/* Animation Ripple */}
-                  <div className={`absolute inset-0 bg-white rounded-full transition-all duration-700 ease-out pointer-events-none 
-                    ${isAnimating ? 'scale-[2] opacity-0' : 'scale-0 opacity-0'}`} />
-                  
-                  <svg className="w-12 h-12 overflow-visible" viewBox="0 0 100 100">
-                    <defs>
-                      <linearGradient id="cardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#3B82F6" />
-                        <stop offset="100%" stopColor="#A855F7" />
-                      </linearGradient>
-                    </defs>
-                    <path 
-                      d="M35,25 L75,50 L35,75 Z" 
-                      fill={isAnimating ? "white" : "none"}
-                      stroke={isAnimating ? "white" : "url(#cardGrad)"}
-                      strokeWidth="6" 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      className="transition-colors duration-200"
-                      style={{ 
-                        strokeDasharray: 200, 
-                        strokeDashoffset: 200,
-                        animation: 'drawTriCard 1.5s ease-out forwards' 
-                      }}
-                    />
-                    <style>{`
-                      @keyframes drawTriCard {
-                        0% { stroke-dashoffset: 200; }
-                        100% { stroke-dashoffset: 0; }
-                      }
-                    `}</style>
-                  </svg>
+              <div 
+                className="absolute top-0 left-0 h-full bg-zinc-500 pointer-events-none"
+                style={{ width: `${Math.min(100, ((progressSeconds + 5) / durationSeconds) * 100)}%` }}
+              />
+              <div 
+                className="absolute top-0 left-0 h-full bg-cyan-400 pointer-events-none"
+                style={{ width: `${Math.min(100, (progressSeconds / durationSeconds) * 100)}%` }}
+              />
+              {hoverTime !== null && (
+                <div 
+                  className="absolute top-0 h-full bg-red-500 pointer-events-none"
+                  style={{ 
+                    left: `${(hoverTime / durationSeconds) * 100}%`,
+                    width: '2px'
+                  }}
+                />
+              )}
+              {hoverTime !== null && (
+                <div 
+                  className="absolute -top-8 left-0 transform -translate-x-1/2 bg-black/90 text-white text-[11px] px-2 py-1 rounded pointer-events-none whitespace-nowrap"
+                  style={{ left: `${(hoverTime / durationSeconds) * 100}%` }}
+                >
+                  {formatDurationFromSeconds(hoverTime)}
                 </div>
+              )}
             </div>
           )}
+
           {video.is_short && (
             <div className="absolute bottom-2 right-2 flex items-center gap-1">
               <img src="/styles-icon.svg?v=white" className="w-5 h-5 drop-shadow-md" alt="" />
             </div>
           )}
-          {/* Progress Bar - White (loaded) + Playra Color (playing) */}
-          {showPreview && (
-            <div className="absolute bottom-0 left-0 right-0 h-1 z-30">
-              {/* White background = loaded/buffered */}
-              <div className="absolute inset-0 bg-white/30" />
-              {/* Playra gradient = current progress */}
-              <div 
-                className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-[#3B82F6] to-[#A855F7] transition-all duration-100"
-                style={{ width: `${(progressSeconds / durationSeconds) * 100}%` }}
-              />
-            </div>
-          )}
 
           {!video.is_short && (
-            <div className="absolute bottom-2 right-2 bg-black/80 text-white text-[12px] font-bold px-1.5 py-0.5 rounded-md z-20">
+            <div className="absolute bottom-2 right-2 bg-black/80 text-white text-[12px] font-bold px-1.5 py-0.5 rounded-md z-30">
               {computedDuration || video.duration || '0:00'}
             </div>
           )}
-
-          {/* YouTube-style hover icons with Mute */}
-          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-2 z-40">
-            {/* Mute/Unmute Button with X when muted */}
-            <button
-              onClick={(e) => { 
-                e.preventDefault(); 
-                e.stopPropagation(); 
-                onToggleMuted(video.id);
-              }}
-              className="bg-black/80 p-1.5 rounded-md text-white hover:bg-black transition-colors"
-              title={isMuted ? "Unmute" : "Mute"}
-            >
-              {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
-            </button>
-            <button
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); /* Logic to toggle watch later */ }}
-              className="bg-black/80 p-1.5 rounded-md text-white hover:bg-black transition-colors"
-              title="Watch Later"
-            >
-              <Clock size={16} />
-            </button>
-            <button
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); /* Logic to show more options */ }}
-              className="bg-black/80 p-1.5 rounded-md text-white hover:bg-black transition-colors"
-              title="More"
-            >
-              <MoreVertical size={16} />
-            </button>
-          </div>
         </div>
-      </Link>
+      </div>
+
+      {/* Mute Button - Only show when video is playing */}
+      {showPreview && (
+        <div className="absolute top-5 right-5 z-50">
+          <button
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              onToggleMute();
+            }}
+            className="bg-black/80 p-2 rounded-md text-white hover:bg-black transition-colors"
+            title={isMuted ? "Unmute" : "Mute"}
+          >
+            {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+          </button>
+        </div>
+      )}
 
       {/* Text area - with ambient glow above */}
-      <div className="relative z-10 flex gap-3 px-2 sm:px-0">
+      <div className="relative z-10 flex gap-3 mt-3">
         <Link href={`/channel/${video.channel_id}`} className="flex-shrink-0">
           <div className="w-9 h-9 rounded-full bg-zinc-800 overflow-hidden">
             <img
@@ -257,27 +263,22 @@ function VideoCard({
           </div>
         </Link>
 
-        <div className="flex flex-1 flex-col min-w-0">
+        <div className="flex flex-1 flex-col min-w-0 pr-8">
           <Link href={video.is_short ? `/styles/${video.id}` : `/watch/${video.id}`}>
-            <h3 className="font-semibold text-white text-[15px] leading-snug line-clamp-2 mb-1">
+            <h3 className="font-semibold text-white text-[14px] leading-tight line-clamp-2 mb-1">
               {video.title}
             </h3>
           </Link>
           <Link href={`/channel/${video.channel_id}`} className="text-[13px] text-[#aaaaaa] hover:text-white transition-colors">
             {video.channel_name}
           </Link>
-          <div className="flex items-center gap-1 text-[13px] text-[#aaaaaa]">
+          <div className="flex items-center gap-1 text-[12px] text-[#aaaaaa]">
             <span>{video.views.toLocaleString()} views</span>
             <span>•</span>
             <span suppressHydrationWarning>{formatDistanceToNow(new Date(video.created_at), { addSuffix: true }).replace(/^about /, '')}</span>
           </div>
         </div>
 
-        <button className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-white/10 text-white opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 -mr-2">
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
-          </svg>
-        </button>
       </div>
     </div>
   );
@@ -288,11 +289,21 @@ function StyleCard({
 }: {
   style: Video;
 }) {
+  const { color: extractedGlowColor } = useAmbientColor({ src: style.thumbnail_url });
+  const glowColor = extractedGlowColor !== 'rgba(100,100,100,0.2)' ? extractedGlowColor : 'rgba(150,150,150,0.3)';
+  const hoverBgColor = glowColor.replace('0.4)', '0.15)').replace('0.2)', '0.15)').replace('0.3)', '0.15)');
+
   return (
     <Link
       href={`/styles/${style.id}`}
-      className="flex-shrink-0 w-44 sm:w-52 group relative"
+      className="flex-shrink-0 w-44 sm:w-52 group relative rounded-2xl p-2 -m-2 transition-all duration-300"
+      style={{ ['--hover-bg' as string]: hoverBgColor }}
     >
+      {/* Hover background */}
+      <div 
+        className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+        style={{ backgroundColor: hoverBgColor }}
+      />
       <div className="relative aspect-[9/16] rounded-2xl overflow-hidden bg-zinc-800 shadow-xl border border-white/5 group-hover:scale-[1.02] transition-transform">
         <img src={style.thumbnail_url || '/default-thumbnail.jpg'} className="w-full h-full object-cover" alt="" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
@@ -338,14 +349,14 @@ function StylesShelf({
 }
 
 // Feed Item Component - switches between Video and Post
-function FeedItem({ item, hoveredId, previewingId, isMuted, onHoverStart, onHoverEnd, onToggleMuted, videoRef }: {
+function FeedItem({ item, hoveredId, previewingId, isMuted, onHoverStart, onHoverEnd, onToggleMute, videoRef }: {
   item: Video | { type: 'post'; data: any };
   hoveredId: string | null;
   previewingId: string | null;
   isMuted: boolean;
   onHoverStart: (id: string) => void;
   onHoverEnd: (id: string) => void;
-  onToggleMuted: () => void;
+  onToggleMute: () => void;
   videoRef: (el: HTMLVideoElement | null, id: string) => void;
 }) {
   // Check if it's a post (wrapped type, empty video_url, or is_post flag)
@@ -379,7 +390,7 @@ function FeedItem({ item, hoveredId, previewingId, isMuted, onHoverStart, onHove
       isMuted={isMuted}
       onHoverStart={onHoverStart}
       onHoverEnd={onHoverEnd}
-      onToggleMuted={onToggleMuted}
+      onToggleMute={onToggleMute}
       videoRef={(el) => videoRef(el, video.id)}
     />
   );
@@ -395,7 +406,8 @@ export default function Home() {
 
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [previewingId, setPreviewingId] = useState<string | null>(null);
-  const [isMuted, setIsMuted] = useState(true);
+  const [mutedVideos, setMutedVideos] = useState<Set<string>>(new Set());
+  const [isCategoryScrolled, setIsCategoryScrolled] = useState(false);
 
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
   const hoverTimersRef = useRef<Record<string, ReturnType<typeof setTimeout> | null>>({});
@@ -450,6 +462,12 @@ export default function Home() {
     };
     fetchContent();
 
+    const handleScroll = () => {
+      setIsCategoryScrolled(window.scrollY > 60);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+
     // Check for video updates made while page wasn't loaded
     const lastUpdate = localStorage.getItem('video-updated');
     console.log('Checking for video updates, lastUpdate:', lastUpdate);
@@ -492,6 +510,7 @@ export default function Home() {
     return () => {
       window.removeEventListener('video-updated', handleVideoUpdate);
       window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('scroll', handleScroll);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [refreshKey]);
@@ -505,6 +524,18 @@ export default function Home() {
         videoEl.play().catch(() => { });
       }
     }, 400);
+  };
+
+  const handleToggleMute = (id: string) => {
+    setMutedVideos(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
   };
 
   const handleHoverEnd = (id: string) => {
@@ -521,13 +552,13 @@ export default function Home() {
 
   const renderSkeleton = () => (
     <div className="flex flex-col">
-      <div suppressHydrationWarning className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 4xl:grid-cols-6 gap-x-6 gap-y-12 px-6 md:px-10 pt-10">
+      <div suppressHydrationWarning className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-6 px-4 md:px-6 pt-10">
         {Array(8).fill(0).map((_, i) => (
           <div suppressHydrationWarning key={i} className="animate-pulse flex flex-col w-full">
-            <div suppressHydrationWarning className="aspect-video bg-zinc-800 rounded-xl mb-3" />
-            <div suppressHydrationWarning className="flex gap-3 px-2 sm:px-0">
-              <div suppressHydrationWarning className="w-10 h-10 bg-zinc-800 rounded-full flex-shrink-0" />
-              <div suppressHydrationWarning className="flex-1 space-y-3 pt-1">
+            <div suppressHydrationWarning className="aspect-video bg-zinc-800 rounded-xl mb-2" />
+            <div suppressHydrationWarning className="flex gap-3">
+              <div suppressHydrationWarning className="w-9 h-9 bg-zinc-800 rounded-full flex-shrink-0" />
+              <div suppressHydrationWarning className="flex-1 space-y-2 pt-1 pr-8">
                 <div suppressHydrationWarning className="h-4 bg-zinc-800 rounded w-[90%]" />
                 <div suppressHydrationWarning className="h-3 bg-zinc-800 rounded w-[60%]" />
               </div>
@@ -540,13 +571,13 @@ export default function Home() {
         <StylesShelf styles={[]} isLoading={true} />
       )}
 
-      <div suppressHydrationWarning className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 4xl:grid-cols-6 gap-x-6 gap-y-12 px-6 md:px-10 pt-10">
+      <div suppressHydrationWarning className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-6 px-4 md:px-10 pt-10">
         {Array(8).fill(0).map((_, i) => (
           <div suppressHydrationWarning key={i+8} className="animate-pulse flex flex-col w-full">
-            <div suppressHydrationWarning className="aspect-video bg-zinc-800 rounded-xl mb-3" />
-            <div suppressHydrationWarning className="flex gap-3 px-2 sm:px-0">
-              <div suppressHydrationWarning className="w-10 h-10 bg-zinc-800 rounded-full flex-shrink-0" />
-              <div suppressHydrationWarning className="flex-1 space-y-3 pt-1">
+            <div suppressHydrationWarning className="aspect-video bg-zinc-800 rounded-xl mb-2" />
+            <div suppressHydrationWarning className="flex gap-3">
+              <div suppressHydrationWarning className="w-9 h-9 bg-zinc-800 rounded-full flex-shrink-0" />
+              <div suppressHydrationWarning className="flex-1 space-y-2 pt-1 pr-8">
                 <div suppressHydrationWarning className="h-4 bg-zinc-800 rounded w-[90%]" />
                 <div suppressHydrationWarning className="h-3 bg-zinc-800 rounded w-[60%]" />
               </div>
@@ -562,7 +593,11 @@ export default function Home() {
       {/* Category Bar Sticky Wrapper */}
       <div
         suppressHydrationWarning
-        className="sticky top-0 z-[60] bg-[#0f0f0f]/95 backdrop-blur-md border-b border-white/5 w-full -mt-[1px]"
+        className={`sticky top-0 z-[60] border-b w-full -mt-[1px] transition-all duration-300 ${
+          isCategoryScrolled 
+            ? 'bg-[#0f0f0f]/80 backdrop-blur-xl border-white/10' 
+            : 'bg-[#0f0f0f]/95 backdrop-blur-md border-white/5'
+        }`}
       >
         <div
           suppressHydrationWarning
@@ -591,6 +626,8 @@ export default function Home() {
           if (selectedCategory === 'All' || selectedCategory === 'New to you') {
             displayVideos = videos.filter(v => !v.is_short && v.video_url && v.video_url.trim() !== '');
             feedPosts = videos.filter(v => !v.video_url || v.video_url.trim() === '');
+          } else if (selectedCategory === 'Music') {
+            displayVideos = videos.filter(v => !v.is_short && v.category === 'music' && v.video_url && v.video_url.trim() !== '');
           } else if (selectedCategory === 'Recently uploaded') {
             const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
             displayVideos = videos.filter(v => !v.is_short && v.video_url && v.video_url.trim() !== '' && new Date(v.created_at).getTime() > oneDayAgo);
@@ -628,17 +665,17 @@ export default function Home() {
               <div className="pb-20">
                 {/* Videos Grid */}
                 {displayVideos.length > 0 ? (
-                  <div className="relative z-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 4xl:grid-cols-6 gap-x-6 gap-y-12 px-6 md:px-10 pt-4 mt-1">
+                  <div className="relative z-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-6 px-4 md:px-6 pt-4 mt-1">
                     {displayVideos.slice(0, 12).map((video) => (
                       <VideoCard
                         key={video.id}
                         video={video}
                         isHovered={hoveredId === video.id}
                         isPreviewing={previewingId === video.id}
-                        isMuted={isMuted}
+                        isMuted={mutedVideos.has(video.id)}
                         onHoverStart={handleHoverStart}
                         onHoverEnd={handleHoverEnd}
-                        onToggleMuted={() => setIsMuted(!isMuted)}
+                        onToggleMute={() => handleToggleMute(video.id)}
                         videoRef={(el) => { videoRefs.current[video.id] = el; }}
                       />
                     ))}
@@ -676,17 +713,17 @@ export default function Home() {
 
                 {/* Remaining Videos */}
                 {displayVideos.length > 12 && (
-                  <div className="relative z-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 4xl:grid-cols-6 gap-x-6 gap-y-12 px-6 md:px-10 pt-10">
+                  <div className="relative z-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-6 px-4 md:px-10 pt-10">
                     {displayVideos.slice(12).map((video) => (
                       <VideoCard
                         key={video.id}
                         video={video}
                         isHovered={hoveredId === video.id}
                         isPreviewing={previewingId === video.id}
-                        isMuted={isMuted}
+                        isMuted={mutedVideos.has(video.id)}
                         onHoverStart={handleHoverStart}
                         onHoverEnd={handleHoverEnd}
-                        onToggleMuted={() => setIsMuted(!isMuted)}
+                        onToggleMute={() => handleToggleMute(video.id)}
                         videoRef={(el) => { videoRefs.current[video.id] = el; }}
                       />
                     ))}

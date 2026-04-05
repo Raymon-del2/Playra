@@ -1,16 +1,5 @@
 import { NextResponse } from 'next/server';
-import { turso } from '@/lib/turso';
-
-async function ensureBannerColumn() {
-  try {
-    await turso.execute(`ALTER TABLE channels ADD COLUMN banner TEXT`);
-  } catch (err: any) {
-    // Ignore "duplicate column" errors
-    if (!`${err?.message || ''}`.toLowerCase().includes('duplicate')) {
-      console.warn('ensureBannerColumn failed', err);
-    }
-  }
-}
+import { supabase } from '@/lib/supabase';
 
 export async function GET(
   _req: Request,
@@ -22,15 +11,17 @@ export async function GET(
   }
 
   try {
-    await ensureBannerColumn();
-    const result = await turso.execute({
-      sql: 'SELECT id, name, description, avatar, banner, verified, account_type, created_at FROM channels WHERE id = ?',
-      args: [channelId],
-    });
-    if (result.rows.length === 0) {
+    // Get channel from profiles table in Supabase
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('id, name, description, avatar, banner, verified, account_type, created_at')
+      .eq('id', channelId)
+      .maybeSingle();
+
+    if (error || !profile) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
-    return NextResponse.json({ channel: result.rows[0] });
+    return NextResponse.json({ channel: profile });
   } catch (error) {
     console.error('Failed to fetch channel', error);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
@@ -61,11 +52,10 @@ export async function POST(
   }
 
   try {
-    await ensureBannerColumn();
-    await turso.execute({
-      sql: 'UPDATE channels SET banner = ? WHERE id = ?',
-      args: [banner, channelId],
-    });
+    await supabase
+      .from('profiles')
+      .update({ banner })
+      .eq('id', channelId);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Failed to update channel banner', error);

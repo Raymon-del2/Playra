@@ -7,6 +7,7 @@ import { useLocation } from '@/hooks/useLocation';
 import ProfileMenu from './ProfileMenu';
 import NotificationsPopup from './NotificationsPopup';
 import CreateMenu from './CreateMenu';
+import { submitFeedback } from '@/app/actions/feedback';
 
 type NavbarProps = {
   isSidebarCollapsed: boolean;
@@ -43,6 +44,11 @@ export default function Navbar({
   const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isSpeechSupported, setIsSpeechSupported] = useState(true);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
   const profileContainerRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
 
@@ -58,7 +64,15 @@ export default function Navbar({
     const SpeechRecognition = getSpeechRecognition();
     setIsSpeechSupported(Boolean(SpeechRecognition));
 
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+
     return () => {
+      window.removeEventListener('scroll', handleScroll);
       if (recognitionRef.current) {
         recognitionRef.current.stop();
       }
@@ -76,11 +90,6 @@ export default function Navbar({
   };
 
   const fetchSuggestions = async (query: string) => {
-    if (query.length < 2) {
-      setSuggestions({ videos: [], profiles: [] });
-      return;
-    }
-
     const cached = searchCacheRef.current.get(query);
     if (cached && Date.now() - cached.timestamp < 30000) {
       setSuggestions(cached);
@@ -94,12 +103,34 @@ export default function Navbar({
       setSuggestions({ videos: json.videos || [], profiles: json.profiles || [] });
       searchCacheRef.current.set(query, { videos: json.videos || [], profiles: json.profiles || [], timestamp: Date.now() });
     } catch (error) {
-      console.error('Failed to fetch suggestions:', error);
+      console.error('Error fetching suggestions:', error);
       setSuggestions({ videos: [], profiles: [] });
     } finally {
       setIsLoadingSuggest(false);
     }
   };
+
+  const fetchInitialSuggestions = async () => {
+    setIsLoadingSuggest(true);
+    try {
+      const res = await fetch(`/api/search?dropdown=true&limit=6`);
+      const json = await res.json();
+      setSuggestions({ videos: json.videos || [], profiles: json.profiles || [] });
+      searchCacheRef.current.set('initial', { videos: json.videos || [], profiles: json.profiles || [], timestamp: Date.now() });
+    } catch (error) {
+      console.error('Error fetching initial suggestions:', error);
+      setSuggestions({ videos: [], profiles: [] });
+    } finally {
+      setIsLoadingSuggest(false);
+    }
+  };
+
+  // Load initial suggestions on mount
+  useEffect(() => {
+    if (shouldShowSearchbar) {
+      fetchInitialSuggestions();
+    }
+  }, [shouldShowSearchbar]);
 
   useEffect(() => {
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
@@ -108,9 +139,8 @@ export default function Navbar({
       searchTimeoutRef.current = setTimeout(() => {
         fetchSuggestions(searchQuery);
       }, 300);
-    } else if (searchQuery.length < 2) {
-      setSuggestions({ videos: [], profiles: [] });
     }
+    // Don't clear suggestions when query is empty - keep initial suggestions
 
     return () => {
       if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
@@ -175,7 +205,11 @@ export default function Navbar({
 
   return (
     <>
-      <nav suppressHydrationWarning className="fixed top-0 left-0 right-0 h-14 bg-[#0f0f0f] border-b border-white/5 z-[100] flex items-center transition-all duration-300">
+      <nav suppressHydrationWarning className={`fixed top-0 left-0 right-0 h-14 border-b z-[100] flex items-center transition-all duration-300 ${
+        isScrolled 
+          ? 'bg-[#0f0f0f]/80 backdrop-blur-xl border-white/10' 
+          : 'bg-[#0f0f0f] border-white/5'
+      }`}>
         {isSearching && (
           <div className="absolute top-0 left-0 right-0 h-0.5 bg-blue-500 animate-pulse" />
         )}
@@ -193,8 +227,8 @@ export default function Navbar({
 
               <Link href="/" className="flex items-center gap-2 flex-shrink-0 group">
                 <div suppressHydrationWarning className="flex items-center gap-2">
-                  <img src="/Playra.png" alt="Playra" className="h-[22px] w-auto brightness-110" />
-                  <span className="text-white font-black text-lg tracking-tighter uppercase leading-none">Playra</span>
+                  <img src="/play-logo.png" alt="Playra" className="h-[22px] w-auto" />
+                  <span className="font-[family-name:var(--font-anton)] text-white text-lg tracking-wide uppercase">Playra</span>
                 </div>
                 <span className="hidden xs:inline text-[9px] font-black text-zinc-500 uppercase tracking-widest bg-zinc-800/50 px-1.5 py-0.5 rounded ml-1 border border-white/5">
                   {countryCode || 'KE'}
@@ -206,17 +240,8 @@ export default function Navbar({
             {shouldShowSearchbar && (
               <div className={`flex items-center transition-all duration-300 ease-in-out ${
                 isSearchExpanded 
-                  ? 'flex-1 md:max-w-2xl mx-0 md:mx-4 z-[110] absolute inset-0 bg-[#0f0f0f] px-2 md:relative md:bg-transparent' 
+                  ? 'flex-1 md:max-w-2xl mx-0 md:mx-4' 
                   : 'hidden md:flex md:flex-1 md:max-w-2xl md:mx-auto'}`}>
-                
-                {isSearchExpanded && (
-                  <button 
-                    onClick={() => { setIsSearchExpanded(false); setIsDropdownOpen(false); }}
-                    className="p-2.5 mr-1 text-white hover:bg-white/10 rounded-full"
-                  >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
-                  </button>
-                )}
 
                 <div className="flex w-full items-center gap-0">
                   <div className="relative flex-1 group">
@@ -263,26 +288,50 @@ export default function Navbar({
                           setIsSearchExpanded(false);
                         }
                       }}
-                      className="w-full bg-zinc-900 md:bg-black md:border md:border-zinc-800 text-white pl-4 md:pl-5 pr-12 md:pr-4 py-2 rounded-full md:rounded-l-full md:rounded-r-none focus:outline-none focus:border-blue-500/50 transition-all font-medium text-[15px]"
+                      className="w-full bg-black border border-white/10 text-white placeholder-white/50 rounded-l-full py-2.5 pl-12 pr-4 focus:outline-none focus:border-white/30 transition-all font-medium text-[16px]"
                     />
+                    
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                    </div>
                     
                     {searchQuery && (
                       <button 
                         onClick={() => setSearchQuery('')}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-zinc-400 hover:text-white"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-white/50 hover:text-white"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                       </button>
                     )}
+                  </div>
 
-                    {isDropdownOpen && searchQuery.trim() && (
-                      <div className="absolute left-0 right-0 top-full mt-2 bg-[#0f0f0f] md:bg-zinc-900 border border-white/5 md:border-zinc-700 rounded-xl shadow-2xl z-[110] overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200">
+                  <button
+                    onClick={() => handleSearch()}
+                    className="flex-shrink-0 bg-white/10 border border-white/10 border-l-0 rounded-r-full px-5 py-2.5 hover:bg-white/15 transition-all"
+                  >
+                    <svg className="w-5 h-5 text-white/70" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                  </button>
+
+                  <button
+                    onClick={handleMicClick}
+                    disabled={!isSpeechSupported}
+                    className={`ml-3 flex-shrink-0 p-2.5 rounded-full transition-all ${isListening ? 'bg-red-600' : 'hover:bg-white/10'} ${!isSpeechSupported ? 'opacity-40' : ''}`}
+                    title="Search with voice"
+                  >
+                    <svg className="w-5 h-5 text-white/70" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                      <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                    </svg>
+                  </button>
+
+                    {isDropdownOpen && (
+                      <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 w-[480px] bg-[#0f0f0f] md:bg-zinc-900 border border-white/5 rounded-xl shadow-2xl z-[110] overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200">
                         {isLoadingSuggest ? (
                           <div className="px-4 py-3 text-sm text-zinc-400 flex items-center gap-3">
                             <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
                             Searching...
                           </div>
-                        ) : suggestions.videos.length === 0 && suggestions.profiles.length === 0 ? (
+                        ) : suggestions.videos.length === 0 && suggestions.profiles.length === 0 && searchQuery.trim() ? (
                           <button
                             onMouseDown={(e) => e.preventDefault()}
                             onClick={() => { setIsDropdownOpen(false); handleSearch(searchQuery); }}
@@ -319,9 +368,15 @@ export default function Navbar({
                                   onMouseEnter={() => setSelectedIndex(realIdx)}
                                   onMouseDown={(e) => e.preventDefault()}
                                   onClick={() => { setIsDropdownOpen(false); router.push(`/watch/${v.id}`); }}
-                                  className={`w-full px-4 py-2.5 flex items-center gap-4 transition-colors text-left ${selectedIndex === realIdx ? 'bg-zinc-800' : 'hover:bg-zinc-800/50'}`}
+                                  className={`w-full px-4 py-2.5 flex items-center gap-3 transition-colors text-left ${selectedIndex === realIdx ? 'bg-zinc-800' : 'hover:bg-zinc-800/50'}`}
                                 >
-                                  <svg className="w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                                  <div className="relative w-24 h-14 flex-shrink-0 rounded overflow-hidden bg-zinc-800">
+                                    <img 
+                                      src={v.thumbnail_url || '/default-thumbnail.jpg'} 
+                                      alt={v.title}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
                                   <div className="flex flex-col min-w-0">
                                     <span className="text-[15px] text-zinc-100 font-bold truncate">{v.title}</span>
                                     <span className="text-[12px] text-zinc-500 truncate">{v.channel_name} • Video</span>
@@ -334,24 +389,19 @@ export default function Navbar({
                       </div>
                     )}
                   </div>
-                  
-                  <button
-                    onClick={() => handleSearch()}
-                    className="hidden md:flex bg-zinc-800 hover:bg-zinc-700 px-5 py-2 rounded-r-full border border-zinc-800 border-l-0 transition-colors"
-                  >
-                    <svg className="w-5 h-5 text-gray-200" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                  </button>
-
-                  <button
-                    onClick={handleMicClick}
-                    disabled={!isSpeechSupported}
-                    className={`ml-2 md:ml-4 p-2.5 rounded-full transition-all active:scale-90 ${isListening ? 'bg-red-600' : 'bg-transparent md:bg-zinc-800 hover:bg-white/10 md:hover:bg-zinc-700'} ${!isSpeechSupported ? 'opacity-0 md:opacity-40' : ''}`}
-                  >
-                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" /><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" /></svg>
-                  </button>
                 </div>
-              </div>
             )}
+
+            {/* Be a Helper link */}
+            <button
+              onClick={() => setIsFeedbackOpen(true)}
+              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 text-xs text-zinc-400 hover:text-white transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+              Be a helper
+            </button>
 
             {/* Right: Actions */}
             <div className={`flex items-center space-x-1 sm:space-x-2 flex-shrink-0 transition-all ${isSearchExpanded ? 'hidden md:flex' : 'flex'}`}>
@@ -442,6 +492,79 @@ export default function Navbar({
           </div>
         </div>
       </nav>
+
+      {/* Feedback Popup */}
+      {isFeedbackOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setIsFeedbackOpen(false)} />
+          <div className="relative bg-zinc-900 border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl">
+            <button
+              onClick={() => { setIsFeedbackOpen(false); setSubmitSuccess(false); setFeedbackMessage(''); }}
+              className="absolute top-4 right-4 p-1 text-zinc-500 hover:text-white transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {submitSuccess ? (
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">Thank you!</h3>
+                <p className="text-zinc-400">Your feedback helps make the app better.</p>
+              </div>
+            ) : (
+              <>
+                <h3 className="text-lg font-bold text-white mb-2">Be a helper</h3>
+                <p className="text-sm text-zinc-400 mb-4">
+                  We are constantly doing our best to make the app be smooth and with your help it might just work.
+                </p>
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (!feedbackMessage.trim() || isSubmitting) return;
+                    
+                    setIsSubmitting(true);
+                    const result = await submitFeedback(feedbackMessage, activeProfile?.id);
+                    setIsSubmitting(false);
+                    
+                    if (result.success) {
+                      setSubmitSuccess(true);
+                      setFeedbackMessage('');
+                    }
+                  }}
+                >
+                  <textarea
+                    value={feedbackMessage}
+                    onChange={(e) => setFeedbackMessage(e.target.value)}
+                    placeholder="Share your ideas for the app..."
+                    className="w-full h-32 bg-zinc-800 border border-white/10 rounded-xl p-3 text-white placeholder-zinc-500 resize-none focus:outline-none focus:border-white/30 transition-colors"
+                    disabled={isSubmitting}
+                  />
+                  <button
+                    type="submit"
+                    disabled={!feedbackMessage.trim() || isSubmitting}
+                    className="mt-4 w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      'Send Feedback'
+                    )}
+                  </button>
+                </form>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 }

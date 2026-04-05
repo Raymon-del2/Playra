@@ -1,6 +1,6 @@
 'use server';
 
-import { turso } from "@/lib/turso";
+import { engagementSupabase as supabase } from "@/lib/supabase";
 import { revalidatePath } from "next/cache";
 
 export type Comment = {
@@ -22,25 +22,25 @@ export type Comment = {
 
 export async function getVideoComments(videoId: string, profileId?: string) {
     try {
-        console.log('Querying comments for videoId:', videoId);
-        // Fetch all comments for the video
-        const result = await turso.execute({
-            sql: "SELECT * FROM comments WHERE video_id = ? ORDER BY created_at DESC",
-            args: [videoId]
-        });
-        
-        console.log('Raw query result:', result.rows.length, 'rows');
+        const { data: comments, error } = await supabase
+            .from('comments')
+            .select('*')
+            .eq('video_id', videoId)
+            .order('created_at', { ascending: false });
 
-        const comments: Comment[] = result.rows.map(row => ({
-            id: row.id as string,
-            video_id: row.video_id as string,
-            profile_id: row.profile_id as string,
-            parent_id: row.parent_id as string | null,
-            content: row.content as string,
-            likes: Number(row.likes),
-            dislikes: Number(row.dislikes),
-            created_at: row.created_at as string,
-            profile_name: 'Unknown User', // Default fallback
+        if (error) throw error;
+        if (!comments || comments.length === 0) return [];
+
+        const commentObjs: Comment[] = comments.map(row => ({
+            id: row.id,
+            video_id: row.video_id,
+            profile_id: row.profile_id,
+            parent_id: row.parent_id,
+            content: row.content,
+            likes: row.likes || 0,
+            dislikes: row.dislikes || 0,
+            created_at: row.created_at,
+            profile_name: 'Unknown User',
             profile_avatar: undefined,
             profile_join_order: null,
             replies: [],
@@ -48,50 +48,34 @@ export async function getVideoComments(videoId: string, profileId?: string) {
             user_disliked: false,
         }));
 
-        console.log('Mapped comments:', comments.length);
-
-        if (comments.length === 0) return [];
-
-        // Fetch profiles for comments with error handling
-        const profileIds = Array.from(new Set(comments.map(c => c.profile_id)));
+        // Fetch profiles
+        const profileIds = Array.from(new Set(commentObjs.map(c => c.profile_id)));
         if (profileIds.length > 0) {
-            try {
-                const placeholders = profileIds.map(() => '?').join(',');
-                const profileRes = await turso.execute({
-                    sql: `SELECT id, name, avatar FROM channels WHERE id IN (${placeholders})`,
-                    args: profileIds
-                });
+            const { data: profiles } = await supabase
+                .from('profiles')
+                .select('id, name, avatar')
+                .in('id', profileIds);
 
-                const profileMap = new Map();
-                profileRes.rows.forEach(r => {
-                    profileMap.set(r.id, r);
-                });
-
-                comments.forEach(c => {
-                    const p = profileMap.get(c.profile_id);
-                    if (p) {
-                        c.profile_name = p.name;
-                        c.profile_avatar = p.avatar;
-                        c.profile_join_order = null; // Can't fetch without users table
-                    }
-                });
-                console.log('Profiles fetched successfully:', profileRes.rows.length);
-            } catch (profileError) {
-                console.error('Failed to fetch profiles:', profileError);
-                // Keep default values if profile fetch fails
-            }
+            const profileMap = new Map((profiles || []).map(p => [p.id, p]));
+            commentObjs.forEach(c => {
+                const p = profileMap.get(c.profile_id);
+                if (p) {
+                    c.profile_name = p.name;
+                    c.profile_avatar = p.avatar;
+                }
+            });
         }
 
-        // Build hierarchy - only root comments for now
+        // Build hierarchy
         const rootComments: Comment[] = [];
         const commentMap = new Map<string, Comment>();
 
-        comments.forEach(c => {
+        commentObjs.forEach(c => {
             c.replies = [];
             commentMap.set(c.id, c);
         });
 
-        comments.forEach(c => {
+        commentObjs.forEach(c => {
             if (c.parent_id) {
                 const parent = commentMap.get(c.parent_id);
                 if (parent) {
@@ -103,22 +87,28 @@ export async function getVideoComments(videoId: string, profileId?: string) {
         });
 
         return rootComments;
-
     } catch (error) {
         console.error("Error fetching comments:", error);
-        throw new Error(`Failed to fetch comments: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        return [];
     }
 }
 
 export async function addComment(videoId: string, profileId: string, content: string, parentId?: string) {
     try {
-        const id = `cmt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        const now = new Date().toISOString();
-
-        await turso.execute({
-            sql: `INSERT INTO comments (id, video_id, profile_id, content, parent_id, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
-            args: [id, videoId, profileId, content, parentId || null, now]
+        // Generate proper UUID for Supabase
+        const id = crypto.randomUUID();
+        
+        const { error } = await supabase.from('comments').insert({
+            id,
+            video_id: videoId,
+            profile_id: profileId,
+            content,
+            parent_id: parentId || null,
+            likes: 0,
+            dislikes: 0
         });
+
+        if (error) throw error;
 
         revalidatePath(`/watch/${videoId}`);
         return { success: true, id };
@@ -130,13 +120,9 @@ export async function addComment(videoId: string, profileId: string, content: st
 
 export async function deleteComment(commentId: string, profileId: string) {
     try {
-        await turso.execute({
-            sql: "DELETE FROM comments WHERE id = ? AND profile_id = ?",
-            args: [commentId, profileId]
-        });
-
-        // Also delete replies if any? Cascading usually handles this in SQL but Turso SQLite needs implicit support or manual.
-        // For now, let's assume we just delete the row. Orphans might exist if no ON DELETE CASCADE.
+        await supabase.from('comments').delete()
+            .eq('id', commentId)
+            .eq('profile_id', profileId);
 
         return { success: true };
     } catch (error) {
@@ -147,39 +133,75 @@ export async function deleteComment(commentId: string, profileId: string) {
 
 export async function engageComment(commentId: string, profileId: string, type: 'like' | 'dislike' | null) {
     try {
-        // Check existing
-        const existingRes = await turso.execute({
-            sql: "SELECT id, type FROM comment_engagement WHERE comment_id = ? AND profile_id = ?",
-            args: [commentId, profileId]
-        });
-        const existing = existingRes.rows[0];
+        const client = supabase;
 
-        // Begin transaction logic (simulated)
+        // Check existing engagement
+        const { data: existing } = await client
+            .from('comment_engagement')
+            .select('*')
+            .eq('comment_id', commentId)
+            .eq('profile_id', profileId)
+            .maybeSingle();
+
+        const wasLike = existing?.type === 'like';
+        const wasDislike = existing?.type === 'dislike';
+
         if (existing) {
-            // Remove old effect
-            const oldType = existing.type;
-            if (oldType === 'like') {
-                await turso.execute({ sql: "UPDATE comments SET likes = likes - 1 WHERE id = ?", args: [commentId] });
-            } else if (oldType === 'dislike') {
-                await turso.execute({ sql: "UPDATE comments SET dislikes = dislikes - 1 WHERE id = ?", args: [commentId] });
-            }
-
-            await turso.execute({ sql: "DELETE FROM comment_engagement WHERE id = ?", args: [existing.id] });
+            // Remove old engagement
+            await client.from('comment_engagement').delete()
+                .eq('id', existing.id);
         }
 
         if (type) {
-            // Add new effect
-            const engId = `eng_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-            await turso.execute({
-                sql: "INSERT INTO comment_engagement (id, comment_id, profile_id, type) VALUES (?, ?, ?, ?)",
-                args: [engId, commentId, profileId, type]
+            // Add new engagement with UUID
+            const engId = crypto.randomUUID();
+            await client.from('comment_engagement').insert({
+                id: engId,
+                comment_id: commentId,
+                profile_id: profileId,
+                type
             });
 
+            // Update comment likes/dislikes count
+            const { data: comment } = await client
+                .from('comments')
+                .select('likes, dislikes')
+                .eq('id', commentId)
+                .single();
+            
+            const currentLikes = comment?.likes || 0;
+            const currentDislikes = comment?.dislikes || 0;
+            
+            let newLikes = currentLikes;
+            let newDislikes = currentDislikes;
+            
             if (type === 'like') {
-                await turso.execute({ sql: "UPDATE comments SET likes = likes + 1 WHERE id = ?", args: [commentId] });
+                newLikes = currentLikes + 1;
+                if (wasDislike) newDislikes = Math.max(0, currentDislikes - 1);
             } else if (type === 'dislike') {
-                await turso.execute({ sql: "UPDATE comments SET dislikes = dislikes + 1 WHERE id = ?", args: [commentId] });
+                newDislikes = currentDislikes + 1;
+                if (wasLike) newLikes = Math.max(0, currentLikes - 1);
             }
+            
+            await client.from('comments').update({
+                likes: newLikes,
+                dislikes: newDislikes
+            }).eq('id', commentId);
+        } else if (existing) {
+            // User removed their engagement - update counts
+            const { data: comment } = await client
+                .from('comments')
+                .select('likes, dislikes')
+                .eq('id', commentId)
+                .single();
+            
+            const currentLikes = comment?.likes || 0;
+            const currentDislikes = comment?.dislikes || 0;
+            
+            await client.from('comments').update({
+                likes: wasLike ? Math.max(0, currentLikes - 1) : currentLikes,
+                dislikes: wasDislike ? Math.max(0, currentDislikes - 1) : currentDislikes
+            }).eq('id', commentId);
         }
 
         return { success: true };
@@ -192,16 +214,17 @@ export async function engageComment(commentId: string, profileId: string, type: 
 export async function getBatchCommentCounts(videoIds: string[]) {
     if (!videoIds.length) return {};
     try {
-        const placeholders = videoIds.map(() => '?').join(',');
-        const result = await turso.execute({
-            sql: `SELECT video_id, COUNT(*) as count FROM comments WHERE video_id IN (${placeholders}) GROUP BY video_id`,
-            args: videoIds
-        });
-        
+        const { data, error } = await supabase
+            .from('comments')
+            .select('video_id')
+            .in('video_id', videoIds);
+
+        if (error) throw error;
+
         const counts: Record<string, number> = {};
         videoIds.forEach(id => counts[id] = 0);
-        result.rows.forEach(r => {
-            counts[r.video_id as string] = Number(r.count);
+        (data || []).forEach((c: any) => {
+            counts[c.video_id] = (counts[c.video_id] || 0) + 1;
         });
         return counts;
     } catch (error) {
@@ -212,11 +235,13 @@ export async function getBatchCommentCounts(videoIds: string[]) {
 
 export async function getCommentCount(videoId: string) {
     try {
-        const result = await turso.execute({
-            sql: "SELECT COUNT(*) as count FROM comments WHERE video_id = ?",
-            args: [videoId]
-        });
-        return Number(result.rows[0].count);
+        const { count, error } = await supabase
+            .from('comments')
+            .select('*', { count: 'exact', head: true })
+            .eq('video_id', videoId);
+
+        if (error) throw error;
+        return count || 0;
     } catch (error) {
         return 0;
     }

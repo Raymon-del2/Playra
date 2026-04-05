@@ -22,6 +22,7 @@ export default function SelectProfilePage() {
     const [loading, setLoading] = useState(true);
     const [authInitialized, setAuthInitialized] = useState(false);
     const [showCreate, setShowCreate] = useState(false);
+    const [initialLoad, setInitialLoad] = useState(true);
 
     // Create Profile Form State
     const [newName, setNewName] = useState('');
@@ -269,6 +270,9 @@ export default function SelectProfilePage() {
     };
 
     useEffect(() => {
+        // Show instant loading on first render
+        setInitialLoad(false);
+        
         const safetyTimer = setTimeout(() => {
             if (loading) {
                 console.warn("Profile fetching timed out");
@@ -297,6 +301,23 @@ export default function SelectProfilePage() {
             clearTimeout(safetyTimer);
         };
     }, [router, authInitialized]);
+
+    if (initialLoad) {
+        return (
+            <div className="min-h-screen bg-black flex items-center justify-center p-4">
+                <div className="flex flex-col items-center gap-8">
+                    <div className="flex gap-8">
+                        {[1, 2].map(i => (
+                            <div key={i} className="flex flex-col items-center gap-4">
+                                <div className="w-32 h-32 rounded-full bg-zinc-900 animate-pulse" />
+                                <div className="w-24 h-4 bg-zinc-900 rounded animate-pulse" />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     if (loading || !authInitialized) {
         return (

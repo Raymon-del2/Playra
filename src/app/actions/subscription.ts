@@ -1,24 +1,31 @@
 'use server';
 
-import { turso } from "@/lib/turso";
+import { createClient } from '@supabase/supabase-js';
 import { revalidatePath } from "next/cache";
 import { supabase } from "@/lib/supabase";
+
+const newSupabaseUrl = 'https://cbfybannksdcajiiwjfl.supabase.co';
+const newSupabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNiZnliYW5ua3NkY2FqaWl3amZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyMzkwNDAsImV4cCI6MjA5MDgxNTA0MH0.qN6dqfAR5qIOh1T4ctRacBv0J12TdXHc4-NiGe2nLe4';
+const newSupabase = createClient(newSupabaseUrl, newSupabaseAnonKey);
 
 export async function subscribe(subscriberId: string, channelId: string) {
     try {
         const id = `sub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        await turso.execute({
-            sql: "INSERT INTO subscriptions (id, subscriber_id, channel_id) VALUES (?, ?, ?)",
-            args: [id, subscriberId, channelId]
+        const { error } = await newSupabase.from('subscriptions').insert({
+            id,
+            subscriber_id: subscriberId,
+            channel_id: channelId,
+            notifications: false
         });
+
+        if (error && !error.message.includes('duplicate')) {
+            throw error;
+        }
 
         revalidatePath('/subscriptions');
         revalidatePath(`/channel/${channelId}`);
         return { success: true };
     } catch (error: any) {
-        if (error.message?.includes('UNIQUE constraint failed')) {
-            return { success: true }; // Already subscribed
-        }
         console.error("Error subscribing:", error);
         return { success: false, error: "Failed to subscribe" };
     }
@@ -26,10 +33,9 @@ export async function subscribe(subscriberId: string, channelId: string) {
 
 export async function unsubscribe(subscriberId: string, channelId: string) {
     try {
-        await turso.execute({
-            sql: "DELETE FROM subscriptions WHERE subscriber_id = ? AND channel_id = ?",
-            args: [subscriberId, channelId]
-        });
+        await newSupabase.from('subscriptions').delete()
+            .eq('subscriber_id', subscriberId)
+            .eq('channel_id', channelId);
 
         revalidatePath('/subscriptions');
         revalidatePath(`/channel/${channelId}`);
@@ -42,11 +48,12 @@ export async function unsubscribe(subscriberId: string, channelId: string) {
 
 export async function getSubscriptionStatus(subscriberId: string, channelId: string) {
     try {
-        const result = await turso.execute({
-            sql: "SELECT id FROM subscriptions WHERE subscriber_id = ? AND channel_id = ?",
-            args: [subscriberId, channelId]
-        });
-        return { isSubscribed: result.rows.length > 0 };
+        const { data } = await newSupabase.from('subscriptions')
+            .select('id')
+            .eq('subscriber_id', subscriberId)
+            .eq('channel_id', channelId)
+            .maybeSingle();
+        return { isSubscribed: !!data };
     } catch (error) {
         console.error("Error checking subscription:", error);
         return { isSubscribed: false };
@@ -55,22 +62,26 @@ export async function getSubscriptionStatus(subscriberId: string, channelId: str
 
 export async function getSubscriptions(subscriberId: string) {
     try {
-        const result = await turso.execute({
-            sql: `
-                SELECT c.* 
-                FROM subscriptions s
-                JOIN channels c ON s.channel_id = c.id
-                WHERE s.subscriber_id = ?
-                ORDER BY s.created_at DESC
-            `,
-            args: [subscriberId]
-        });
-        return result.rows.map(row => ({
-            id: row.id as string,
-            name: row.name as string,
-            avatar: row.avatar as string,
-            description: row.description as string,
-            verified: Boolean(row.verified)
+        const { data } = await newSupabase
+            .from('subscriptions')
+            .select('channel_id, created_at')
+            .eq('subscriber_id', subscriberId)
+            .order('created_at', { ascending: false });
+
+        if (!data?.length) return [];
+
+        const channelIds = data.map(d => d.channel_id);
+        const { data: profiles } = await newSupabase
+            .from('profiles')
+            .select('id, name, avatar, description, verified')
+            .in('id', channelIds);
+
+        return (profiles || []).map(p => ({
+            id: p.id,
+            name: p.name,
+            avatar: p.avatar,
+            description: p.description,
+            verified: p.verified
         }));
     } catch (error) {
         console.error("Error fetching subscriptions:", error);
@@ -80,63 +91,45 @@ export async function getSubscriptions(subscriberId: string) {
 
 export async function getSuggestedCreators(subscriberId: string) {
     try {
-        // 1. Get IDs of channels user is already subscribed to
-        const subResult = await turso.execute({
-            sql: "SELECT channel_id FROM subscriptions WHERE subscriber_id = ?",
-            args: [subscriberId]
-        });
-        const subscribedIds = new Set(subResult.rows.map(r => r.channel_id as string));
-        subscribedIds.add(subscriberId); // Don't suggest self
+        // Get IDs of channels user is already subscribed to
+        const { data: subs } = await newSupabase
+            .from('subscriptions')
+            .select('channel_id')
+            .eq('subscriber_id', subscriberId);
+        
+        const subscribedIds = new Set((subs || []).map(r => r.channel_id));
+        subscribedIds.add(subscriberId);
 
-        // 2. Get active creators from Supabase (people who uploaded videos)
-        // We limit to 50 unique channels to keep it manageable
-        if (!supabase) return [];
-
+        // Get active creators from Supabase
         const { data: activeChannels } = await supabase
             .from('videos')
             .select('channel_id')
-            .not('channel_id', 'is', null) // filter nulls
+            .not('channel_id', 'is', null)
             .limit(100);
-        // Note: .distinct() or .select('channel_id', { count: 'exact', head: false }) isn't direct in basic select without distinct modifier
-        // We'll filter in JS.
 
         const activeCreatorIds = Array.from(new Set(activeChannels?.map(v => v.channel_id) || []));
-
-        // 3. Filter out already subscribed
         const candidateIds = activeCreatorIds.filter(id => !subscribedIds.has(id));
 
-        // 4. Check if self is a creator (uploaded videos)
-        const isSelfCreator = activeCreatorIds.includes(subscriberId);
+        if (candidateIds.length === 0) return { suggested: [], self: null };
 
-        // Combine fetch requests
-        const idsToFetch = [...candidateIds];
-        if (isSelfCreator && !candidateIds.includes(subscriberId)) {
-            idsToFetch.push(subscriberId);
-        }
+        // Fetch details from newSupabase profiles
+        const { data: profiles } = await newSupabase
+            .from('profiles')
+            .select('id, name, avatar, description, verified')
+            .in('id', candidateIds.slice(0, 25));
 
-        if (idsToFetch.length === 0) return { suggested: [], self: null };
-
-        // 5. Fetch details from Turso
-        const placeholders = idsToFetch.map(() => '?').join(',');
-
-        const result = await turso.execute({
-            sql: `SELECT * FROM channels WHERE id IN (${placeholders}) LIMIT 25`,
-            args: idsToFetch
-        });
-
-        const channels = result.rows.map(row => ({
-            id: row.id as string,
-            name: row.name as string,
-            avatar: row.avatar as string,
-            description: row.description as string,
-            verified: Boolean(row.verified)
+        const channels = (profiles || []).map(p => ({
+            id: p.id,
+            name: p.name,
+            avatar: p.avatar,
+            description: p.description,
+            verified: p.verified
         }));
 
         const selfChannel = channels.find(c => c.id === subscriberId) || null;
         const suggested = channels.filter(c => c.id !== subscriberId);
 
         return { suggested, self: selfChannel };
-
     } catch (error) {
         console.error("Error fetching suggestions:", error);
         return { suggested: [], self: null };
@@ -145,17 +138,11 @@ export async function getSuggestedCreators(subscriberId: string) {
 
 export async function getSubscriberCount(channelId: string) {
     try {
-        console.log('Getting subscriber count for channel:', channelId);
-        const result = await turso.execute({
-            sql: "SELECT COUNT(*) as count FROM subscriptions WHERE channel_id = ?",
-            args: [channelId]
-        });
-        console.log('Turso result:', result);
-        console.log('Rows:', result.rows);
-        console.log('First row:', result.rows[0]);
-        const count = result.rows[0]?.count ?? result.rows[0]?.[0] ?? 0;
-        console.log('Parsed count:', count);
-        return Number(count);
+        const { count } = await newSupabase
+            .from('subscriptions')
+            .select('*', { count: 'exact', head: true })
+            .eq('channel_id', channelId);
+        return count || 0;
     } catch (error) {
         console.error("Error getting subscriber count:", error);
         return 0;
@@ -164,14 +151,17 @@ export async function getSubscriberCount(channelId: string) {
 
 export async function isSubscribed(subscriberId: string, channelId: string) {
     try {
-        const result = await turso.execute({
-            sql: "SELECT id, notifications FROM subscriptions WHERE subscriber_id = ? AND channel_id = ?",
-            args: [subscriberId, channelId]
-        });
-        if (result.rows.length > 0) {
+        const { data } = await newSupabase
+            .from('subscriptions')
+            .select('notifications')
+            .eq('subscriber_id', subscriberId)
+            .eq('channel_id', channelId)
+            .maybeSingle();
+        
+        if (data) {
             return {
                 subscribed: true,
-                notifications: Boolean(result.rows[0].notifications ?? 1)
+                notifications: data.notifications ?? true
             };
         }
         return { subscribed: false, notifications: false };
@@ -191,23 +181,21 @@ export async function unsubscribeFromChannel(subscriberId: string, channelId: st
 
 export async function toggleSubscriptionNotifications(subscriberId: string, channelId: string) {
     try {
-        // Get current status
-        const result = await turso.execute({
-            sql: "SELECT notifications FROM subscriptions WHERE subscriber_id = ? AND channel_id = ?",
-            args: [subscriberId, channelId]
-        });
+        const { data } = await newSupabase
+            .from('subscriptions')
+            .select('notifications')
+            .eq('subscriber_id', subscriberId)
+            .eq('channel_id', channelId)
+            .maybeSingle();
 
-        if (result.rows.length === 0) {
-            return false;
-        }
+        if (!data) return false;
 
-        const currentNotifications = Boolean(result.rows[0].notifications ?? 1);
-        const newNotifications = !currentNotifications;
+        const newNotifications = !data.notifications;
 
-        await turso.execute({
-            sql: "UPDATE subscriptions SET notifications = ? WHERE subscriber_id = ? AND channel_id = ?",
-            args: [newNotifications ? 1 : 0, subscriberId, channelId]
-        });
+        await newSupabase.from('subscriptions')
+            .update({ notifications: newNotifications })
+            .eq('subscriber_id', subscriberId)
+            .eq('channel_id', channelId);
 
         return newNotifications;
     } catch (error) {

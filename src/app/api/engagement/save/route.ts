@@ -8,8 +8,8 @@ import {
   addPlaylistItem,
   removePlaylistItem,
   createPlaylist,
+  listPlaylistItems,
 } from '@/lib/engagement';
-import { turso } from '@/lib/turso';
 import { getActiveProfile } from '@/app/actions/profile';
 
 async function requireProfile() {
@@ -34,12 +34,12 @@ export async function GET(req: Request) {
 
     let playlistMap = new Map<string, boolean>();
     if (playlistIds.length > 0) {
-      const placeholders = playlistIds.map(() => '?').join(',');
-      const res = await turso.execute({
-        sql: `SELECT playlist_id FROM playlist_items WHERE video_id = ? AND playlist_id IN (${placeholders})`,
-        args: [videoId, ...playlistIds],
-      });
-      playlistMap = new Map((res.rows || []).map((r: any) => [r.playlist_id as string, true]));
+      // Check which playlists contain this video using Supabase
+      for (const pid of playlistIds) {
+        const items = await listPlaylistItems(pid);
+        const hasVideo = (items || []).some((item: any) => item.video_id === videoId);
+        playlistMap.set(pid, hasVideo);
+      }
     }
 
     const wl = await listWatchLater(profileId);
@@ -82,13 +82,8 @@ export async function POST(req: Request) {
       let pid = playlistId;
       if (!pid) {
         if (!newPlaylistName) return NextResponse.json({ error: 'name required for new playlist' }, { status: 400 });
-        await createPlaylist(profileId, newPlaylistName.trim());
-        // fetch the new playlist id
-        const res = await turso.execute({
-          sql: `SELECT id FROM playlists WHERE user_id = ? ORDER BY created_at DESC LIMIT 1`,
-          args: [profileId],
-        });
-        pid = res.rows?.[0]?.id as string | undefined;
+        const result = await createPlaylist(profileId, newPlaylistName.trim());
+        pid = result?.id;
       }
       if (!pid) return NextResponse.json({ error: 'playlistId missing' }, { status: 400 });
       await addPlaylistItem(pid, videoId);

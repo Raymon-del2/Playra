@@ -1,7 +1,7 @@
 'use server';
 
 import { listPlaylists, listPlaylistItems, removePlaylistItem } from '@/lib/engagement';
-import { supabase } from '@/lib/supabase';
+import { engagementSupabase as supabase } from '@/lib/supabase';
 
 export async function fetchUserPlaylists(userId: string) {
   try {

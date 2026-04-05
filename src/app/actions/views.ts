@@ -1,6 +1,10 @@
 'use server';
 
-import { turso } from "@/lib/turso";
+import { createClient } from '@supabase/supabase-js';
+
+const newSupabaseUrl = 'https://cbfybannksdcajiiwjfl.supabase.co';
+const newSupabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNiZnliYW5ua3NkY2FqaWl3amZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyMzkwNDAsImV4cCI6MjA5MDgxNTA0MH0.qN6dqfAR5qIOh1T4ctRacBv0J12TdXHc4-NiGe2nLe4';
+const newSupabase = createClient(newSupabaseUrl, newSupabaseAnonKey);
 
 export type ViewRecord = {
     id: string;
@@ -17,9 +21,13 @@ export async function trackVideoView(videoId: string, profileId?: string) {
         const hour = now.getHours();
         const id = `view_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         
-        await turso.execute({
-            sql: `INSERT INTO video_views (id, video_id, profile_id, viewed_at, hour_of_day) VALUES (?, ?, ?, ?, ?)`,
-            args: [id, videoId, profileId || null, now.toISOString(), hour]
+        await newSupabase.from('video_views').insert({
+            id,
+            video_id: videoId,
+            profile_id: profileId || null,
+            user_id: profileId || null,
+            watched_seconds: 0,
+            created_at: now.toISOString()
         });
         
         return { success: true };
@@ -32,31 +40,33 @@ export async function trackVideoView(videoId: string, profileId?: string) {
 // Get peak viewing time for a channel's videos
 export async function getPeakViewingTime(channelId: string): Promise<string> {
     try {
-        // Get all video IDs for this channel
-        const { rows: videos } = await turso.execute({
-            sql: "SELECT id FROM videos WHERE channel_id = ?",
-            args: [channelId]
-        });
+        // Get all video IDs for this channel from old Supabase
+        const { supabase: oldSupabase } = await import("@/lib/supabase");
+        const { data: videos } = await oldSupabase
+            .from('videos')
+            .select('id')
+            .eq('channel_id', channelId);
         
-        if (videos.length === 0) return "No data";
+        if (!videos || videos.length === 0) return "No data";
         
         const videoIds = videos.map(v => v.id);
-        const placeholders = videoIds.map(() => '?').join(',');
         
         // Get view counts by hour
-        const { rows: hourCounts } = await turso.execute({
-            sql: `SELECT hour_of_day, COUNT(*) as count 
-                  FROM video_views 
-                  WHERE video_id IN (${placeholders})
-                  GROUP BY hour_of_day 
-                  ORDER BY count DESC`,
-            args: videoIds
-        });
+        const { data: hourCounts } = await newSupabase
+            .from('video_views')
+            .select('created_at')
+            .in('video_id', videoIds);
         
-        if (hourCounts.length === 0) return "No views yet";
+        if (!hourCounts || hourCounts.length === 0) return "No views yet";
         
         // Determine time of day based on peak hour
-        const peakHour = Number(hourCounts[0].hour_of_day);
+        const hourCountsObj: Record<number, number> = {};
+        hourCounts.forEach((v: any) => {
+            const h = new Date(v.created_at).getHours();
+            hourCountsObj[h] = (hourCountsObj[h] || 0) + 1;
+        });
+        
+        const peakHour = Number(Object.entries(hourCountsObj).sort((a, b) => b[1] - a[1])[0]?.[0] || 0);
         
         if (peakHour >= 5 && peakHour < 12) return "Morning";
         if (peakHour >= 12 && peakHour < 17) return "Afternoon";
@@ -76,35 +86,34 @@ export async function getViewTimeDistribution(channelId: string): Promise<{
     night: number;
 }> {
     try {
-        const { rows: videos } = await turso.execute({
-            sql: "SELECT id FROM videos WHERE channel_id = ?",
-            args: [channelId]
-        });
+        const { supabase: oldSupabase } = await import("@/lib/supabase");
+        const { data: videos } = await oldSupabase
+            .from('videos')
+            .select('id')
+            .eq('channel_id', channelId);
         
-        if (videos.length === 0) {
+        if (!videos || videos.length === 0) {
             return { morning: 0, afternoon: 0, evening: 0, night: 0 };
         }
         
         const videoIds = videos.map(v => v.id);
-        const placeholders = videoIds.map(() => '?').join(',');
         
-        const { rows } = await turso.execute({
-            sql: `SELECT 
-                SUM(CASE WHEN hour_of_day >= 5 AND hour_of_day < 12 THEN 1 ELSE 0 END) as morning,
-                SUM(CASE WHEN hour_of_day >= 12 AND hour_of_day < 17 THEN 1 ELSE 0 END) as afternoon,
-                SUM(CASE WHEN hour_of_day >= 17 AND hour_of_day < 21 THEN 1 ELSE 0 END) as evening,
-                SUM(CASE WHEN hour_of_day >= 21 OR hour_of_day < 5 THEN 1 ELSE 0 END) as night
-            FROM video_views 
-            WHERE video_id IN (${placeholders})`,
-            args: videoIds
+        const { data: views } = await newSupabase
+            .from('video_views')
+            .select('created_at')
+            .in('video_id', videoIds);
+        
+        let morning = 0, afternoon = 0, evening = 0, night = 0;
+        
+        (views || []).forEach((v: any) => {
+            const h = new Date(v.created_at).getHours();
+            if (h >= 5 && h < 12) morning++;
+            else if (h >= 12 && h < 17) afternoon++;
+            else if (h >= 17 && h < 21) evening++;
+            else night++;
         });
         
-        return {
-            morning: Number(rows[0]?.morning || 0),
-            afternoon: Number(rows[0]?.afternoon || 0),
-            evening: Number(rows[0]?.evening || 0),
-            night: Number(rows[0]?.night || 0)
-        };
+        return { morning, afternoon, evening, night };
     } catch (error) {
         console.error("Error getting view time distribution:", error);
         return { morning: 0, afternoon: 0, evening: 0, night: 0 };

@@ -18,7 +18,7 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
 
   const mainItems = [
     { icon: 'home', label: 'Home', path: '/' },
-    { icon: 'styles', label: 'Style', path: '/styles' },
+    { icon: 'styles', label: 'Styles', path: '/styles' },
     { icon: 'subscriptions', label: 'Subscriptions', path: '/subscriptions', protected: true },
   ];
 
@@ -112,11 +112,13 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
             ? 'flex-col items-center justify-center py-4 px-0'
             : 'items-center space-x-5 px-3 py-2.5 rounded-xl'
             } ${isActive
-              ? 'bg-white/10 text-white'
-              : 'text-gray-300 hover:bg-white/5 hover:text-white'
+              ? isCollapsed 
+                ? 'text-white'
+                : 'bg-white/10 text-white'
+              : 'text-gray-400 hover:text-white'
             }`}
         >
-          <div suppressHydrationWarning className={`flex items-center justify-center transition-colors w-6 h-6 ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-white'}`}>
+          <div suppressHydrationWarning className={`flex items-center justify-center transition-colors w-6 h-6`}>
             {getIcon(item.icon, isActive)}
           </div>
           <span
@@ -133,15 +135,25 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
   return (
     <aside
       suppressHydrationWarning
-      className={`fixed left-0 top-14 h-[calc(100vh-56px)] bg-[#0f0f0f] overflow-y-auto hidden lg:block transition-all duration-300 border-r border-white/5 z-40 ${isCollapsed ? 'w-20' : 'w-64'
+      className={`fixed left-0 top-14 h-[calc(100vh-56px)] bg-[#0f0f0f] overflow-y-auto hidden lg:block transition-all duration-300 z-40 ${isCollapsed ? 'w-[72px]' : 'w-64 border-r border-white/5'
         }`}
     >
       <div suppressHydrationWarning className={`py-2 w-full ${isCollapsed ? 'px-0' : 'px-3'}`}>
-        <ul suppressHydrationWarning className="space-y-1 mb-3">
+        {/* Main Items - Always visible */}
+        <ul suppressHydrationWarning className={`space-y-1 ${isCollapsed ? 'px-0' : 'mb-3'}`}>
           {mainItems.map(renderItem)}
         </ul>
 
-        {!isCollapsed && (
+        {isCollapsed ? (
+          // Collapsed: Show "You" section with just essential items
+          <>
+            <div className="h-px bg-white/10 my-2 mx-3" />
+            <ul suppressHydrationWarning className="space-y-1">
+              {youItems.slice(0, 2).map(renderItem)} {/* Just Your channel and History */}
+            </ul>
+          </>
+        ) : (
+          // Expanded: Full sidebar
           <>
             {isUserAuthenticated && (
               <>
@@ -182,8 +194,6 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
 
             <div suppressHydrationWarning className="h-px bg-white/10 my-3 mx-3" />
 
-            <div suppressHydrationWarning className="h-px bg-white/10 my-3 mx-3" />
-
             <div suppressHydrationWarning className="px-3 py-2">
               <h3 className="text-[16px] font-bold text-white mb-1">Explore</h3>
             </div>
@@ -215,7 +225,7 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
                   Creators
                 </Link>
                 <Link href="/advertisement" className="hover:text-white transition-colors">
-                  Advertisement
+                  Advertise
                 </Link>
                 <Link href="/developers" className="hover:text-white transition-colors">
                   Developers

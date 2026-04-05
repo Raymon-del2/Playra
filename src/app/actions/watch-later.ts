@@ -1,7 +1,7 @@
 'use server';
 
 import { listWatchLater, removeWatchLater, batchCheckWatchLater } from '@/lib/engagement';
-import { supabase } from '@/lib/supabase';
+import { engagementSupabase as supabase } from '@/lib/supabase';
 
 export async function fetchBatchWatchLaterStatus(userId: string, videoIds: string[]) {
   try {

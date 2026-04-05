@@ -1,7 +1,6 @@
 'use server';
 
-import { turso } from "@/lib/turso";
-import { supabase } from "@/lib/supabase";
+import { engagementSupabase as supabase } from "@/lib/supabase";
 
 export type UserCommentWithVideo = {
     comment_id: string;
@@ -19,25 +18,22 @@ export type UserCommentWithVideo = {
 // Get all comments by a user with video details
 export async function getUserComments(profileId: string): Promise<UserCommentWithVideo[]> {
     try {
-        // Get all comments from the user
-        const { rows: comments } = await turso.execute({
-            sql: `SELECT 
-                c.id as comment_id,
-                c.content,
-                c.created_at,
-                c.likes,
-                c.dislikes,
-                c.video_id
-            FROM comments c
-            WHERE c.profile_id = ? AND c.parent_id IS NULL
-            ORDER BY c.created_at DESC`,
-            args: [profileId]
-        });
+        // Get all comments from the user using Supabase
+        const { data: comments, error: commentsError } = await supabase
+            .from('comments')
+            .select('id, content, created_at, likes, dislikes, video_id')
+            .eq('profile_id', profileId)
+            .is('parent_id', null)
+            .order('created_at', { ascending: false });
 
-        if (comments.length === 0) return [];
+        if (commentsError) {
+            console.error("Error fetching comments:", commentsError);
+        }
+
+        if (!comments || comments.length === 0) return [];
 
         // Get video details from Supabase
-        const videoIds = comments.map(c => c.video_id as string);
+        const videoIds = comments.map((c: any) => c.video_id);
         const { data: videos, error } = await supabase
             .from('videos')
             .select('id, title, thumbnail_url, channel_id, is_short, channels(name)')
@@ -49,7 +45,7 @@ export async function getUserComments(profileId: string): Promise<UserCommentWit
 
         // Create a map of video details
         const videoMap = new Map();
-        videos?.forEach(v => {
+        videos?.forEach((v: any) => {
             videoMap.set(v.id, {
                 title: v.title,
                 thumbnail: v.thumbnail_url,
@@ -59,15 +55,15 @@ export async function getUserComments(profileId: string): Promise<UserCommentWit
         });
 
         // Combine comment data with video details
-        return comments.map(c => {
+        return comments.map((c: any) => {
             const video = videoMap.get(c.video_id) || {};
             return {
-                comment_id: c.comment_id as string,
-                content: c.content as string,
-                created_at: c.created_at as string,
-                likes: Number(c.likes),
-                dislikes: Number(c.dislikes),
-                video_id: c.video_id as string,
+                comment_id: c.id,
+                content: c.content,
+                created_at: c.created_at,
+                likes: c.likes || 0,
+                dislikes: c.dislikes || 0,
+                video_id: c.video_id,
                 video_title: video.title || 'Unknown Video',
                 video_thumbnail: video.thumbnail || null,
                 video_channel_name: video.channel_name || 'Unknown',
@@ -83,11 +79,12 @@ export async function getUserComments(profileId: string): Promise<UserCommentWit
 // Get comment count for a user
 export async function getUserCommentCount(profileId: string): Promise<number> {
     try {
-        const { rows } = await turso.execute({
-            sql: "SELECT COUNT(*) as count FROM comments WHERE profile_id = ?",
-            args: [profileId]
-        });
-        return Number(rows[0]?.count || 0);
+        const { count, error } = await supabase
+            .from('comments')
+            .select('*', { count: 'exact', head: true })
+            .eq('profile_id', profileId);
+        
+        return count || 0;
     } catch (error) {
         console.error("Error getting user comment count:", error);
         return 0;

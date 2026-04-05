@@ -1,22 +1,23 @@
 'use server';
 
 import { turso } from "@/lib/turso";
-import { initDatabase } from "@/lib/db-setup";
+import { supabase } from "@/lib/supabase";
+import { createClient } from '@supabase/supabase-js';
 import { revalidatePath } from "next/cache";
+
+// New Supabase for Turso-migrated data
+const newSupabaseUrl = 'https://cbfybannksdcajiiwjfl.supabase.co';
+const newSupabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNiZnliYW5ua3NkY2FqaWl3amZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyMzkwNDAsImV4cCI6MjA5MDgxNTA0MH0.qN6dqfAR5qIOh1T4ctRacBv0J12TdXHc4-NiGe2nLe4';
+const newSupabase = createClient(newSupabaseUrl, newSupabaseAnonKey);
 
 export async function getBatchProfiles(profileIds: string[]) {
     if (!profileIds.length) return [];
     try {
-        const placeholders = profileIds.map(() => '?').join(',');
-        const result = await turso.execute({
-            sql: `SELECT id, name, avatar FROM channels WHERE id IN (${placeholders})`,
-            args: profileIds
-        });
-        return result.rows.map(row => ({
-            id: row.id as string,
-            name: row.name as string,
-            avatar: row.avatar as string | null
-        }));
+        const { data } = await newSupabase
+            .from('profiles')
+            .select('id, name, avatar')
+            .in('id', profileIds);
+        return data || [];
     } catch (error) {
         console.error("Error fetching batch profiles:", error);
         return [];
@@ -25,21 +26,13 @@ export async function getBatchProfiles(profileIds: string[]) {
 
 export async function getUserProfiles(userId: string) {
     try {
-        const result = await turso.execute({
-            sql: `SELECT * FROM channels WHERE user_id = ?`,
-            args: [userId]
-        });
-        return result.rows.map(row => ({
-            id: row.id as string,
-            user_id: row.user_id as string,
-            name: row.name as string,
-            description: row.description as string | null,
-            avatar: row.avatar as string | null,
-            verified: Boolean(row.verified),
-            account_type: row.account_type as string || 'general',
-            join_order: null, // Simplified - no users table JOIN
-            created_at: String(row.created_at)
-        }));
+        const { data, error } = await newSupabase
+            .from('profiles')
+            .select('*')
+            .eq('user_id', userId);
+        
+        if (error) throw error;
+        return data || [];
     } catch (error) {
         console.error("Error fetching profiles:", error);
         return [];
@@ -48,37 +41,31 @@ export async function getUserProfiles(userId: string) {
 
 export async function createProfile(userId: string, name: string, avatarBase64: string, accountType: 'adult' | 'kids' | 'family') {
     try {
-        // Check profile count limit (4) via fast count query
-        const countResult = await turso.execute({
-            sql: "SELECT COUNT(*) as count FROM channels WHERE user_id = ?",
-            args: [userId]
-        });
+        // Check profile count limit (4)
+        const { count } = await newSupabase
+            .from('profiles')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', userId);
 
-        const count = countResult.rows[0]?.count as number || 0;
-
-        if (count >= 4) {
+        if ((count || 0) >= 4) {
             return { success: false, error: "Maximum of 4 profiles allowed." };
         }
 
-        const channelId = `ch_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const profileId = `ch_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-        // Get user's join_order to copy to channel
-        let joinOrder = null;
-        try {
-            const userResult = await turso.execute({
-                sql: 'SELECT join_order FROM users WHERE id = ?',
-                args: [userId]
+        const { error } = await newSupabase
+            .from('profiles')
+            .insert({
+                id: profileId,
+                user_id: userId,
+                name,
+                avatar: avatarBase64,
+                account_type: accountType,
+                verified: false,
+                created_at: new Date().toISOString()
             });
-            joinOrder = userResult.rows[0]?.join_order;
-        } catch (e) { /* ignore */ }
 
-        await turso.execute({
-            sql: `
-                INSERT INTO channels (id, user_id, name, avatar, account_type, join_order)
-                VALUES (?, ?, ?, ?, ?, ?)
-            `,
-            args: [channelId, userId, name, avatarBase64, accountType, joinOrder]
-        });
+        if (error) throw error;
 
         revalidatePath('/select-profile');
         return { success: true };
@@ -90,20 +77,18 @@ export async function createProfile(userId: string, name: string, avatarBase64: 
 
 export async function updateProfileAvatar(profileId: string, avatarBase64: string) {
     try {
-        await turso.execute({
-            sql: `
-                UPDATE channels 
-                SET avatar = ?
-                WHERE id = ?
-            `,
-            args: [avatarBase64, profileId]
-        });
+        const { error } = await newSupabase
+            .from('profiles')
+            .update({ avatar: avatarBase64 })
+            .eq('id', profileId);
 
-        // Propagate avatar change to Supabase videos so all viewers see the updated profile photo
+        if (error) throw error;
+
+        // Propagate avatar change to Supabase videos
         try {
             await updateChannelAvatarInVideos(profileId, avatarBase64);
         } catch (supabaseError) {
-            console.warn("Failed to sync avatar to videos table in Supabase; falling back to existing channel_avatar", supabaseError);
+            console.warn("Failed to sync avatar to videos:", supabaseError);
         }
 
         revalidatePath('/select-profile');
@@ -119,12 +104,14 @@ import { cookies } from 'next/headers';
 export async function selectActiveProfile(profileId: string, userId: string) {
     try {
         // Security check: Ensure profile belongs to user
-        const result = await turso.execute({
-            sql: "SELECT id FROM channels WHERE id = ? AND user_id = ?",
-            args: [profileId, userId]
-        });
+        const { data } = await newSupabase
+            .from('profiles')
+            .select('id')
+            .eq('id', profileId)
+            .eq('user_id', userId)
+            .maybeSingle();
 
-        if (result.rows.length === 0) {
+        if (!data) {
             return { success: false, error: "Unauthorized profile selection" };
         }
 
@@ -138,9 +125,7 @@ export async function selectActiveProfile(profileId: string, userId: string) {
             maxAge: 60 * 60 * 24 * 30 // 30 days
         });
 
-
         revalidatePath('/', 'layout');
-
         return { success: true };
     } catch (error) {
         console.error("Error selecting profile:", error);
@@ -151,16 +136,18 @@ export async function selectActiveProfile(profileId: string, userId: string) {
 export async function selectActiveProfileByName(handle: string) {
     try {
         const cleanHandle = handle.startsWith('@') ? handle : `@${handle}`;
-        const result = await turso.execute({
-            sql: "SELECT id FROM channels WHERE LOWER(name) = LOWER(?)",
-            args: [cleanHandle]
-        });
+        
+        const { data } = await newSupabase
+            .from('profiles')
+            .select('id')
+            .ilike('name', cleanHandle)
+            .maybeSingle();
 
-        if (result.rows.length === 0) {
+        if (!data) {
             return { success: false, error: "Profile not found" };
         }
 
-        const profileId = result.rows[0].id as string;
+        const profileId = data.id;
         
         // Set secure cookie
         const cookieStore = await cookies();
@@ -169,7 +156,7 @@ export async function selectActiveProfileByName(handle: string) {
             httpOnly: true,
             sameSite: 'strict',
             path: '/',
-            maxAge: 60 * 60 * 24 * 30 // 30 days
+            maxAge: 60 * 60 * 24 * 30
         });
 
         revalidatePath('/', 'layout');
@@ -187,32 +174,32 @@ export async function getActiveProfile() {
     if (!profileId) return null;
 
     try {
-        const result = await turso.execute({
-            sql: "SELECT * FROM channels WHERE id = ?",
-            args: [profileId]
-        });
+        const { data, error } = await newSupabase
+            .from('profiles')
+            .select('*')
+            .eq('id', profileId)
+            .maybeSingle();
 
-        if (result.rows.length === 0) return null;
+        if (error) throw error;
+        if (!data) return null;
 
-        const row = result.rows[0];
-        const profile = {
-            id: row.id as string,
-            user_id: row.user_id as string,
-            name: row.name as string,
-            description: row.description as string | null,
-            avatar: row.avatar as string | null,
-            verified: Boolean(row.verified),
-            account_type: row.account_type as string || 'general',
-            created_at: String(row.created_at)
+        return {
+            id: data.id,
+            user_id: data.user_id,
+            name: data.name,
+            description: data.description,
+            avatar: data.avatar,
+            verified: data.verified,
+            account_type: data.account_type || 'general',
+            created_at: data.created_at
         };
-        return profile;
     } catch (error) {
         console.error("Error fetching active profile:", error);
         return null;
     }
 }
 
-import { deleteChannelVideos, supabase, updateChannelAvatarInVideos } from "@/lib/supabase";
+import { deleteChannelVideos, updateChannelAvatarInVideos } from "@/lib/supabase";
 
 export async function getProfileVideoCount(profileId: string) {
     try {
@@ -232,14 +219,12 @@ export async function getProfileVideoCount(profileId: string) {
 
 export async function updateProfileName(profileId: string, newName: string) {
     try {
-        await turso.execute({
-            sql: `
-                UPDATE channels 
-                SET name = ?
-                WHERE id = ?
-            `,
-            args: [newName, profileId]
-        });
+        const { error } = await newSupabase
+            .from('profiles')
+            .update({ name: newName })
+            .eq('id', profileId);
+
+        if (error) throw error;
 
         revalidatePath('/select-profile');
         return { success: true };
@@ -254,11 +239,14 @@ export async function deleteProfile(profileId: string, userId: string) {
         // 1. Delete videos from Supabase first
         await deleteChannelVideos(profileId);
 
-        // 2. Delete channel from Turso
-        await turso.execute({
-            sql: "DELETE FROM channels WHERE id = ? AND user_id = ?",
-            args: [profileId, userId]
-        });
+        // 2. Delete from newSupabase
+        const { error } = await newSupabase
+            .from('profiles')
+            .delete()
+            .eq('id', profileId)
+            .eq('user_id', userId);
+
+        if (error) throw error;
 
         revalidatePath('/select-profile');
         return { success: true };
@@ -273,12 +261,13 @@ export async function checkProfileName(name: string) {
     if (name.length < 3) return { available: false, error: "Too short" };
 
     try {
-        const result = await turso.execute({
-            sql: "SELECT id FROM channels WHERE LOWER(name) = LOWER(?)",
-            args: [name]
-        });
+        const { data } = await newSupabase
+            .from('profiles')
+            .select('id')
+            .ilike('name', name)
+            .maybeSingle();
 
-        if (result.rows.length === 0) {
+        if (!data) {
             return { available: true };
         }
 

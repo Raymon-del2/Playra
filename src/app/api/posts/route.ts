@@ -118,11 +118,12 @@ export async function GET(request: Request) {
   const offset = parseInt(searchParams.get('offset') || '0');
 
   try {
-    // Fetch all and filter in memory since we store post data in description
+    // Fetch only posts - filter by description containing _is_post
     let query = supabase
       .from('videos')
-      .select('*')
-      .eq('video_url', '') // Posts have empty video_url
+      .select('id, channel_id, channel_name, channel_avatar, title, description, thumbnail_url, created_at')
+      .eq('video_url', '')
+      .ilike('description', '%"_is_post":true%')
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
@@ -134,15 +135,7 @@ export async function GET(request: Request) {
 
     if (error) throw error;
     
-    // Filter to only include posts (those with _is_post in description)
-    const posts = (data || []).filter((item: any) => {
-      try {
-        const desc = JSON.parse(item.description || '{}');
-        return desc._is_post === true;
-      } catch {
-        return false;
-      }
-    });
+    const posts = data || [];
 
     // Get channel IDs and fetch join_order from channels table
     const channelIds = [...new Set(posts.map((p: any) => p.channel_id).filter(Boolean))];

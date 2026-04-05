@@ -1,60 +1,35 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Prioritize the new credentials specifically provided in the latest update
-const supabaseUrl = 'https://dyhbrdijbxjrhfthknkw.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR5aGJyZGlqYnhqcmhmdGhrbmt3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkzNjM4MDYsImV4cCI6MjA4NDkzOTgwNn0.RSa6GmEkxO9Zf56JxSI7J9nG8upNY-9XrzAJu2QP5A8';
+// Video Supabase (has videos table)
+const videosSupabaseUrl = 'https://dyhbrdijbxjrhfthknkw.supabase.co';
+const videosSupabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR5aGJyZGlqYnhqcmhmdGhrbmt3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkzNjM4MDYsImV4cCI6MjA4NDkzOTgwNn0.RSa6GmEkxO9Zf56JxSI7J9nG8upNY-9XrzAJu2QP5A8';
 
-// Client-side singleton with proper auth persistence
-let browserClient: ReturnType<typeof createClient> | null = null;
+// Engagement Supabase (has profiles, comments, likes, etc.)
+const engagementSupabaseUrl = 'https://cbfybannksdcajiiwjfl.supabase.co';
+const engagementSupabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNiZnliYW5ua3NkY2FqaWl3amZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyMzkwNDAsImV4cCI6MjA5MDgxNTA0MH0.qN6dqfAR5qIOh1T4ctRacBv0J12TdXHc4-NiGe2nLe4';
 
-function getSupabaseClient() {
-  if (typeof window === 'undefined') {
-    // Server-side - create new instance without auth persistence
-    return createClient(supabaseUrl, supabaseAnonKey);
-  }
-  
-  // Browser-side - use singleton with localStorage persistence
-  if (!browserClient) {
-    browserClient = createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-        storageKey: 'playra-auth-token',
-        storage: {
-          getItem: (key) => {
-            try {
-              return localStorage.getItem(key);
-            } catch {
-              return null;
-            }
-          },
-          setItem: (key, value) => {
-            try {
-              localStorage.setItem(key, value);
-            } catch {}
-          },
-          removeItem: (key) => {
-            try {
-              localStorage.removeItem(key);
-            } catch {}
-          }
-        }
-      }
-    });
-  }
-  return browserClient;
-}
+// Main supabase for videos (default)
+export const supabase = createClient(videosSupabaseUrl, videosSupabaseKey);
 
-export const supabase = typeof window !== 'undefined' 
-  ? getSupabaseClient() 
-  : createClient(supabaseUrl, supabaseAnonKey);
+// Engagement supabase for profiles, comments, likes, etc.
+export const engagementSupabase = createClient(engagementSupabaseUrl, engagementSupabaseKey);
 
 function ensureSupabase() {
-  if (!supabase) {
+  if (!engagementSupabase) {
     throw new Error('Supabase is not configured. Please add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to your .env.local file.');
   }
-  return supabase;
+  return engagementSupabase;
+}
+
+// Get the correct Supabase client based on table name
+function getSupabaseForTable(table: string) {
+  // Tables that exist in the videos Supabase
+  const videoTables = ['videos', 'video_views', 'watch_history', 'watch_history_pause', 'video_likes', 'video_dislikes'];
+  if (videoTables.includes(table)) {
+    return supabase;
+  }
+  // All other tables (profiles, comments, likes, subscriptions, etc.) are in engagement Supabase
+  return engagementSupabase;
 }
 
 export async function ensurePostsTables() {
@@ -105,7 +80,7 @@ export async function ensurePostsTables() {
 }
 
 export async function getWatchHistoryRaw(profileId: string, limit = 1000) {
-    const { data, error } = await ensureSupabase()
+    const { data, error } = await getSupabaseForTable('watch_history')
         .from('watch_history')
         .select('id, watched_at, video_id')
         .eq('profile_id', profileId)
@@ -117,7 +92,7 @@ export async function getWatchHistoryRaw(profileId: string, limit = 1000) {
     if (rows.length === 0) return [];
 
     const videoIds = Array.from(new Set(rows.map((r) => r.video_id)));
-    const { data: videos, error: videoError } = await ensureSupabase()
+    const { data: videos, error: videoError } = await getSupabaseForTable('videos')
         .from('videos')
         .select('id, title, thumbnail_url, channel_name, duration, views, is_short, category')
         .in('id', videoIds);
@@ -148,7 +123,7 @@ export async function getWatchHistoryRaw(profileId: string, limit = 1000) {
 }
 
 export async function deleteWatchHistoryEntry(id: string, profileId: string) {
-    const { error } = await ensureSupabase()
+    const { error } = await getSupabaseForTable('watch_history')
         .from('watch_history')
         .delete()
         .eq('id', id)
@@ -180,7 +155,7 @@ export interface Video {
 
 // Video upload function
 export async function uploadVideo(videoData: Omit<Video, 'id' | 'created_at' | 'updated_at' | 'views'>) {
-    const { data, error } = await ensureSupabase()
+    const { data, error } = await getSupabaseForTable('videos')
         .from('videos')
         .insert([{
             ...videoData,
@@ -208,7 +183,7 @@ async function deleteStorageObjectFromPublicUrl(publicUrl?: string | null) {
         const pathParts = parts.slice(objectIndex + 3);
         const path = pathParts.join('/');
         if (!bucket || !path) return;
-        const { error } = await ensureSupabase().storage.from(bucket).remove([path]);
+        const { error } = await getSupabaseForTable('videos').storage.from(bucket).remove([path]);
         if (error) {
             console.warn('Failed to delete storage object', bucket, path, error.message);
         }
@@ -219,7 +194,7 @@ async function deleteStorageObjectFromPublicUrl(publicUrl?: string | null) {
 
 // Delete a video row by id
 export async function deleteVideo(id: string) {
-    const { data, error } = await ensureSupabase()
+    const { data, error } = await getSupabaseForTable('videos')
         .from('videos')
         .delete()
         .eq('id', id)
@@ -246,8 +221,8 @@ export async function deleteVideoWithAssets(params: { id: string; videoUrl?: str
     // 2. Database cleanup (optional: depends on RLS/Cascade)
     // Try to delete comments and history first to avoid foreign key violations
     try {
-        await ensureSupabase().from('comments').delete().eq('video_id', id);
-        await ensureSupabase().from('watch_history').delete().eq('video_id', id);
+        await getSupabaseForTable('videos').from('comments').delete().eq('video_id', id);
+        await getSupabaseForTable('videos').from('watch_history').delete().eq('video_id', id);
     } catch (e) {
         console.warn('Failed to delete related data', e);
     }
@@ -258,7 +233,7 @@ export async function deleteVideoWithAssets(params: { id: string; videoUrl?: str
 // Get all videos
 export async function getVideos(limit = 20, offset = 0, category?: string) {
     // First get videos
-    let query = ensureSupabase()
+    let query = supabase
         .from('videos')
         .select('*')
         .not('channel_id', 'in', '("ch_1769262677206_k5xxdmskb")') // Blacklist legacy orphaned videos
@@ -301,7 +276,7 @@ type WatchHistoryRow = {
 };
 
 export async function recordWatch(profileId: string, videoId: string) {
-    const { error } = await ensureSupabase()
+    const { error } = await getSupabaseForTable('videos')
         .from('watch_history')
         .insert([{ profile_id: profileId, video_id: videoId }]);
     if (error) throw error;
@@ -309,7 +284,7 @@ export async function recordWatch(profileId: string, videoId: string) {
 }
 
 export async function clearWatchHistory(profileId: string) {
-    const { error } = await ensureSupabase()
+    const { error } = await getSupabaseForTable('videos')
         .from('watch_history')
         .delete()
         .eq('profile_id', profileId);
@@ -318,7 +293,7 @@ export async function clearWatchHistory(profileId: string) {
 }
 
 export async function setHistoryPause(profileId: string, paused: boolean) {
-    const { error } = await ensureSupabase()
+    const { error } = await getSupabaseForTable('videos')
         .from('watch_history_pause')
         .upsert({ profile_id: profileId, paused, updated_at: new Date().toISOString() });
     if (error) throw error;
@@ -326,7 +301,7 @@ export async function setHistoryPause(profileId: string, paused: boolean) {
 }
 
 export async function isHistoryPaused(profileId: string) {
-    const { data, error } = await ensureSupabase()
+    const { data, error } = await getSupabaseForTable('videos')
         .from('watch_history_pause')
         .select('paused')
         .eq('profile_id', profileId)
@@ -336,7 +311,7 @@ export async function isHistoryPaused(profileId: string) {
 }
 
 export async function getWatchHistory(profileId: string, limit = 200) {
-    const { data, error } = await ensureSupabase()
+    const { data, error } = await getSupabaseForTable('videos')
         .from('watch_history')
         .select('id, watched_at, video_id')
         .eq('profile_id', profileId)
@@ -357,7 +332,7 @@ export async function getWatchHistory(profileId: string, limit = 200) {
     });
 
     const videoIds = deduped.map((r) => r.video_id);
-    const { data: videos, error: videoError } = await ensureSupabase()
+    const { data: videos, error: videoError } = await getSupabaseForTable('videos')
         .from('videos')
         .select('id, title, thumbnail_url, channel_name, duration, views, is_short, category')
         .in('id', videoIds);
@@ -389,7 +364,7 @@ export async function getWatchHistory(profileId: string, limit = 200) {
 // Search videos by title, description, or channel name
 export async function searchVideos(query: string | null, limit = 50) {
     // First get videos
-    let builder = ensureSupabase()
+    let builder = getSupabaseForTable('videos')
         .from('videos')
         .select('*')
         .not('channel_id', 'in', '("ch_1769262677206_k5xxdmskb")') // Blacklist legacy orphaned videos
@@ -411,7 +386,7 @@ export async function searchVideos(query: string | null, limit = 50) {
 // Get only styles (shorts)
 export async function getStyles(limit = 20, offset = 0, category?: string) {
     // First get videos
-    let query = ensureSupabase()
+    let query = getSupabaseForTable('videos')
         .from('videos')
         .select('*')
         .eq('is_short', true)
@@ -433,7 +408,7 @@ export async function getStyles(limit = 20, offset = 0, category?: string) {
 // Get video by ID
 export async function getVideoById(id: string) {
     // First get video
-    const { data: video, error } = await ensureSupabase()
+    const { data: video, error } = await supabase
         .from('videos')
         .select('*')
         .eq('id', id)
@@ -444,7 +419,7 @@ export async function getVideoById(id: string) {
 
     // Get profile avatar for this channel; swallow errors to avoid breaking the watch page
     try {
-        const { data: profile } = await ensureSupabase()
+        const { data: profile } = await engagementSupabase
             .from('profiles')
             .select('avatar')
             .eq('id', video.channel_id)
@@ -462,8 +437,7 @@ export async function getVideoById(id: string) {
 
 // Force-refresh channel avatar for all videos from this channel
 export async function updateChannelAvatarInVideos(channelId: string, avatar: string) {
-    const client = ensureSupabase();
-    const { error } = await client
+    const { error } = await supabase
         .from('videos')
         .update({ channel_avatar: avatar })
         .eq('channel_id', channelId);
@@ -473,15 +447,14 @@ export async function updateChannelAvatarInVideos(channelId: string, avatar: str
 
 // Increment views
 export async function incrementViews(id: string) {
-    const client = ensureSupabase();
-    const { data: fetchData, error: fetchError } = await client
+    const { data: fetchData, error: fetchError } = await supabase
         .from('videos')
         .select('views')
         .eq('id', id)
         .single();
     if (fetchError) throw fetchError;
     const nextViews = ((fetchData?.views ?? 0) as number) + 1;
-    const { data: updated, error: updateError } = await client
+    const { data: updated, error: updateError } = await supabase
         .from('videos')
         .update({ views: nextViews })
         .eq('id', id)
@@ -493,7 +466,7 @@ export async function incrementViews(id: string) {
 
 // Upload file to Supabase Storage
 export async function uploadVideoFile(file: File, path: string) {
-    const { data, error } = await ensureSupabase().storage
+    const { data, error } = await supabase.storage
         .from('videos')
         .upload(path, file, {
             cacheControl: '3600',
@@ -503,7 +476,7 @@ export async function uploadVideoFile(file: File, path: string) {
     if (error) throw error;
 
     // Get public URL
-    const { data: urlData } = ensureSupabase().storage
+    const { data: urlData } = supabase.storage
         .from('videos')
         .getPublicUrl(path);
 
@@ -512,7 +485,7 @@ export async function uploadVideoFile(file: File, path: string) {
 
 // Upload thumbnail to Supabase Storage
 export async function uploadThumbnail(file: File, path: string) {
-    const { data, error } = await ensureSupabase().storage
+    const { data, error } = await supabase.storage
         .from('thumbnails')
         .upload(path, file, {
             cacheControl: '3600',
@@ -522,7 +495,7 @@ export async function uploadThumbnail(file: File, path: string) {
     if (error) throw error;
 
     // Get public URL
-    const { data: urlData } = ensureSupabase().storage
+    const { data: urlData } = supabase.storage
         .from('thumbnails')
         .getPublicUrl(path);
 
@@ -531,7 +504,7 @@ export async function uploadThumbnail(file: File, path: string) {
 
 // Delete all videos for a channel
 export async function deleteChannelVideos(channelId: string) {
-    const { error } = await ensureSupabase()
+    const { error } = await supabase
         .from('videos')
         .delete()
         .eq('channel_id', channelId);
@@ -562,7 +535,7 @@ export interface Comment {
 
 // Get comments for a video
 export async function getVideoComments(videoId: string, profileId?: string) {
-    const { data: comments, error } = await ensureSupabase()
+    const { data: comments, error } = await engagementSupabase
         .from('comments')
         .select('*')
         .eq('video_id', videoId)
@@ -574,7 +547,7 @@ export async function getVideoComments(videoId: string, profileId?: string) {
 
     // Get profile info for commenters
     const profileIds = Array.from(new Set(comments.map((c: any) => c.profile_id)));
-    const { data: profiles } = await ensureSupabase()
+    const { data: profiles } = await engagementSupabase
         .from('profiles')
         .select('id, name, avatar')
         .in('id', profileIds);
@@ -583,7 +556,7 @@ export async function getVideoComments(videoId: string, profileId?: string) {
 
     // Get replies for each comment
     const commentIds = comments.map((c: any) => c.id);
-    const { data: replies } = await ensureSupabase()
+    const { data: replies } = await engagementSupabase
         .from('comments')
         .select('*')
         .in('parent_id', commentIds)
@@ -592,7 +565,7 @@ export async function getVideoComments(videoId: string, profileId?: string) {
     // Get reply profile info
     const replyProfileIds = Array.from(new Set((replies || []).map((r: any) => r.profile_id)));
     if (replyProfileIds.length > 0) {
-        const { data: replyProfiles } = await ensureSupabase()
+        const { data: replyProfiles } = await engagementSupabase
             .from('profiles')
             .select('id, name, avatar')
             .in('id', replyProfileIds);
@@ -603,7 +576,7 @@ export async function getVideoComments(videoId: string, profileId?: string) {
     let userEngagement = new Map();
     if (profileId) {
         const allCommentIds = commentIds.concat((replies || []).map((r: any) => r.id));
-        const { data: engagements } = await ensureSupabase()
+        const { data: engagements } = await engagementSupabase
             .from('comment_engagement')
             .select('comment_id, type')
             .eq('profile_id', profileId)
@@ -641,9 +614,14 @@ export async function getVideoComments(videoId: string, profileId?: string) {
 
 // Add a comment
 export async function addComment(videoId: string, profileId: string, content: string, parentId?: string) {
-    const { data, error } = await ensureSupabase()
+    // Generate a proper UUID for the comment
+    const { data: uuidData } = await engagementSupabase.rpc('gen_random_uuid');
+    const commentId = uuidData || crypto.randomUUID();
+    
+    const { data, error } = await engagementSupabase
         .from('comments')
         .insert([{
+            id: commentId,
             video_id: videoId,
             profile_id: profileId,
             content: content.trim(),
@@ -660,7 +638,7 @@ export async function addComment(videoId: string, profileId: string, content: st
 
 // Like/dislike a comment
 export async function engageComment(commentId: string, profileId: string, type: 'like' | 'dislike' | null) {
-    const client = ensureSupabase();
+    const client = engagementSupabase;
 
     // Check existing engagement
     const { data: existing } = await client
@@ -677,17 +655,16 @@ export async function engageComment(commentId: string, profileId: string, type: 
         .eq('id', commentId)
         .single();
 
-    if (!comment) throw new Error('Comment not found');
-
-    let likes = comment.likes;
-    let dislikes = comment.dislikes;
+    let likes = comment?.likes || 0;
+    let dislikes = comment?.dislikes || 0;
+    const existingType = existing?.type;
 
     if (existing) {
         // Remove existing engagement effect
-        if (existing.type === 'like') likes--;
-        if (existing.type === 'dislike') dislikes--;
+        if (existingType === 'like') likes--;
+        if (existingType === 'dislike') dislikes--;
 
-        if (type === null || type === existing.type) {
+        if (type === null || type === existingType) {
             // Just remove
             await client.from('comment_engagement').delete().eq('id', existing.id);
         } else {
@@ -697,12 +674,18 @@ export async function engageComment(commentId: string, profileId: string, type: 
             if (type === 'dislike') dislikes++;
         }
     } else if (type) {
-        // Create new engagement
-        await client.from('comment_engagement').insert([{
+        // Create new engagement with UUID - use upsert to prevent duplicates
+        const { data: uuidData } = await client.rpc('gen_random_uuid');
+        const engId = uuidData || crypto.randomUUID();
+        
+        // Use upsert with onConflict to prevent duplicate likes
+        await client.from('comment_engagement').upsert([{
+            id: engId,
             comment_id: commentId,
             profile_id: profileId,
             type,
-        }]);
+        }], { onConflict: 'comment_id,profile_id', ignoreDuplicates: true });
+        
         if (type === 'like') likes++;
         if (type === 'dislike') dislikes++;
     }
@@ -715,7 +698,7 @@ export async function engageComment(commentId: string, profileId: string, type: 
 
 // Delete a comment
 export async function deleteComment(commentId: string, profileId: string) {
-    const { error } = await ensureSupabase()
+    const { error } = await engagementSupabase
         .from('comments')
         .delete()
         .eq('id', commentId)
@@ -728,7 +711,7 @@ export async function deleteComment(commentId: string, profileId: string) {
 // Get comment count for a video
 export async function getBatchCommentCounts(videoIds: string[]) {
   if (!videoIds.length) return {};
-  const { data, error } = await ensureSupabase()
+  const { data, error } = await engagementSupabase
     .from('comments')
     .select('video_id')
     .in('video_id', videoIds);
@@ -744,7 +727,7 @@ export async function getBatchCommentCounts(videoIds: string[]) {
 }
 
 export async function getCommentCount(videoId: string) {
-    const { count, error } = await ensureSupabase()
+    const { count, error } = await engagementSupabase
         .from('comments')
         .select('*', { count: 'exact', head: true })
         .eq('video_id', videoId);
@@ -765,7 +748,7 @@ export interface Subscription {
 
 // Subscribe to a channel
 export async function subscribeToChannel(subscriberId: string, channelId: string) {
-    const { data, error } = await ensureSupabase()
+    const { data, error } = await getSupabaseForTable('videos')
         .from('subscriptions')
         .insert([{
             subscriber_id: subscriberId,
@@ -781,7 +764,7 @@ export async function subscribeToChannel(subscriberId: string, channelId: string
 
 // Unsubscribe from a channel
 export async function unsubscribeFromChannel(subscriberId: string, channelId: string) {
-    const { error } = await ensureSupabase()
+    const { error } = await getSupabaseForTable('videos')
         .from('subscriptions')
         .delete()
         .eq('subscriber_id', subscriberId)
@@ -793,7 +776,7 @@ export async function unsubscribeFromChannel(subscriberId: string, channelId: st
 
 // Check if subscribed
 export async function isSubscribed(subscriberId: string, channelId: string) {
-    const { data, error } = await ensureSupabase()
+    const { data, error } = await getSupabaseForTable('videos')
         .from('subscriptions')
         .select('id, notifications')
         .eq('subscriber_id', subscriberId)
@@ -806,7 +789,7 @@ export async function isSubscribed(subscriberId: string, channelId: string) {
 
 // Toggle notifications for a subscription
 export async function toggleSubscriptionNotifications(subscriberId: string, channelId: string) {
-    const { data: existing } = await ensureSupabase()
+    const { data: existing } = await getSupabaseForTable('videos')
         .from('subscriptions')
         .select('id, notifications')
         .eq('subscriber_id', subscriberId)
@@ -815,7 +798,7 @@ export async function toggleSubscriptionNotifications(subscriberId: string, chan
 
     if (!existing) throw new Error('Not subscribed');
 
-    const { error } = await ensureSupabase()
+    const { error } = await getSupabaseForTable('videos')
         .from('subscriptions')
         .update({ notifications: !existing.notifications })
         .eq('id', existing.id);
@@ -826,7 +809,7 @@ export async function toggleSubscriptionNotifications(subscriberId: string, chan
 
 // Get subscriber count for a channel
 export async function getSubscriberCount(channelId: string) {
-    const { count, error } = await ensureSupabase()
+    const { count, error } = await getSupabaseForTable('videos')
         .from('subscriptions')
         .select('*', { count: 'exact', head: true })
         .eq('channel_id', channelId);
@@ -837,7 +820,7 @@ export async function getSubscriberCount(channelId: string) {
 
 // Get user's subscriptions with channel info
 export async function getSubscriptions(subscriberId: string) {
-    const { data: subs, error } = await ensureSupabase()
+    const { data: subs, error } = await getSupabaseForTable('videos')
         .from('subscriptions')
         .select('*')
         .eq('subscriber_id', subscriberId)
@@ -848,7 +831,7 @@ export async function getSubscriptions(subscriberId: string) {
 
     // Get channel profiles
     const channelIds = subs.map((s: any) => s.channel_id);
-    const { data: profiles } = await ensureSupabase()
+    const { data: profiles } = await getSupabaseForTable('videos')
         .from('profiles')
         .select('id, name, avatar')
         .in('id', channelIds);
@@ -868,7 +851,7 @@ export async function getSubscriptions(subscriberId: string) {
 // Get videos from subscribed channels
 export async function getSubscriptionFeed(subscriberId: string, limit = 50) {
     // Get subscribed channel IDs
-    const { data: subs } = await ensureSupabase()
+    const { data: subs } = await getSupabaseForTable('videos')
         .from('subscriptions')
         .select('channel_id')
         .eq('subscriber_id', subscriberId);
@@ -878,7 +861,7 @@ export async function getSubscriptionFeed(subscriberId: string, limit = 50) {
     const channelIds = subs.map((s: any) => s.channel_id);
 
     // Get videos from those channels
-    const { data: videos, error } = await ensureSupabase()
+    const { data: videos, error } = await getSupabaseForTable('videos')
         .from('videos')
         .select('*')
         .in('channel_id', channelIds)
@@ -893,7 +876,7 @@ export async function getSubscriptionFeed(subscriberId: string, limit = 50) {
 
 // Get related videos based on category, channel, or recent uploads
 export async function getRelatedVideos(videoId: string, category?: string, channelId?: string, limit = 20) {
-    const client = ensureSupabase();
+    const client = getSupabaseForTable('videos');
 
     // Strategy: Get videos from same category or channel, excluding current video
     let query = client
@@ -961,7 +944,7 @@ export async function getRelatedVideos(videoId: string, category?: string, chann
 export async function getTrendingVideos(limit = 50) {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-    const { data: recentVideos, error } = await ensureSupabase()
+    const { data: recentVideos, error } = await getSupabaseForTable('videos')
         .from('videos')
         .select('*')
         .not('channel_id', 'in', '("ch_1769262677206_k5xxdmskb")')
@@ -973,7 +956,7 @@ export async function getTrendingVideos(limit = 50) {
 
     // If not enough recent videos, get all-time trending
     if (!recentVideos || recentVideos.length < 10) {
-        const { data: allTimeVideos } = await ensureSupabase()
+        const { data: allTimeVideos } = await getSupabaseForTable('videos')
             .from('videos')
             .select('*')
             .not('channel_id', 'in', '("ch_1769262677206_k5xxdmskb")')
