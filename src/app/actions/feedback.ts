@@ -1,13 +1,13 @@
 'use server';
 
-import { engagementSupabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 
 export async function submitFeedback(message: string, profileId?: string) {
   if (!message.trim()) {
     return { success: false, error: "Message cannot be empty" };
   }
 
-  const { error } = await engagementSupabase
+  const { error } = await supabase
     .from("feedback")
     .insert([{ message: message.trim(), profile_id: profileId || null }]);
 

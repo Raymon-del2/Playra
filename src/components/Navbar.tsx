@@ -403,6 +403,18 @@ export default function Navbar({
               Be a helper
             </button>
 
+            {/* TV Mode link */}
+            <Link
+              href="/tv"
+              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 text-xs text-zinc-400 hover:text-white transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h8M12 6v8" />
+              </svg>
+              TV Mode
+            </Link>
+
             {/* Right: Actions */}
             <div className={`flex items-center space-x-1 sm:space-x-2 flex-shrink-0 transition-all ${isSearchExpanded ? 'hidden md:flex' : 'flex'}`}>
               

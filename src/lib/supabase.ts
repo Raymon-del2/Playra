@@ -153,6 +153,14 @@ export interface Video {
     content_type?: 'video' | 'style' | 'post' | 'live' | 'music' | 'podcast' | 'promotion' | 'collaboration' | 'playlist';
 }
 
+// Types for profiles (channels)
+export interface Channel {
+    id: string;
+    name: string;
+    avatar: string;
+    subscribers: number;
+}
+
 // Video upload function
 export async function uploadVideo(videoData: Omit<Video, 'id' | 'created_at' | 'updated_at' | 'views'>) {
     const { data, error } = await getSupabaseForTable('videos')
@@ -936,6 +944,38 @@ export async function getRelatedVideos(videoId: string, category?: string, chann
     }
 
     return (videos || []) as Video[];
+}
+
+// Get top channels by subscriber count
+export async function getTopChannels(limit = 10): Promise<Channel[]> {
+    const { data: profiles, error } = await engagementSupabase
+        .from('profiles')
+        .select('id, name, avatar')
+        .order('subscribers', { ascending: false })
+        .limit(limit);
+
+    if (error) throw error;
+
+    // Get subscriber counts for each profile
+    const channelIds = profiles?.map(p => p.id) || [];
+    if (channelIds.length === 0) return [];
+
+    const { data: subs } = await engagementSupabase
+        .from('subscriptions')
+        .select('channel_id')
+        .in('channel_id', channelIds);
+
+    const subscriberCounts = new Map<string, number>();
+    subs?.forEach(s => {
+        subscriberCounts.set(s.channel_id, (subscriberCounts.get(s.channel_id) || 0) + 1);
+    });
+
+    return (profiles || []).map(p => ({
+        id: p.id,
+        name: p.name,
+        avatar: p.avatar,
+        subscribers: subscriberCounts.get(p.id) || 0
+    }));
 }
 
 // ============== TRENDING ==============
