@@ -413,6 +413,31 @@ export default function Home() {
   const [previewingId, setPreviewingId] = useState<string | null>(null);
   const [mutedVideos, setMutedVideos] = useState<Set<string>>(new Set());
   const [isCategoryScrolled, setIsCategoryScrolled] = useState(false);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const minSwipeDistance = 50;
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe) {
+      window.location.href = '/explore';
+    } else if (isRightSwipe) {
+      // Could navigate back or show a different view
+    }
+  };
 
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
   const hoverTimersRef = useRef<Record<string, ReturnType<typeof setTimeout> | null>>({});
@@ -676,7 +701,12 @@ export default function Home() {
             const interleavedContent = interleavePosts(displayVideos, feedPosts);
 
             return (
-              <div className="pb-20">
+              <div 
+                className="pb-20"
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+              >
                 {/* Videos Grid */}
                 {displayVideos.length > 0 ? (
                   <div className="relative z-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-6 px-4 md:px-6 pt-4 mt-1">
