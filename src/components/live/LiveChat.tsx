@@ -94,6 +94,16 @@ export function LiveChat({ streamId, activeProfile, isCreator }: LiveChatProps) 
     }
   };
 
+  // Generate consistent hex color from string
+  const stringToColor = (str: string) => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hue = Math.abs(hash % 360);
+    return `hsl(${hue}, 70%, 60%)`;
+  };
+
   return (
     <div className="flex flex-col h-full">
       {/* Chat Header */}
@@ -114,21 +124,13 @@ export function LiveChat({ streamId, activeProfile, isCreator }: LiveChatProps) 
         ) : (
           messages.map((msg) => (
             <div key={msg.id} className="flex items-start gap-2 group">
-              {/* Avatar */}
-              <div className="w-7 h-7 rounded-full overflow-hidden bg-zinc-700 flex-shrink-0">
-                {msg.sender?.avatar ? (
-                  <img src={msg.sender.avatar} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-xs font-bold">
-                    {msg.sender?.name?.[0]?.toUpperCase() || '?'}
-                  </div>
-                )}
-              </div>
-
               {/* Message content */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline gap-2">
-                  <span className="font-bold text-sm text-zinc-300">
+                  <span 
+                    className="font-bold text-sm"
+                    style={{ color: stringToColor(msg.sender?.name || 'Anonymous') }}
+                  >
                     {msg.sender?.name || 'Anonymous'}
                   </span>
                   <span className="text-xs text-zinc-500">
