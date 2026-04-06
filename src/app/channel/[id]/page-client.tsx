@@ -51,6 +51,7 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
   const [videos, setVideos] = useState<Video[]>([]);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [activeTab, setActiveTab] = useState<'Home' | 'Playlists' | 'Posts'>('Home');
+  const [channelSearch, setChannelSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [loadingPlaylists, setLoadingPlaylists] = useState(false);
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
@@ -130,6 +131,14 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
       loadPlaylists();
     }
   }, [activeTab, channelId]);
+
+  const filteredVideos = channelSearch.trim()
+    ? videos.filter(v => v.title.toLowerCase().includes(channelSearch.toLowerCase()))
+    : videos;
+
+  const filteredPlaylists = channelSearch.trim()
+    ? playlists.filter(p => p.name.toLowerCase().includes(channelSearch.toLowerCase()))
+    : playlists;
 
   const onBannerFile = async (file?: File | null) => {
     if (!file) return;
@@ -255,6 +264,28 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
 
         {/* Tabs */}
         <div className="mt-8 border-b border-white/10">
+          {/* Search Bar */}
+          <div className="mb-4">
+            <div className="flex items-center gap-2 bg-zinc-900 border border-white/10 rounded-full px-4 py-2 max-w-md">
+              <svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                value={channelSearch}
+                onChange={(e) => setChannelSearch(e.target.value)}
+                placeholder="Search channel"
+                className="flex-1 bg-transparent text-white text-sm placeholder-zinc-500 outline-none"
+              />
+              {channelSearch && (
+                <button onClick={() => setChannelSearch('')} className="text-zinc-400 hover:text-white">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
           <div className="flex items-center gap-4 sm:gap-8 overflow-x-auto no-scrollbar">
             {['Home', 'Playlists', 'Posts'].map((tab) => (
               <button
@@ -275,9 +306,9 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
         {/* Content */}
         <div className="py-8">
           {activeTab === 'Home' && (
-            videos.length > 0 ? (
+            filteredVideos.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-8">
-                {videos.map((video) => (
+                {filteredVideos.map((video) => (
                   <Link key={video.id} href={video.is_short ? `/styles/${video.id}` : `/watch/${video.id}`} className="flex flex-col gap-2 group">
                     <div className={`relative bg-zinc-800 rounded-xl overflow-hidden ${video.is_short ? 'aspect-[9/16]' : 'aspect-video'} shadow-lg border border-white/5`}>
                       <img src={video.thumbnail_url} alt={video.title} className="w-full h-full object-cover" />
@@ -330,9 +361,9 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
               <div className="flex items-center justify-center py-20">
                 <div className="w-8 h-8 border-4 border-white/10 border-t-white rounded-full animate-spin"></div>
               </div>
-            ) : playlists.length > 0 ? (
+            ) : filteredPlaylists.length > 0 ? (
               <div className="space-y-8">
-                {playlists.map((playlist) => (
+                {filteredPlaylists.map((playlist) => (
                   <div key={playlist.id} className="space-y-3">
                     {/* Playlist Header */}
                     <div className="flex items-center justify-between">
