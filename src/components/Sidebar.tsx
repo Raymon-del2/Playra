@@ -20,7 +20,6 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
     { icon: 'home', label: 'Home', path: '/' },
     { icon: 'explore', label: 'Explore', path: '/explore' },
     { icon: 'styles', label: 'Styles', path: '/styles' },
-    { icon: 'subscriptions', label: 'Subscriptions', path: '/subscriptions', protected: true },
   ];
 
   const youItems = [
@@ -29,6 +28,7 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
     { icon: 'playlists', label: 'Playlists', path: '/playlists' },
     { icon: 'watchLater', label: 'Watch later', path: '/watch-later' },
     { icon: 'liked', label: 'Liked videos', path: '/liked' },
+    { icon: 'subscriptions', label: 'Subscriptions', path: '/subscriptions', protected: true },
   ];
 
 
@@ -70,7 +70,13 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
         />
       ),
       subscriptions: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+        <Image 
+          src="/subscriptions.svg" 
+          alt="Subscriptions" 
+          width={24} 
+          height={24} 
+          className={`w-6 h-6 ${isActive ? '' : 'opacity-70'}`}
+        />
       ),
       yourChannel: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
