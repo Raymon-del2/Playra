@@ -76,6 +76,8 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
   const [isBuffering, setIsBuffering] = useState(false);
   const [showMobileControls, setShowMobileControls] = useState(false);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isStickyPlayer, setIsStickyPlayer] = useState(false);
+  const [showStickyPrompt, setShowStickyPrompt] = useState(false);
   
   // Dragging and Hover states
   const [isDraggingProgress, setIsDraggingProgress] = useState(false);
@@ -436,6 +438,23 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
     }
   }, [videoId, activeProfileId]);
 
+  // Sticky player on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      const videoSection = document.getElementById('video-section');
+      if (videoSection) {
+        const rect = videoSection.getBoundingClientRect();
+        if (rect.bottom < 0 && !isStickyPlayer) {
+          setIsStickyPlayer(true);
+        } else if (rect.top < 100 && isStickyPlayer) {
+          setIsStickyPlayer(false);
+        }
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isStickyPlayer]);
+
   const handleLike = async () => {
     if (!activeProfileId || !videoId) {
       showToast('Please sign in to like videos', 'error');
@@ -582,7 +601,38 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
   const videoDate = video ? formatDistanceToNow(new Date(video.created_at), { addSuffix: true }) : "";
   const videoDescription = video?.description || "";  return (
     <div className={`flex ${isTheatreMode ? 'flex-col lg:flex-col' : 'flex-col lg:flex-row'} gap-6 p-0 lg:p-6 bg-[#0f0f0f] min-h-screen items-center lg:items-start`}>
-      <div className={`w-full ${isTheatreMode ? 'max-w-none' : 'flex-1 lg:max-w-[calc(100vw-450px)]'}`}>
+      {/* Sticky Player */}
+      {isStickyPlayer && (
+        <div className="fixed top-4 right-4 z-50 w-[280px] sm:w-[320px] rounded-xl overflow-hidden shadow-2xl bg-black border border-white/10">
+          <button
+            onClick={() => setIsStickyPlayer(false)}
+            className="absolute top-2 right-2 z-10 p-1 bg-black/60 rounded-full text-white hover:bg-black/80"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <div className="relative aspect-video">
+            {videoSrc && (
+              <video
+                ref={videoRef}
+                src={videoSrc}
+                className="w-full h-full object-contain"
+                playsInline
+                muted
+                loop
+                autoPlay
+              />
+            )}
+          </div>
+          <div className="p-2 bg-zinc-900">
+            <h4 className="text-sm font-bold text-white line-clamp-1">{video?.title}</h4>
+            <p className="text-xs text-zinc-400">{video?.channel_name}</p>
+          </div>
+        </div>
+      )}
+
+      <div id="video-section" className={`w-full ${isTheatreMode ? 'max-w-none' : 'flex-1 lg:max-w-[calc(100vw-450px)]'}`}>
         {/* Video Player Section */}
         <div 
           className="aspect-video bg-zinc-900 sm:rounded-xl overflow-hidden mb-4 relative shadow-2xl group/player cursor-pointer"
