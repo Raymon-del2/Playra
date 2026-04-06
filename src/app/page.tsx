@@ -403,6 +403,11 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [activeProfile, setActiveProfile] = useState<any>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [isFeedControlOpen, setIsFeedControlOpen] = useState(false);
+  const [feedTags, setFeedTags] = useState<string[]>(['Gaming', 'Tech', 'Animation']);
+  const [excludedContent, setExcludedContent] = useState<string[]>([]);
+  const [newTag, setNewTag] = useState('');
+  const [newExclusion, setNewExclusion] = useState('');
 
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [previewingId, setPreviewingId] = useState<string | null>(null);
@@ -603,6 +608,15 @@ export default function Home() {
           suppressHydrationWarning
           className="flex items-center gap-3 overflow-x-auto px-4 md:px-8 py-3 scrollbar-hide"
         >
+          <button
+            onClick={() => setIsFeedControlOpen(true)}
+            className="p-2 rounded-full hover:bg-white/10 text-white transition-colors flex-shrink-0"
+            title="Feed Settings"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+            </svg>
+          </button>
           {['All', 'Live', 'Music', 'Gaming', 'News', 'Recently uploaded', 'New to you'].map((cat) => (
             <button
               key={cat}
@@ -758,6 +772,115 @@ export default function Home() {
             </div>
           );
         })()
+      )}
+
+      {/* Feed Control Modal */}
+      {isFeedControlOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setIsFeedControlOpen(false)} />
+          <div className="relative bg-zinc-900 border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl max-h-[80vh] overflow-y-auto">
+            <button
+              onClick={() => setIsFeedControlOpen(false)}
+              className="absolute top-4 right-4 p-1 text-zinc-500 hover:text-white transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            <h3 className="text-xl font-bold text-white mb-1">Personalize Feed</h3>
+            <p className="text-sm text-zinc-400 mb-6">Add topics you love to customize your home feed</p>
+
+            {/* Add Topics */}
+            <div className="mb-6">
+              <label className="text-sm font-medium text-white mb-2 block">Add Topics</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  placeholder="e.g., Gaming, Tech, Animation"
+                  className="flex-1 bg-zinc-800 border border-white/10 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-white/30"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && newTag.trim()) {
+                      setFeedTags([...feedTags, newTag.trim()]);
+                      setNewTag('');
+                    }
+                  }}
+                />
+                <button
+                  onClick={() => {
+                    if (newTag.trim()) {
+                      setFeedTags([...feedTags, newTag.trim()]);
+                      setNewTag('');
+                    }
+                  }}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                >
+                  Add
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2 mt-3">
+                {feedTags.map((tag, idx) => (
+                  <span key={idx} className="px-3 py-1 bg-zinc-800 text-white text-sm rounded-full flex items-center gap-2">
+                    {tag}
+                    <button onClick={() => setFeedTags(feedTags.filter((_, i) => i !== idx))} className="text-zinc-400 hover:text-white">
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Excluded Content */}
+            <div className="mb-6">
+              <label className="text-sm font-medium text-white mb-2 block">Excluded Content</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newExclusion}
+                  onChange={(e) => setNewExclusion(e.target.value)}
+                  placeholder="e.g., Shorts, Gaming, News"
+                  className="flex-1 bg-zinc-800 border border-white/10 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-white/30"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && newExclusion.trim()) {
+                      setExcludedContent([...excludedContent, newExclusion.trim()]);
+                      setNewExclusion('');
+                    }
+                  }}
+                />
+                <button
+                  onClick={() => {
+                    if (newExclusion.trim()) {
+                      setExcludedContent([...excludedContent, newExclusion.trim()]);
+                      setNewExclusion('');
+                    }
+                  }}
+                  className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded-lg font-medium transition-colors"
+                >
+                  Block
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2 mt-3">
+                {excludedContent.map((item, idx) => (
+                  <span key={idx} className="px-3 py-1 bg-red-900/30 text-red-400 text-sm rounded-full flex items-center gap-2 border border-red-500/30">
+                    {item}
+                    <button onClick={() => setExcludedContent(excludedContent.filter((_, i) => i !== idx))} className="hover:text-white">
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <button
+              onClick={() => setIsFeedControlOpen(false)}
+              className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors"
+            >
+              Done
+            </button>
+          </div>
+        </div>
       )}
     </>
   );
