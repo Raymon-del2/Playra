@@ -18,6 +18,7 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
 
   const mainItems = [
     { icon: 'home', label: 'Home', path: '/' },
+    { icon: 'explore', label: 'Explore', path: '/explore' },
     { icon: 'styles', label: 'Styles', path: '/styles' },
     { icon: 'subscriptions', label: 'Subscriptions', path: '/subscriptions', protected: true },
   ];
@@ -49,6 +50,15 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
         <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M4 10V21H9V15H15V21H20V10L12 3L4 10Z" /></svg>
       ) : (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3L4 10V21H9V15H15V21H20V10L12 3L4 10Z" /></svg>
+      ),
+      explore: (
+        <Image 
+          src="/explore.svg" 
+          alt="Explore" 
+          width={24} 
+          height={24} 
+          className={`w-6 h-6 ${isActive ? '' : 'opacity-70'}`}
+        />
       ),
       styles: (
         <Image 
