@@ -476,13 +476,21 @@ function StylesCarousel({ items }: { items: ResultItem[] }) {
 
 export default function ResultsPage() {
   const searchParams = useSearchParams();
-  const query = searchParams.get('search_query') ?? '';
-  const queryLabel = query.trim() || 'All';
+  const queryParam = searchParams.get('search_query') ?? '';
+  const queryLabel = queryParam.trim() || 'All';
   const [activeFilter, setActiveFilter] = useState('All');
   const [results, setResults] = useState<ResultItem[]>([]);
   const [profiles, setProfiles] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchInput, setSearchInput] = useState(queryParam);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchInput.trim()) {
+      window.location.href = `/results?search_query=${encodeURIComponent(searchInput.trim())}`;
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -491,7 +499,7 @@ export default function ResultsPage() {
       setError(null);
       try {
         // Use unified search API for videos and profiles
-        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&limit=50`);
+        const res = await fetch(`/api/search?q=${encodeURIComponent(queryParam)}&limit=50`);
         if (!res.ok) throw new Error('Search failed');
         const json = await res.json();
         const videos = json.videos || [];
@@ -538,12 +546,12 @@ export default function ResultsPage() {
     return () => {
       isMounted = false;
     };
-  }, [query]);
+  }, [queryParam]);
 
   const filteredResults = useMemo(() => {
     let items = results;
-    if (query.trim()) {
-      const lower = query.toLowerCase();
+    if (queryParam.trim()) {
+      const lower = queryParam.toLowerCase();
       items = items.filter((item) =>
         [item.title, item.channel, item.description].some((field) =>
           field.toLowerCase().includes(lower),
@@ -592,13 +600,13 @@ export default function ResultsPage() {
       }
     }
     return items;
-  }, [query, activeFilter]);
+  }, [queryParam, activeFilter]);
 
   // Get styles items for the carousel (only shown when filter is 'All')
   const stylesItems = useMemo(() => {
     let items = results.filter((item) => item.format === 'styles');
-    if (query.trim()) {
-      const lower = query.toLowerCase();
+    if (queryParam.trim()) {
+      const lower = queryParam.toLowerCase();
       items = items.filter((item) =>
         [item.title, item.channel, item.description].some((field) =>
           field.toLowerCase().includes(lower),
@@ -606,10 +614,31 @@ export default function ResultsPage() {
       );
     }
     return items;
-  }, [query]);
+  }, [queryParam]);
 
   return (
     <div className="px-4 sm:px-6 pt-6 sm:pt-8 pb-24 lg:pb-8 w-full max-w-full overflow-x-hidden">
+      {/* Search Input */}
+      <form onSubmit={handleSearch} className="mb-6">
+        <div className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-full px-4 py-2.5 focus-within:border-zinc-700">
+          <svg className="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            type="text"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Search"
+            className="flex-1 bg-transparent text-white placeholder-zinc-500 outline-none"
+          />
+          <button type="submit" className="text-zinc-400 hover:text-white">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </button>
+        </div>
+      </form>
+
       <div className="flex items-center gap-3 overflow-x-auto pb-5 scrollbar-hide">
         {filters.map((filter) => (
           <button
