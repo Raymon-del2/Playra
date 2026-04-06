@@ -63,16 +63,18 @@ export default function MobileNav({
                     {navItems.map((item) => {
                         const isActive = pathname === item.path;
 
-                        // Special handling for Create button
+                        // Special handling for Create button - show search icon instead
                         if (item.isAction) {
                             return (
                                 <button
                                     key="create-action"
-                                    onClick={() => setIsCreateOpen(true)}
+                                    onClick={() => window.location.href = '/results'}
                                     className="flex items-center justify-center"
                                 >
                                     <div className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 active:scale-90 transition-transform">
-                                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
                                     </div>
                                 </button>
                             );
