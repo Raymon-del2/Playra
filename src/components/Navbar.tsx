@@ -425,22 +425,6 @@ export default function Navbar({
 
             {/* Right: Actions */}
             <div className={`flex items-center space-x-1 sm:space-x-2 flex-shrink-0 transition-all ${isSearchExpanded ? 'hidden md:flex' : 'flex'}`}>
-              
-              <div className="flex items-center">
-                {shouldShowSearchbar && !isSearchExpanded && (
-                  <button 
-                    onClick={() => setIsSearchExpanded(true)}
-                    className="md:hidden p-2 text-white hover:bg-white/10 rounded-full transition-all active:scale-95"
-                  >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                  </button>
-                )}
-                
-                <button className="hidden xs:flex p-2 rounded-full hover:bg-white/10 text-white active:scale-90 transition-all">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 13.5v3.375C3 17.439 3.561 18 4.125 18h3.375m-4.5-9a4.5 4.5 0 014.5-4.5h11.25a4.5 4.5 0 014.5 4.5v11.25a4.5 4.5 0 01-4.5 4.5H10.5" /><path d="M3 13.5c3.314 0 6 2.686 6 6M3 9c5.523 0 10 4.477 10 10" /></svg>
-                </button>
-              </div>
-
               {activeProfile && (
                 <div suppressHydrationWarning className="relative">
                   <button
@@ -452,6 +436,17 @@ export default function Navbar({
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                     </svg>
                     <span suppressHydrationWarning>Create</span>
+                  </button>
+
+                  {/* Mobile: Search icon instead of + */}
+                  <button
+                    suppressHydrationWarning
+                    onClick={() => setIsSearchExpanded(true)}
+                    className="sm:hidden p-2 rounded-full hover:bg-white/10 text-white transition-all active:scale-95"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
                   </button>
 
                   <CreateMenu isOpen={isCreateMenuOpen} onClose={() => setIsCreateMenuOpen(false)} />
