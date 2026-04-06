@@ -1163,9 +1163,16 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
         {/* Video Info Section */}
         <div className="px-4 lg:px-0">
           {video ? (
-            <h1 className="text-xl lg:text-2xl font-bold leading-tight mb-2 text-white tracking-tight">
-              {videoTitle}
-            </h1>
+            <>
+              <h1 className="text-xl lg:text-2xl font-bold leading-tight mb-1 text-white tracking-tight">
+                {videoTitle}
+              </h1>
+              <div className="flex items-center gap-3 text-[14px] font-medium text-zinc-400 mb-3">
+                <span>{videoViews}</span>
+                <span>•</span>
+                <span>{videoDate}</span>
+              </div>
+            </>
           ) : (
             <div className="h-7 w-3/4 bg-zinc-800 rounded-lg animate-pulse mb-3" />
           )}
@@ -1264,10 +1271,6 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
             >
               {video ? (
                 <>
-                  <div className="flex items-center gap-3 text-[14px] font-bold mb-1 text-white">
-                    <span>{videoViews}</span>
-                    <span>{videoDate}</span>
-                  </div>
                   <p 
                     ref={descriptionTextRef}
                     className={`text-[14px] text-zinc-200 leading-relaxed whitespace-pre-wrap transition-all ${isDescriptionExpanded ? '' : 'line-clamp-2'}`}

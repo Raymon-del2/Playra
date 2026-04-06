@@ -700,6 +700,60 @@ export default function Home() {
                   </div>
                 )}
 
+                {/* Engagement Row: In Case You Missed (from subscriptions) */}
+                {selectedCategory === 'All' && displayVideos.length > 4 && (
+                  <div className="px-4 md:px-10 pt-8">
+                    <div className="flex items-center gap-2 mb-4">
+                      <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                      </svg>
+                      <h2 className="text-lg font-bold text-white">In Case You Missed</h2>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                      {displayVideos.slice(4, 8).map((video) => (
+                        <VideoCard
+                          key={`missed-${video.id}`}
+                          video={video}
+                          isHovered={hoveredId === video.id}
+                          isPreviewing={previewingId === video.id}
+                          isMuted={mutedVideos.has(video.id)}
+                          onHoverStart={handleHoverStart}
+                          onHoverEnd={handleHoverEnd}
+                          onToggleMute={() => handleToggleMute(video.id)}
+                          videoRef={(el) => { videoRefs.current[`missed-${video.id}`] = el; }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Engagement Row: Suggestions based on recent watches */}
+                {selectedCategory === 'All' && displayVideos.length > 8 && (
+                  <div className="px-4 md:px-10 pt-8">
+                    <div className="flex items-center gap-2 mb-4">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      <h2 className="text-lg font-bold text-white">More to Watch</h2>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                      {displayVideos.slice(8, 12).map((video) => (
+                        <VideoCard
+                          key={`more-${video.id}`}
+                          video={video}
+                          isHovered={hoveredId === video.id}
+                          isPreviewing={previewingId === video.id}
+                          isMuted={mutedVideos.has(video.id)}
+                          onHoverStart={handleHoverStart}
+                          onHoverEnd={handleHoverEnd}
+                          onToggleMute={() => handleToggleMute(video.id)}
+                          videoRef={(el) => { videoRefs.current[`more-${video.id}`] = el; }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Styles Shelf */}
                 {(selectedCategory === 'All' || selectedCategory === 'New to you') && (
                   styles.length > 0 ? (
