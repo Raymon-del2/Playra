@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { engagementSupabase } from '@/lib/supabase';
 
 type SidebarProps = {
   isCollapsed: boolean;
@@ -12,6 +14,41 @@ type SidebarProps = {
 
 export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile }: SidebarProps) {
   const pathname = usePathname();
+  const [subscriptionsExpanded, setSubscriptionsExpanded] = useState(true);
+  const [userSubscriptions, setUserSubscriptions] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function fetchSubscriptions() {
+      if (!activeProfile?.id) return;
+      
+      const { data: subs } = await engagementSupabase
+        .from('subscriptions')
+        .select('channel_id')
+        .eq('subscriber_id', activeProfile.id)
+        .limit(10);
+      
+      if (subs && subs.length > 0) {
+        const channelIds = subs.map(s => s.channel_id);
+        
+        const { data: profiles } = await engagementSupabase
+          .from('profiles')
+          .select('id, name, avatar')
+          .in('id', channelIds);
+        
+        const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+        
+        setUserSubscriptions(subs.map(s => {
+          const profile = profileMap.get(s.channel_id);
+          return {
+            id: s.channel_id,
+            name: profile?.name,
+            avatar: profile?.avatar
+          };
+        }));
+      }
+    }
+    fetchSubscriptions();
+  }, [activeProfile?.id]);
 
   // Combine auth states
   const isUserAuthenticated = isSignedIn || !!activeProfile;
@@ -28,6 +65,9 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
     { icon: 'playlists', label: 'Playlists', path: '/playlists' },
     { icon: 'watchLater', label: 'Watch later', path: '/watch-later' },
     { icon: 'liked', label: 'Liked videos', path: '/liked' },
+  ];
+
+  const subscriptionItems = [
     { icon: 'subscriptions', label: 'Subscriptions', path: '/subscriptions', protected: true },
   ];
 
@@ -185,6 +225,72 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
                 <ul suppressHydrationWarning className="space-y-0.5">
                   {youItems.map(renderItem)}
                 </ul>
+
+                <div suppressHydrationWarning className="h-px bg-white/10 my-3 mx-3" />
+                
+                <ul suppressHydrationWarning className="space-y-0.5">
+                  {subscriptionItems.map((item) => {
+                    const isActive = pathname === item.path;
+                    return (
+                      <li key={item.path} suppressHydrationWarning className="relative group list-none w-full flex items-center">
+                        <Link
+                          suppressHydrationWarning
+                          href={item.protected && !isUserAuthenticated ? '/signin' : item.path}
+                          className={`flex-1 transition-all duration-200 outline-none flex items-center px-3 py-2.5 rounded-xl ${
+                            isActive ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'
+                          }`}
+                        >
+                          <div suppressHydrationWarning className="flex items-center justify-center transition-colors w-6 h-6 flex-shrink-0">
+                            {getIcon(item.icon, isActive)}
+                          </div>
+                          <span suppressHydrationWarning className="text-[14px] truncate">
+                            {item.label}
+                          </span>
+                        </Link>
+                        <button
+                          onClick={(e) => { e.preventDefault(); setSubscriptionsExpanded(!subscriptionsExpanded); }}
+                          className="p-2 hover:bg-white/10 rounded mr-1"
+                        >
+                          <svg 
+                            className={`w-4 h-4 text-gray-400 transition-transform ${subscriptionsExpanded ? 'rotate-180' : ''}`} 
+                            fill="none" 
+                            stroke="currentColor" 
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+
+                {subscriptionsExpanded && (
+                  <div className="ml-4 pl-4 border-l border-white/10 space-y-0.5">
+                    {userSubscriptions.length > 0 ? (
+                      userSubscriptions.map((sub) => (
+                        <Link
+                          key={sub.id}
+                          href={`/channel/${sub.id}`}
+                          className="flex items-center gap-3 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
+                        >
+                          <div className="w-6 h-6 rounded-full bg-zinc-700 overflow-hidden flex-shrink-0">
+                            {sub.avatar ? (
+                              <img src={sub.avatar} alt={sub.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-xs font-bold">
+                                {sub.name?.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                          </div>
+                          <span className="text-[14px] truncate">{sub.name}</span>
+                        </Link>
+                      ))
+                    ) : (
+                      <p className="px-3 py-2 text-[13px] text-gray-500">No subscriptions yet</p>
+                    )}
+                  </div>
+                )}
               </>
             )}
 

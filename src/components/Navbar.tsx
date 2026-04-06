@@ -49,6 +49,7 @@ export default function Navbar({
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const profileContainerRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
 
@@ -218,6 +219,13 @@ export default function Navbar({
             
             {/* Left: Logo & Sidebar Toggle */}
             <div className={`flex items-center gap-2 transition-all duration-300 ${isSearchExpanded ? 'hidden md:flex' : 'flex'}`}>
+              <button
+                onClick={() => setIsMobileMenuOpen(true)}
+                className="lg:hidden p-2 rounded-full hover:bg-white/10 text-white transition-all active:scale-90"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
+              </button>
+
               <button
                 onClick={onToggleSidebar}
                 className="hidden lg:flex p-2 rounded-full hover:bg-white/10 text-white transition-all active:scale-90"
@@ -574,6 +582,60 @@ export default function Navbar({
                 </form>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Menu */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-[200] lg:hidden">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setIsMobileMenuOpen(false)} />
+          <div className="absolute left-0 top-0 bottom-0 w-72 bg-[#0f0f0f] border-r border-white/10 overflow-y-auto">
+            <div className="p-4 border-b border-white/10">
+              <div className="flex items-center justify-between">
+                <Link href="/" className="flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
+                  <img src="/play-logo.png" alt="Playra" className="h-[22px] w-auto" />
+                  <span className="font-[family-name:var(--font-anton)] text-white text-lg tracking-wide uppercase">Playra</span>
+                </Link>
+                <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 hover:bg-white/10 rounded-full">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-3 space-y-1">
+              <Link href="/" className="flex items-center gap-4 px-3 py-3 rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3L4 10V21H9V15H15V21H20V10L12 3Z" /></svg>
+                <span className="font-medium">Home</span>
+              </Link>
+              
+              <Link href="/explore" className="flex items-center gap-4 px-3 py-3 rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
+                <img src="/explore.svg" alt="Explore" className="w-6 h-6 opacity-70" />
+                <span className="font-medium">Explore</span>
+              </Link>
+              
+              <Link href="/channel" className="flex items-center gap-4 px-3 py-3 rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <span className="font-medium">Your channel</span>
+              </Link>
+              
+              <Link href="/studio" className="flex items-center gap-4 px-3 py-3 rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                <span className="font-medium">Studio</span>
+              </Link>
+              
+              <Link href="/subscriptions" className="flex items-center gap-4 px-3 py-3 rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
+                <img src="/subscriptions.svg" alt="Subscriptions" className="w-6 h-6 opacity-70" />
+                <span className="font-medium">Subscriptions</span>
+              </Link>
+              
+              <Link href="/styles" className="flex items-center gap-4 px-3 py-3 rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
+                <img src="/styles-icon.svg" alt="Styles" className="w-6 h-6 opacity-70" />
+                <span className="font-medium">Styles</span>
+              </Link>
+            </div>
           </div>
         </div>
       )}
