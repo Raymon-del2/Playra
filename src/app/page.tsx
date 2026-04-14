@@ -625,10 +625,10 @@ export default function Home() {
       {/* Category Bar Sticky Wrapper */}
       <div
         suppressHydrationWarning
-        className={`sticky top-0 z-[60] border-b w-full -mt-[1px] transition-all duration-300 ${
+        className={`sticky top-0 z-[60] w-full -mt-px transition-all duration-300 ${
           isCategoryScrolled 
-            ? 'bg-white/5 backdrop-blur-2xl border-white/10 shadow-lg shadow-black/20' 
-            : 'bg-white/[0.02] backdrop-blur-xl border-white/5'
+            ? 'bg-white/5 backdrop-blur-2xl shadow-lg shadow-black/20' 
+            : 'bg-white/[0.02] backdrop-blur-xl'
         }`}
       >
         <div

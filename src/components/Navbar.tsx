@@ -202,10 +202,10 @@ export default function Navbar({
 
   return (
     <>
-      <nav suppressHydrationWarning className={`fixed top-0 left-0 right-0 h-14 border-b z-[100] flex items-center transition-all duration-300 ${
+      <nav suppressHydrationWarning className={`fixed top-0 left-0 right-0 h-14 z-[100] flex items-center transition-all duration-300 ${
         isScrolled 
-          ? 'bg-white/5 backdrop-blur-2xl border-white/10 shadow-lg shadow-black/20' 
-          : 'bg-white/[0.02] backdrop-blur-xl border-white/5'
+          ? 'bg-white/5 backdrop-blur-2xl shadow-lg shadow-black/20' 
+          : 'bg-white/[0.02] backdrop-blur-xl'
       }`}>
         {isSearching && (
           <div className="absolute top-0 left-0 right-0 h-0.5 bg-blue-500 animate-pulse" />
