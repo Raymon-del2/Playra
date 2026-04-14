@@ -627,8 +627,8 @@ export default function Home() {
         suppressHydrationWarning
         className={`sticky top-0 z-[60] border-b w-full -mt-[1px] transition-all duration-300 ${
           isCategoryScrolled 
-            ? 'bg-[#0f0f0f]/80 backdrop-blur-xl border-white/10' 
-            : 'bg-[#0f0f0f]/95 backdrop-blur-md border-white/5'
+            ? 'bg-white/5 backdrop-blur-2xl border-white/10 shadow-lg shadow-black/20' 
+            : 'bg-white/[0.02] backdrop-blur-xl border-white/5'
         }`}
       >
         <div
