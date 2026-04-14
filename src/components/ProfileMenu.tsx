@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { auth } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
+import { submitFeedback } from '@/app/actions/feedback';
 
 interface ProfileMenuProps {
     isOpen: boolean;
@@ -16,6 +17,10 @@ interface ProfileMenuProps {
 export default function ProfileMenu({ isOpen, onClose, activeProfile, userEmail }: ProfileMenuProps) {
     const menuRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
+    const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+    const [feedbackMessage, setFeedbackMessage] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitSuccess, setSubmitSuccess] = useState(false);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -42,11 +47,37 @@ export default function ProfileMenu({ isOpen, onClose, activeProfile, userEmail 
         }
     };
 
+    const handleFeedbackSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!feedbackMessage.trim() || isSubmitting) return;
+
+        // Optimistic UI - show success immediately
+        setIsSubmitting(true);
+        setSubmitSuccess(true);
+        
+        // Send to server in background
+        try {
+            await submitFeedback(feedbackMessage);
+        } catch (error) {
+            console.error('Error submitting feedback:', error);
+            // Even if it fails, we already showed success (optimistic)
+        } finally {
+            setIsSubmitting(false);
+            setFeedbackMessage('');
+            // Close modal after 2 seconds
+            setTimeout(() => {
+                setIsFeedbackOpen(false);
+                setSubmitSuccess(false);
+            }, 2000);
+        }
+    };
+
     if (!isOpen || !activeProfile) return null;
 
     const displayHandle = `@${activeProfile.name.replace(/^@+/, '').replace(/\s+/g, '').toLowerCase()}`;
 
     return (
+        <>
         <div
             ref={menuRef}
             className="absolute top-full mt-2 right-0 w-[300px] bg-[#282828] rounded-xl shadow-2xl py-2 z-50 text-white border border-gray-700/50"
@@ -98,13 +129,66 @@ export default function ProfileMenu({ isOpen, onClose, activeProfile, userEmail 
                 {/* Section 3 */}
                 <div className="py-2">
                     <MenuItem
-                        icon={<FeedbackIcon />}
-                        label="Send feedback"
-                        onClick={() => router.push('/feedback')}
+                        icon={<BeHelperIcon />}
+                        label="Be a helper"
+                        onClick={() => setIsFeedbackOpen(true)}
                     />
                 </div>
             </div>
         </div>
+
+        {/* Feedback Modal */}
+        {isFeedbackOpen && (
+            <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+                <div className="absolute inset-0 bg-black/60" onClick={() => setIsFeedbackOpen(false)} />
+                <div className="relative bg-zinc-900 border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl">
+                    <button
+                        onClick={() => { setIsFeedbackOpen(false); setSubmitSuccess(false); setFeedbackMessage(''); }}
+                        className="absolute top-4 right-4 p-1 text-zinc-500 hover:text-white transition-colors"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+
+                    {!submitSuccess ? (
+                        <>
+                            <h3 className="text-xl font-bold text-white mb-2">Help Playra Grow</h3>
+                            <p className="text-sm text-zinc-400 mb-4">Share your ideas, feedback, or suggestions to help improve Playra.</p>
+
+                            <form onSubmit={handleFeedbackSubmit}>
+                                <textarea
+                                    value={feedbackMessage}
+                                    onChange={(e) => setFeedbackMessage(e.target.value)}
+                                    placeholder="What would you like to share?"
+                                    className="w-full h-32 bg-zinc-800 border border-white/10 rounded-xl p-3 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none mb-4"
+                                    disabled={isSubmitting}
+                                />
+
+                                <button
+                                    type="submit"
+                                    disabled={!feedbackMessage.trim() || isSubmitting}
+                                    className="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-700 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl transition-all active:scale-95"
+                                >
+                                    {isSubmitting ? 'Sending...' : 'Send Feedback'}
+                                </button>
+                            </form>
+                        </>
+                    ) : (
+                        <div className="text-center py-8">
+                            <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                            <h3 className="text-xl font-bold text-white mb-2">Thank You!</h3>
+                            <p className="text-sm text-zinc-400">Your feedback helps make Playra better.</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+        )}
+        </>
     );
 }
 
@@ -166,9 +250,12 @@ const StudioIcon = () => (
     </svg>
 );
 
-
 const FeedbackIcon = () => (
     <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
     </svg>
+);
+
+const BeHelperIcon = () => (
+    <img src="/self_improvement_24dp_EFEFEF_FILL0_wght400_GRAD0_opsz24.svg" className="w-6 h-6" alt="" />
 );
