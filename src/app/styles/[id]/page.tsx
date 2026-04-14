@@ -93,7 +93,8 @@ function StylesFeed({ styleId }: { styleId?: string }) {
     initializedRef.current = true;
     const init = async () => {
       try {
-        // Load videos immediately (video-first)
+        // Stage 1: Show skeleton and load basic video data
+        setIsLoading(true);
         const limit = 15;
         const res = await getStylesFeed(activeProfile?.id, limit, 0);
         if (res.success && res.videos && res.videos.length > 0) {
@@ -106,15 +107,25 @@ function StylesFeed({ styleId }: { styleId?: string }) {
           offsetRef.current = limit;
           if (data.length < limit) setHasMore(false);
           
-          // Load engagement data in background
-          if (res.engagement) setReactions(res.engagement);
-          if (res.watchLater) setWatchLaterMap(res.watchLater);
-          if (res.commentCounts) setCommentCounts(res.commentCounts);
+          // Stage 2: Show video immediately (skeleton removed)
+          setIsLoading(false);
+          
+          // Stage 3: Load engagement metadata in background while video plays
+          // This happens after video is already visible
+          setTimeout(() => {
+            if (res.engagement) setReactions(res.engagement);
+            if (res.watchLater) setWatchLaterMap(res.watchLater);
+            if (res.commentCounts) setCommentCounts(res.commentCounts);
+          }, 100);
         } else {
           setClips([]);
           setHasMore(false);
+          setIsLoading(false);
         }
-      } catch (e) { console.error(e); }
+      } catch (e) { 
+        console.error(e); 
+        setIsLoading(false);
+      }
     };
     init();
     
@@ -347,7 +358,22 @@ function StylesFeed({ styleId }: { styleId?: string }) {
 
       {/* Scroll Container */}
       <div className="yt-shorts-scroller hide-scrollbar" onScroll={handleScroll}>
-        {clips.length === 0 ? (
+        {isLoading ? (
+          // Stage 1: Skeleton loader while fetching videos
+          <>
+            {[1, 2, 3].map((_, i) => (
+              <div key={i} className="yt-slide">
+                <div className="yt-slide-inner">
+                  <div className="yt-video-col">
+                    <div className="yt-video-wrap">
+                      <div className="aspect-[9/16] bg-[#313131] rounded-xl w-full" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </>
+        ) : clips.length === 0 ? (
           <div className="yt-slide">
             <div className="yt-slide-inner">
               <div className="yt-video-wrap bg-black">
