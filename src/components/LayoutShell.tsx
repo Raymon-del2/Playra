@@ -172,9 +172,7 @@ export default function LayoutShell({ children, activeProfile }: LayoutShellProp
 
   return (
     <>
-      <Suspense fallback={null}>
-        <TopLoader />
-      </Suspense>
+      {/* TopLoader disabled to remove circle loader */}
       <div className={isStylesPage ? 'styles-page-navbar' : ''}>
         <Navbar
           isSidebarCollapsed={isSidebarCollapsed}
