@@ -37,14 +37,13 @@ export default function ProfileMenu({ isOpen, onClose, activeProfile, userEmail 
         };
     }, [isOpen, onClose]);
 
-    // Reset feedback state when dropdown closes
+    // When feedback modal closes, reset its state
     useEffect(() => {
-        if (!isOpen) {
-            setIsFeedbackOpen(false);
+        if (!isFeedbackOpen) {
             setSubmitSuccess(false);
             setFeedbackMessage('');
         }
-    }, [isOpen]);
+    }, [isFeedbackOpen]);
 
     const handleSignOut = async () => {
         try {
@@ -76,7 +75,7 @@ export default function ProfileMenu({ isOpen, onClose, activeProfile, userEmail 
         }
     };
 
-    if (!isOpen || !activeProfile) return null;
+    if (!isOpen && !isFeedbackOpen || !activeProfile) return null;
 
     const displayHandle = `@${activeProfile.name.replace(/^@+/, '').replace(/\s+/g, '').toLowerCase()}`;
 
@@ -135,7 +134,7 @@ export default function ProfileMenu({ isOpen, onClose, activeProfile, userEmail 
                     <MenuItem
                         icon={<BeHelperIcon />}
                         label="Be a helper"
-                        onClick={() => { onClose(); setIsFeedbackOpen(true); }}
+                        onClick={() => setIsFeedbackOpen(true)}
                     />
                 </div>
             </div>
