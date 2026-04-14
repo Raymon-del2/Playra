@@ -158,7 +158,13 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
         <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" /></svg>
       ),
       community: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-1a5 5 0 00-5-5M7 20H2v-1a5 5 0 015-5m10-6a4 4 0 11-8 0 4 4 0 018 0zm-6 0a4 4 0 01-8 0 4 4 0 018 0z" /></svg>
+        <Image 
+          src="/family_group_24dp_EFEFEF_FILL0_wght300_GRAD200_opsz24.svg" 
+          alt="Community" 
+          width={24} 
+          height={24} 
+          className={`w-6 h-6 ${isActive ? '' : 'opacity-70'}`}
+        />
       ),
       download: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
