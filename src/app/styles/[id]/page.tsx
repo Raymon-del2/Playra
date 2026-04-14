@@ -82,6 +82,7 @@ function StylesFeed({ styleId }: { styleId?: string }) {
   const [showOptionsId, setShowOptionsId] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const [loadedMetadata, setLoadedMetadata] = useState<Set<string>>(new Set());
   const offsetRef = useRef(0);
   const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
@@ -117,6 +118,43 @@ function StylesFeed({ styleId }: { styleId?: string }) {
     };
     init();
   }, [styleId]);
+
+  // Pre-fetch next videos using Intersection Observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
+            const index = slideRefs.current.findIndex((el) => el === entry.target);
+            if (index !== -1 && index + 1 < clips.length) {
+              const nextClip = clips[index + 1];
+              if (nextClip && !loadedMetadata.has(nextClip.id)) {
+                // Pre-load metadata for next video
+                fetchVideoEngagement(nextClip.id, activeProfile?.id).then((res) => {
+                  if (res) {
+                    setReactions((prev) => ({ ...prev, [nextClip.id]: res }));
+                    setLoadedMetadata((prev) => new Set(prev).add(nextClip.id));
+                  }
+                });
+                fetchBatchWatchLaterStatus([nextClip.id], activeProfile?.id).then((res) => {
+                  if (res) {
+                    setWatchLaterMap((prev) => ({ ...prev, ...res }));
+                  }
+                });
+              }
+            }
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    slideRefs.current.forEach((el) => {
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, [clips, activeProfile, loadedMetadata]);
 
   useEffect(() => {
     if (activeIndex >= clips.length - 3 && hasMore && !isFetchingMore && clips.length > 0) {
@@ -171,8 +209,15 @@ function StylesFeed({ styleId }: { styleId?: string }) {
       if (isPlaying) { currentVideo.play().catch(() => {}); }
       else { currentVideo.pause(); }
     }
+    // Preload next video
+    if (activeIndex + 1 < clips.length) {
+      const nextVideo = videoRefs.current[activeIndex + 1];
+      if (nextVideo && nextVideo.preload !== 'auto') {
+        nextVideo.load(); // Start loading next video
+      }
+    }
     prevActiveRef.current = activeIndex;
-  }, [activeIndex, isPlaying]);
+  }, [activeIndex, isPlaying, clips]);
 
   const viewedClipsRef = useRef<Set<string>>(new Set());
   useEffect(() => {
@@ -321,6 +366,8 @@ function StylesFeed({ styleId }: { styleId?: string }) {
                   <video
                     ref={el => { videoRefs.current[index] = el; }}
                     src={clip.video_url}
+                    poster={clip.thumbnail_url}
+                    preload={index === activeIndex ? 'auto' : 'none'}
                     className={`yt-video ${VIDEO_FILTERS[activeFilterIndex].class}`}
                     loop playsInline muted={isMuted}
                     onTimeUpdate={e => {
