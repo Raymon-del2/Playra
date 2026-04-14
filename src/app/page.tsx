@@ -586,44 +586,12 @@ export default function Home() {
       <div suppressHydrationWarning className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-6 px-4 md:px-6 pt-10">
         {Array(4).fill(0).map((_, i) => (
           <div suppressHydrationWarning key={i} className="flex flex-col w-full">
-            <div 
-              suppressHydrationWarning 
-              className="aspect-video bg-zinc-800 rounded-xl mb-2 relative overflow-hidden" 
-              style={{
-                background: 'linear-gradient(90deg, #27272a 25%, #3f3f46 50%, #27272a 75%)',
-                backgroundSize: '200% 100%',
-                animation: 'shimmer 1.5s infinite'
-              }} 
-            />
+            <div suppressHydrationWarning className="aspect-video bg-[#313131] rounded-xl mb-3" />
             <div suppressHydrationWarning className="flex gap-3">
-              <div 
-                suppressHydrationWarning 
-                className="w-9 h-9 bg-zinc-800 rounded-full flex-shrink-0 relative overflow-hidden" 
-                style={{
-                  background: 'linear-gradient(90deg, #27272a 25%, #3f3f46 50%, #27272a 75%)',
-                  backgroundSize: '200% 100%',
-                  animation: 'shimmer 1.5s infinite'
-                }} 
-              />
+              <div suppressHydrationWarning className="w-9 h-9 bg-[#313131] rounded-full flex-shrink-0" />
               <div suppressHydrationWarning className="flex-1 space-y-2 pt-1 pr-8">
-                <div 
-                  suppressHydrationWarning 
-                  className="h-4 bg-zinc-800 rounded w-[90%] relative overflow-hidden" 
-                  style={{
-                    background: 'linear-gradient(90deg, #27272a 25%, #3f3f46 50%, #27272a 75%)',
-                    backgroundSize: '200% 100%',
-                    animation: 'shimmer 1.5s infinite'
-                  }} 
-                />
-                <div 
-                  suppressHydrationWarning 
-                  className="h-3 bg-zinc-800 rounded w-[60%] relative overflow-hidden" 
-                  style={{
-                    background: 'linear-gradient(90deg, #27272a 25%, #3f3f46 50%, #27272a 75%)',
-                    backgroundSize: '200% 100%',
-                    animation: 'shimmer 1.5s infinite'
-                  }} 
-                />
+                <div suppressHydrationWarning className="h-4 bg-[#313131] rounded w-[90%]" />
+                <div suppressHydrationWarning className="h-3 bg-[#313131] rounded w-[60%]" />
               </div>
             </div>
           </div>
@@ -638,44 +606,12 @@ export default function Home() {
       <div suppressHydrationWarning className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-6 px-4 md:px-10 pt-10">
         {Array(4).fill(0).map((_, i) => (
           <div suppressHydrationWarning key={i+4} className="flex flex-col w-full">
-            <div 
-              suppressHydrationWarning 
-              className="aspect-video bg-zinc-800 rounded-xl mb-2 relative overflow-hidden" 
-              style={{
-                background: 'linear-gradient(90deg, #27272a 25%, #3f3f46 50%, #27272a 75%)',
-                backgroundSize: '200% 100%',
-                animation: 'shimmer 1.5s infinite'
-              }} 
-            />
+            <div suppressHydrationWarning className="aspect-video bg-[#313131] rounded-xl mb-3" />
             <div suppressHydrationWarning className="flex gap-3">
-              <div 
-                suppressHydrationWarning 
-                className="w-9 h-9 bg-zinc-800 rounded-full flex-shrink-0 relative overflow-hidden" 
-                style={{
-                  background: 'linear-gradient(90deg, #27272a 25%, #3f3f46 50%, #27272a 75%)',
-                  backgroundSize: '200% 100%',
-                  animation: 'shimmer 1.5s infinite'
-                }} 
-              />
+              <div suppressHydrationWarning className="w-9 h-9 bg-[#313131] rounded-full flex-shrink-0" />
               <div suppressHydrationWarning className="flex-1 space-y-2 pt-1 pr-8">
-                <div 
-                  suppressHydrationWarning 
-                  className="h-4 bg-zinc-800 rounded w-[90%] relative overflow-hidden" 
-                  style={{
-                    background: 'linear-gradient(90deg, #27272a 25%, #3f3f46 50%, #27272a 75%)',
-                    backgroundSize: '200% 100%',
-                    animation: 'shimmer 1.5s infinite'
-                  }} 
-                />
-                <div 
-                  suppressHydrationWarning 
-                  className="h-3 bg-zinc-800 rounded w-[60%] relative overflow-hidden" 
-                  style={{
-                    background: 'linear-gradient(90deg, #27272a 25%, #3f3f46 50%, #27272a 75%)',
-                    backgroundSize: '200% 100%',
-                    animation: 'shimmer 1.5s infinite'
-                  }} 
-                />
+                <div suppressHydrationWarning className="h-4 bg-[#313131] rounded w-[90%]" />
+                <div suppressHydrationWarning className="h-3 bg-[#313131] rounded w-[60%]" />
               </div>
             </div>
           </div>
