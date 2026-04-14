@@ -93,13 +93,9 @@ function StylesFeed({ styleId }: { styleId?: string }) {
     initializedRef.current = true;
     const init = async () => {
       try {
-        // Get profile first
-        const profile = await getActiveProfile();
-        setActiveProfile(profile);
-        
         // Load videos immediately (video-first)
         const limit = 15;
-        const res = await getStylesFeed(profile?.id, limit, 0);
+        const res = await getStylesFeed(activeProfile?.id, limit, 0);
         if (res.success && res.videos && res.videos.length > 0) {
           const data = res.videos;
           let startIndex = 0;
@@ -110,9 +106,6 @@ function StylesFeed({ styleId }: { styleId?: string }) {
           offsetRef.current = limit;
           if (data.length < limit) setHasMore(false);
           
-          // Show video immediately, load metadata in background
-          setIsLoading(false);
-          
           // Load engagement data in background
           if (res.engagement) setReactions(res.engagement);
           if (res.watchLater) setWatchLaterMap(res.watchLater);
@@ -120,11 +113,13 @@ function StylesFeed({ styleId }: { styleId?: string }) {
         } else {
           setClips([]);
           setHasMore(false);
-          setIsLoading(false);
         }
-      } catch (e) { console.error(e); setIsLoading(false); }
+      } catch (e) { console.error(e); }
     };
     init();
+    
+    // Load profile in background (non-blocking)
+    getActiveProfile().then(profile => setActiveProfile(profile));
   }, [styleId]);
 
   // Pre-fetch next videos using Intersection Observer
@@ -352,11 +347,11 @@ function StylesFeed({ styleId }: { styleId?: string }) {
 
       {/* Scroll Container */}
       <div className="yt-shorts-scroller hide-scrollbar" onScroll={handleScroll}>
-        {clips.length === 0 && isLoading ? (
+        {clips.length === 0 ? (
           <div className="yt-slide">
             <div className="yt-slide-inner">
               <div className="yt-video-wrap bg-black">
-                {/* Instant black screen - video loads immediately after */}
+                {/* No videos yet */}
               </div>
             </div>
           </div>
