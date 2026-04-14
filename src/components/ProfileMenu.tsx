@@ -37,6 +37,15 @@ export default function ProfileMenu({ isOpen, onClose, activeProfile, userEmail 
         };
     }, [isOpen, onClose]);
 
+    // Reset feedback state when dropdown closes
+    useEffect(() => {
+        if (!isOpen) {
+            setIsFeedbackOpen(false);
+            setSubmitSuccess(false);
+            setFeedbackMessage('');
+        }
+    }, [isOpen]);
+
     const handleSignOut = async () => {
         try {
             await signOut(auth);
