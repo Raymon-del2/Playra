@@ -582,9 +582,9 @@ export default function Home() {
 
   const renderSkeleton = () => (
     <div className="flex flex-col">
-      {/* First row - 4 skeleton cards */}
-      <div suppressHydrationWarning className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-6 px-4 md:px-6 pt-10">
-        {Array(4).fill(0).map((_, i) => (
+      {/* First row - 3 skeleton cards */}
+      <div suppressHydrationWarning className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-6 px-4 md:px-6 pt-10">
+        {Array(3).fill(0).map((_, i) => (
           <div suppressHydrationWarning key={i} className="flex flex-col w-full">
             <div suppressHydrationWarning className="aspect-video bg-[#313131] rounded-xl mb-3" />
             <div suppressHydrationWarning className="flex gap-3">
@@ -602,10 +602,10 @@ export default function Home() {
         <StylesShelf styles={[]} isLoading={true} />
       )}
 
-      {/* Second row - 4 skeleton cards */}
-      <div suppressHydrationWarning className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-6 px-4 md:px-10 pt-10">
-        {Array(4).fill(0).map((_, i) => (
-          <div suppressHydrationWarning key={i+4} className="flex flex-col w-full">
+      {/* Second row - 3 skeleton cards */}
+      <div suppressHydrationWarning className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-6 px-4 md:px-10 pt-10">
+        {Array(3).fill(0).map((_, i) => (
+          <div suppressHydrationWarning key={i+3} className="flex flex-col w-full">
             <div suppressHydrationWarning className="aspect-video bg-[#313131] rounded-xl mb-3" />
             <div suppressHydrationWarning className="flex gap-3">
               <div suppressHydrationWarning className="w-9 h-9 bg-[#313131] rounded-full flex-shrink-0" />
