@@ -131,7 +131,13 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
         />
       ),
       playlists: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h12" /></svg>
+        <Image 
+          src="/library_add_24dp_EFEFEF_FILL0_wght300_GRAD200_opsz24.svg" 
+          alt="Playlists" 
+          width={24} 
+          height={24} 
+          className={`w-6 h-6 ${isActive ? '' : 'opacity-70'}`}
+        />
       ),
       watchLater: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
