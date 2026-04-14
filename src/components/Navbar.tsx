@@ -45,10 +45,6 @@ export default function Navbar({
   const [isListening, setIsListening] = useState(false);
   const [isSpeechSupported, setIsSpeechSupported] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
-  const [feedbackMessage, setFeedbackMessage] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const profileContainerRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
@@ -484,79 +480,6 @@ export default function Navbar({
           </div>
         </div>
       </nav>
-
-      {/* Feedback Popup */}
-      {isFeedbackOpen && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60" onClick={() => setIsFeedbackOpen(false)} />
-          <div className="relative bg-zinc-900 border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl">
-            <button
-              onClick={() => { setIsFeedbackOpen(false); setSubmitSuccess(false); setFeedbackMessage(''); }}
-              className="absolute top-4 right-4 p-1 text-zinc-500 hover:text-white transition-colors"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-
-            {submitSuccess ? (
-              <div className="text-center py-8">
-                <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold text-white mb-2">Thank you!</h3>
-                <p className="text-zinc-400">Your feedback helps make the app better.</p>
-              </div>
-            ) : (
-              <>
-                <h3 className="text-lg font-bold text-white mb-2">Be a helper</h3>
-                <p className="text-sm text-zinc-400 mb-4">
-                  We are constantly doing our best to make the app be smooth and with your help it might just work.
-                </p>
-                <form
-                  onSubmit={async (e) => {
-                    e.preventDefault();
-                    if (!feedbackMessage.trim() || isSubmitting) return;
-                    
-                    setIsSubmitting(true);
-                    const result = await submitFeedback(feedbackMessage, activeProfile?.id);
-                    setIsSubmitting(false);
-                    
-                    if (result.success) {
-                      setSubmitSuccess(true);
-                      setFeedbackMessage('');
-                    }
-                  }}
-                >
-                  <textarea
-                    value={feedbackMessage}
-                    onChange={(e) => setFeedbackMessage(e.target.value)}
-                    placeholder="Share your ideas for the app..."
-                    className="w-full h-32 bg-zinc-800 border border-white/10 rounded-xl p-3 text-white placeholder-zinc-500 resize-none focus:outline-none focus:border-white/30 transition-colors"
-                    disabled={isSubmitting}
-                  />
-                  <button
-                    type="submit"
-                    disabled={!feedbackMessage.trim() || isSubmitting}
-                    className="mt-4 w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Sending...
-                      </>
-                    ) : (
-                      'Send Feedback'
-                    )}
-                  </button>
-                </form>
-              </>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
