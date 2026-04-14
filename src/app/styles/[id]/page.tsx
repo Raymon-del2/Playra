@@ -374,7 +374,6 @@ function StylesFeed({ styleId }: { styleId?: string }) {
                   <video
                     ref={el => { videoRefs.current[index] = el; }}
                     src={clip.video_url}
-                    poster={clip.thumbnail_url}
                     preload={index === activeIndex ? 'auto' : 'none'}
                     className={`yt-video ${VIDEO_FILTERS[activeFilterIndex].class}`}
                     loop playsInline muted={isMuted}
