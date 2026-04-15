@@ -1,26 +1,16 @@
 'use strict';
 import { NextResponse } from 'next/server';
-import { turso } from '@/lib/turso';
+import { supabase } from '@/lib/supabase';
 
 export async function GET(req: Request) {
   try {
-    // Ensure join_order column exists in users table
-    try {
-      await turso.execute(`ALTER TABLE users ADD COLUMN join_order INTEGER`);
-    } catch (e) { /* ignore if already exists */ }
-
-    // Ensure join_order column exists in channels table
-    try {
-      await turso.execute(`ALTER TABLE channels ADD COLUMN join_order INTEGER`);
-    } catch (e) { /* ignore if already exists */ }
-
     const { searchParams } = new URL(req.url);
-    const email = searchParams.get('email');
+    const profileId = searchParams.get('profileId');
     const joinOrder = searchParams.get('order');
 
-    if (!email || !joinOrder) {
+    if (!profileId || !joinOrder) {
       return NextResponse.json({ 
-        error: 'Missing email or order param. Use: /api/set-join-order?email=you@gmail.com&order=1' 
+        error: 'Missing profileId or order param. Use: /api/set-join-order?profileId=xxx&order=1' 
       }, { status: 400 });
     }
 
@@ -29,29 +19,20 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Order must be a number' }, { status: 400 });
     }
 
-    // Update user's join_order
-    await turso.execute({
-      sql: `UPDATE users SET join_order = ? WHERE email = ?`,
-      args: [orderNum, email]
-    });
+    // Update profile's join_order in Supabase
+    const { error } = await supabase
+      .from('profiles')
+      .update({ join_order: orderNum })
+      .eq('id', profileId);
 
-    // Also update all their channels
-    const userResult = await turso.execute({
-      sql: `SELECT id FROM users WHERE email = ?`,
-      args: [email]
-    });
-
-    if (userResult.rows?.[0]) {
-      const userId = userResult.rows[0].id;
-      await turso.execute({
-        sql: `UPDATE channels SET join_order = ? WHERE user_id = ?`,
-        args: [orderNum, userId]
-      });
+    if (error) {
+      console.error('Failed to update join_order:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({ 
       success: true, 
-      message: `Set join_order to ${orderNum} for ${email}` 
+      message: `Set join_order to ${orderNum} for ${profileId}` 
     });
   } catch (error: any) {
     console.error('Error:', error);

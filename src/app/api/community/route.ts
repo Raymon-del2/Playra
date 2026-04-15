@@ -1,38 +1,17 @@
 import { NextResponse } from 'next/server';
-import { turso } from '@/lib/turso';
-
-async function ensureTable() {
-  try {
-    await turso.execute({
-      sql: `
-        CREATE TABLE IF NOT EXISTS community_messages (
-          id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
-          type TEXT CHECK (type IN ('problem','feature')) NOT NULL,
-          message TEXT NOT NULL,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        );
-      `,
-      args: [],
-    });
-  } catch (error) {
-    console.error('Failed to ensure community_messages table', error);
-    throw error;
-  }
-}
+import { supabase } from '@/lib/supabase';
+import { v4 as uuidv4 } from 'uuid';
 
 export async function GET() {
   try {
-    await ensureTable();
-    const res = await turso.execute({
-      sql: `
-        SELECT id, type, message, created_at
-        FROM community_messages
-        ORDER BY created_at DESC
-        LIMIT 100
-      `,
-      args: [],
-    });
-    return NextResponse.json({ data: res.rows || [] });
+    const { data, error } = await supabase
+      .from('community_messages')
+      .select('id, type, message, created_at')
+      .order('created_at', { ascending: false })
+      .limit(100);
+    
+    if (error) throw error;
+    return NextResponse.json({ data: data || [] });
   } catch (error) {
     console.error('Community GET error', error);
     return NextResponse.json({ error: 'Failed to load messages' }, { status: 500 });
@@ -41,7 +20,6 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    await ensureTable();
     const body = await req.json();
     const type = body?.type === 'feature' ? 'feature' : 'problem';
     const message = (body?.message || '').trim();
@@ -50,12 +28,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
     }
 
-    await turso.execute({
-      sql: `
-        INSERT INTO community_messages (type, message, created_at)
-        VALUES (?, ?, CURRENT_TIMESTAMP)
-      `,
-      args: [type, message],
+    await supabase.from('community_messages').insert({
+      id: uuidv4(),
+      type,
+      message
     });
 
     return NextResponse.json({ ok: true });
@@ -67,15 +43,11 @@ export async function POST(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
-    await ensureTable();
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
     if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 });
 
-    await turso.execute({
-      sql: `DELETE FROM community_messages WHERE id = ?`,
-      args: [id],
-    });
+    await supabase.from('community_messages').delete().eq('id', id);
 
     return NextResponse.json({ ok: true });
   } catch (error) {

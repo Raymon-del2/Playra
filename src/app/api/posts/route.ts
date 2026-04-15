@@ -80,25 +80,21 @@ export async function POST(request: Request) {
 
     if (error) throw error;
 
-    // 5. If it's a quiz, also insert into Turso
+    // 5. If it's a quiz, also insert into Supabase quizzes table
     if (post_type === 'quiz') {
       try {
-        const { turso } = await import('@/lib/turso');
         const { v4: uuidv4 } = await import('uuid');
-        await turso.execute({
-          sql: 'INSERT INTO quizzes (id, post_id, profile_id, question, options, correct_index) VALUES (?, ?, ?, ?, ?, ?)',
-          args: [
-            uuidv4(),
-            data.id,
-            profile.id,
-            content.question,
-            JSON.stringify(content.options),
-            content.correct_index
-          ]
+        await supabase.from('quizzes').insert({
+          id: uuidv4(),
+          post_id: data.id,
+          profile_id: profile.id,
+          question: content.question,
+          options: JSON.stringify(content.options),
+          correct_index: content.correct_index
         });
-      } catch (tursoError) {
-        console.error('Failed to sync quiz to Turso:', tursoError);
-        // We continue since the Supabase part succeeded
+      } catch (quizError) {
+        console.error('Failed to save quiz to Supabase:', quizError);
+        // We continue since the Supabase posts part succeeded
       }
     }
 
@@ -153,7 +149,6 @@ export async function GET(request: Request) {
           console.warn('Failed to fetch profiles:', profileError);
         }
         // join_order doesn't exist in Supabase profiles - set to null for all
-        // This field was from Turso channels table
       } catch (e) {
         console.warn('Failed to fetch profiles:', e);
       }

@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { turso } from '@/lib/turso';
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -62,23 +61,24 @@ export async function GET(req: Request) {
       }
     }
 
-    // Fetch profiles (channels) from Turso
+    // Fetch profiles (channels) from Supabase
     let profiles: any[] = [];
     try {
-      const pattern = isDropdown ? `${q}%` : `%${q}%`;
-      const profilesRes = await turso.execute({
-        sql: `
-          SELECT id, name, avatar, description, verified, account_type, created_at
-          FROM channels
-          WHERE name LIKE ?
-          ORDER BY created_at DESC
-          LIMIT ?
-        `,
-        args: [pattern.replace(/%/g, '%'), limit],
-      });
-      profiles = profilesRes?.rows || [];
-    } catch (tursoError) {
-      console.error('Turso search error:', tursoError);
+      const pattern = `%${q}%`;
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, name, avatar, description, verified, account_type, created_at')
+        .ilike('name', pattern)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      
+      if (profileError) {
+        console.error('Supabase profile search error:', profileError);
+      } else {
+        profiles = profileData || [];
+      }
+    } catch (profileSearchError) {
+      console.error('Profile search error:', profileSearchError);
     }
 
     console.log(`Search for "${q}": ${videos.length} videos, ${profiles.length} profiles`);

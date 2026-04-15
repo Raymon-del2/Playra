@@ -1,4 +1,3 @@
-import { turso } from '@/lib/turso';
 import { supabase } from '@/lib/supabase';
 import { NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
@@ -15,52 +14,25 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // 0. Auto-create tables if missing
-    try {
-        await turso.batch([
-            `CREATE TABLE IF NOT EXISTS quizzes (
-                id TEXT PRIMARY KEY,
-                post_id TEXT,
-                profile_id TEXT,
-                question TEXT,
-                options TEXT,
-                correct_index INTEGER,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )`,
-            `CREATE TABLE IF NOT EXISTS quiz_votes (
-                id TEXT PRIMARY KEY,
-                quiz_id TEXT,
-                profile_id TEXT,
-                selected_index INTEGER,
-                is_correct INTEGER,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(quiz_id, profile_id)
-            )`,
-            `CREATE TABLE IF NOT EXISTS quiz_analytics_logs (
-                id TEXT PRIMARY KEY,
-                quiz_id TEXT,
-                log_content TEXT,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )`
-        ], "write");
-    } catch (dbError) {
-        console.warn('Database initialization warning (likely tables exist):', dbError);
-    }
+    // 1. Check if already voted in Supabase
+    const { data: existingVote } = await supabase
+      .from('quiz_votes')
+      .select('id')
+      .eq('quiz_id', quizId || postId)
+      .eq('profile_id', profileId)
+      .limit(1);
 
-    // 1. Check if already voted in Turso
-    const existingVote = await turso.execute({
-      sql: 'SELECT id FROM quiz_votes WHERE quiz_id = ? AND profile_id = ?',
-      args: [quizId || postId, profileId]
-    });
-
-    if (existingVote.rows.length > 0) {
+    if (existingVote && existingVote.length > 0) {
       return NextResponse.json({ error: 'Already voted' }, { status: 400 });
     }
 
-    // 2. Insert vote into Turso
-    await turso.execute({
-      sql: 'INSERT INTO quiz_votes (id, quiz_id, profile_id, selected_index, is_correct) VALUES (?, ?, ?, ?, ?)',
-      args: [uuidv4(), quizId || postId, profileId, optionIndex, isCorrect ? 1 : 0]
+    // 2. Insert vote into Supabase
+    await supabase.from('quiz_votes').insert({
+      id: uuidv4(),
+      quiz_id: quizId || postId,
+      profile_id: profileId,
+      selected_index: optionIndex,
+      is_correct: isCorrect ? 1 : 0
     });
 
     // 3. Update Supabase JSON counts
@@ -109,9 +81,10 @@ export async function POST(request: Request) {
     const logString = `qz[${postId}] a.[${description.votes[0] || 0}] b.[${description.votes[1] || 0}] c.[${description.votes[2] || 0}] d.[${description.votes[3] || 0}]`;
     
     try {
-        await turso.execute({
-            sql: 'INSERT INTO quiz_analytics_logs (id, quiz_id, log_content) VALUES (?, ?, ?)',
-            args: [uuidv4(), postId, logString]
+        await supabase.from('quiz_analytics_logs').insert({
+            id: uuidv4(),
+            quiz_id: postId,
+            log_content: logString
         });
     } catch (logError) {
         console.warn('Failed to log analytics string, but vote was recorded:', logError);
