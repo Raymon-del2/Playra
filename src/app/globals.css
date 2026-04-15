@@ -54,6 +54,15 @@
   background: #717171;
 }
 
+/* Move scrollbar to right side like YouTube */
+html {
+  direction: rtl;
+}
+
+html > * {
+  direction: ltr;
+}
+
 /* For Firefox */
 * {
   scrollbar-width: thin;
