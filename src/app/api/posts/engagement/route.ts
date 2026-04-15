@@ -1,38 +1,7 @@
 'use strict';
 import { NextResponse } from 'next/server';
-import { turso } from '@/lib/turso';
 import { getActiveProfile } from '@/app/actions/profile';
 import { supabase } from '@/lib/supabase';
-
-async function ensureTables() {
-  // Create post_likes table if not exists (PostgreSQL syntax)
-  try {
-    await turso.execute({
-      sql: `CREATE TABLE IF NOT EXISTS post_likes (
-        id SERIAL PRIMARY KEY,
-        post_id TEXT NOT NULL,
-        profile_id TEXT NOT NULL,
-        created_at TEXT DEFAULT (datetime('now')),
-        UNIQUE(post_id, profile_id)
-      )`,
-      args: []
-    });
-  } catch (e) { /* ignore */ }
-  
-  // Create post_comments table if not exists
-  try {
-    await turso.execute({
-      sql: `CREATE TABLE IF NOT EXISTS post_comments (
-        id SERIAL PRIMARY KEY,
-        post_id TEXT NOT NULL,
-        profile_id TEXT NOT NULL,
-        content TEXT NOT NULL,
-        created_at TEXT DEFAULT (datetime('now'))
-      )`,
-      args: []
-    });
-  } catch (e) { /* ignore */ }
-}
 
 async function getProfile() {
   const profile = await getActiveProfile();
@@ -44,8 +13,6 @@ async function getProfile() {
 
 export async function GET(req: Request) {
   try {
-    await ensureTables();
-    
     const { searchParams } = new URL(req.url);
     const postId = searchParams.get('postId');
     if (!postId) return NextResponse.json({ error: 'postId required' }, { status: 400 });
@@ -57,32 +24,32 @@ export async function GET(req: Request) {
       profileId = profile?.id || null;
     } catch (e) { profileId = null; }
     
-    const likesRes = await turso.execute({
-      sql: `SELECT COUNT(*) as count FROM post_likes WHERE post_id = ?`,
-      args: [postId],
-    });
-    const likesCount = Number(likesRes.rows?.[0]?.count || 0);
+    // Get likes count from Supabase
+    const { count: likesCount } = await supabase
+      .from('post_likes')
+      .select('*', { count: 'exact', head: true })
+      .eq('post_id', postId);
 
     let userLiked = false;
     if (profileId) {
-      const userLikeRes = await turso.execute({
-        sql: `SELECT 1 FROM post_likes WHERE post_id = ? AND profile_id = ?`,
-        args: [postId, profileId],
-      });
-      userLiked = (userLikeRes.rows?.length || 0) > 0;
+      const { data: userLikeData } = await supabase
+        .from('post_likes')
+        .select('id')
+        .eq('post_id', postId)
+        .eq('profile_id', profileId)
+        .limit(1);
+      userLiked = !!userLikeData?.length;
     }
 
-    // Get comments
-    const commentsRes = await turso.execute({
-      sql: `SELECT id, content, created_at, profile_id 
-            FROM post_comments 
-            WHERE post_id = ? 
-            ORDER BY created_at DESC 
-            LIMIT 50`,
-      args: [postId],
-    });
+    // Get comments from Supabase
+    const { data: commentsData } = await supabase
+      .from('post_comments')
+      .select('id, content, created_at, profile_id')
+      .eq('post_id', postId)
+      .order('created_at', { ascending: false })
+      .limit(50);
 
-    const comments = (commentsRes.rows || []).map((r: any) => ({
+    const comments = (commentsData || []).map((r: any) => ({
       id: r.id,
       content: r.content,
       created_at: r.created_at,
@@ -91,17 +58,16 @@ export async function GET(req: Request) {
       profile_avatar: null,
     }));
 
-    // Fetch real profile names from Turso channels table
+    // Fetch real profile names from Supabase channels table
     const profileIds = comments.map((c: any) => c.profile_id).filter(Boolean);
     if (profileIds.length > 0) {
       try {
-        const placeholders = profileIds.map(() => '?').join(',');
-        const channelResult = await turso.execute({
-          sql: `SELECT id, name, avatar FROM channels WHERE id IN (${placeholders})`,
-          args: profileIds
-        });
+        const { data: channelData } = await supabase
+          .from('channels')
+          .select('id, name, avatar')
+          .in('id', profileIds);
         
-        const channelMap = new Map((channelResult.rows || []).map((c: any) => [c.id, c]));
+        const channelMap = new Map((channelData || []).map((c: any) => [c.id, c]));
         comments.forEach((c: any) => {
           const channel = channelMap.get(c.profile_id);
           if (channel) {
@@ -124,23 +90,27 @@ export async function GET(req: Request) {
     let userQuizAnswer: number | null = null;
     if (profileId) {
       try {
-        const quizVoteRes = await turso.execute({
-          sql: `SELECT selected_index FROM quiz_votes WHERE quiz_id = ? AND profile_id = ?`,
-          args: [postId, profileId],
-        });
-        if (quizVoteRes.rows?.[0]) {
-          userQuizAnswer = Number(quizVoteRes.rows[0].selected_index);
+        const { data: quizVoteData } = await supabase
+          .from('quiz_votes')
+          .select('selected_index')
+          .eq('quiz_id', postId)
+          .eq('profile_id', profileId)
+          .limit(1);
+        if (quizVoteData?.[0]) {
+          userQuizAnswer = Number(quizVoteData[0].selected_index);
         }
       } catch (e) { /* ignore */ }
       
-      // Also check poll_votes table (need to create this)
+      // Also check poll_votes table
       try {
-        const pollVoteRes = await turso.execute({
-          sql: `SELECT selected_index FROM poll_votes WHERE post_id = ? AND profile_id = ?`,
-          args: [postId, profileId],
-        });
-        if (pollVoteRes.rows?.[0]) {
-          userVotedIndex = Number(pollVoteRes.rows[0].selected_index);
+        const { data: pollVoteData } = await supabase
+          .from('poll_votes')
+          .select('selected_index')
+          .eq('post_id', postId)
+          .eq('profile_id', profileId)
+          .limit(1);
+        if (pollVoteData?.[0]) {
+          userVotedIndex = Number(pollVoteData[0].selected_index);
         }
       } catch (e) { /* table might not exist */ }
     }
@@ -162,9 +132,6 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     console.log('POST /api/posts/engagement called');
-    
-    await ensureTables();
-    console.log('ensureTables done');
     
     const body = await req.json();
     const postId = body?.postId as string;
@@ -188,25 +155,27 @@ export async function POST(req: Request) {
     if (action === 'like') {
       console.log('Like action - postId:', postId, 'profileId:', profileId);
       // Check if already liked
-      const existing = await turso.execute({
-        sql: `SELECT 1 FROM post_likes WHERE post_id = ? AND profile_id = ?`,
-        args: [postId, profileId],
-      });
-      console.log('Existing likes:', existing.rows);
+      const { data: existing } = await supabase
+        .from('post_likes')
+        .select('id')
+        .eq('post_id', postId)
+        .eq('profile_id', profileId)
+        .limit(1);
+      console.log('Existing likes:', existing);
 
-      if (existing.rows?.length > 0) {
+      if (existing && existing.length > 0) {
         // Unlike
-        await turso.execute({
-          sql: `DELETE FROM post_likes WHERE post_id = ? AND profile_id = ?`,
-          args: [postId, profileId],
-        });
+        await supabase
+          .from('post_likes')
+          .delete()
+          .eq('post_id', postId)
+          .eq('profile_id', profileId);
         return NextResponse.json({ liked: false });
       } else {
         // Like
-        await turso.execute({
-          sql: `INSERT INTO post_likes (post_id, profile_id, created_at) VALUES (?, ?, datetime('now'))`,
-          args: [postId, profileId],
-        });
+        await supabase
+          .from('post_likes')
+          .insert({ post_id: postId, profile_id: profileId });
         console.log('Like inserted for postId:', postId, 'profileId:', profileId);
         return NextResponse.json({ liked: true });
       }
@@ -216,23 +185,30 @@ export async function POST(req: Request) {
       const content = body?.content as string;
       if (!content?.trim()) return NextResponse.json({ error: 'content required' }, { status: 400 });
 
-      const result = await turso.execute({
-        sql: `INSERT INTO post_comments (post_id, profile_id, content, created_at) VALUES (?, ?, ?, datetime('now'))`,
-        args: [postId, profileId, content.trim()],
-      });
+      const { data: result, error: insertError } = await supabase
+        .from('post_comments')
+        .insert({ post_id: postId, profile_id: profileId, content: content.trim() })
+        .select()
+        .single();
 
-      return NextResponse.json({ ok: true, commentId: result.lastInsertRowid });
+      if (insertError) {
+        console.error('Comment insert error:', insertError);
+        return NextResponse.json({ error: 'Failed to insert comment' }, { status: 500 });
+      }
+
+      return NextResponse.json({ ok: true, commentId: result?.id });
     }
 
     if (action === 'deleteComment') {
-      const commentId = body?.commentId as number;
+      const commentId = body?.commentId as string;
       if (!commentId) return NextResponse.json({ error: 'commentId required' }, { status: 400 });
 
       // Only allow deleting own comments
-      await turso.execute({
-        sql: `DELETE FROM post_comments WHERE id = ? AND profile_id = ?`,
-        args: [commentId, profileId],
-      });
+      await supabase
+        .from('post_comments')
+        .delete()
+        .eq('id', commentId)
+        .eq('profile_id', profileId);
 
       return NextResponse.json({ ok: true });
     }

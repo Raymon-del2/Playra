@@ -142,19 +142,22 @@ export async function GET(request: Request) {
     let channelJoinOrders: Record<string, number> = {};
     
     if (channelIds.length > 0) {
-      // Fetch join_order from Turso channels table
-      const { turso } = await import('@/lib/turso');
+      // Fetch join_order from Supabase channels table
       try {
-        const placeholders = channelIds.map(() => '?').join(',');
-        const channelResult = await turso.execute({
-          sql: `SELECT id, join_order FROM channels WHERE id IN (${placeholders})`,
-          args: channelIds
-        });
-        (channelResult.rows || []).forEach((row: any) => {
-          if (row.join_order) {
-            channelJoinOrders[row.id] = row.join_order;
-          }
-        });
+        const { data: channelData, error: channelError } = await supabase
+          .from('channels')
+          .select('id, join_order')
+          .in('id', channelIds);
+        
+        if (channelError) {
+          console.warn('Failed to fetch join_order from channels:', channelError);
+        } else if (channelData) {
+          channelData.forEach((row: any) => {
+            if (row.join_order !== null && row.join_order !== undefined) {
+              channelJoinOrders[row.id] = row.join_order;
+            }
+          });
+        }
       } catch (e) {
         console.warn('Failed to fetch join_order from channels:', e);
       }

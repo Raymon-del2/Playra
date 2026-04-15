@@ -113,7 +113,19 @@ function StylesFeed({ styleId }: { styleId?: string }) {
           // Stage 3: Load engagement metadata in background while video plays
           // This happens after video is already visible
           setTimeout(() => {
-            if (res.engagement) setReactions(res.engagement);
+            if (res.engagement) {
+              // Map engagement data to ReactionState type
+              const mappedReactions: Record<string, ReactionState> = {};
+              Object.entries(res.engagement).forEach(([id, eng]: [string, any]) => {
+                mappedReactions[id] = {
+                  likes: eng.likes || 0,
+                  dislikes: eng.views ? eng.views - (eng.likes || 0) : 0,
+                  isLiked: eng.userLiked || false,
+                  isDisliked: eng.userDisliked || false
+                };
+              });
+              setReactions(mappedReactions);
+            }
             if (res.watchLater) setWatchLaterMap(res.watchLater);
             if (res.commentCounts) setCommentCounts(res.commentCounts);
           }, 100);
@@ -144,17 +156,27 @@ function StylesFeed({ styleId }: { styleId?: string }) {
               const nextClip = clips[index + 1];
               if (nextClip && !loadedMetadata.has(nextClip.id)) {
                 // Pre-load metadata for next video
-                fetchVideoEngagement(nextClip.id, activeProfile?.id).then((res) => {
-                  if (res) {
-                    setReactions((prev) => ({ ...prev, [nextClip.id]: res }));
+                fetchVideoEngagement(nextClip.id, activeProfile?.id, nextClip.channel_id).then((res) => {
+                  if (res && res.success) {
+                    setReactions((prev) => ({ 
+                      ...prev, 
+                      [nextClip.id]: { 
+                        likes: res.likes || 0, 
+                        dislikes: res.views ? res.views - (res.likes || 0) : 0,
+                        isLiked: res.userLiked || false,
+                        isDisliked: res.userDisliked || false
+                      } 
+                    }));
                     setLoadedMetadata((prev) => new Set(prev).add(nextClip.id));
                   }
                 });
-                fetchBatchWatchLaterStatus([nextClip.id], activeProfile?.id).then((res) => {
-                  if (res) {
-                    setWatchLaterMap((prev) => ({ ...prev, ...res }));
-                  }
-                });
+                if (activeProfile?.id) {
+                  fetchBatchWatchLaterStatus(activeProfile.id, [nextClip.id]).then((res) => {
+                    if (res && res.success && res.data) {
+                      setWatchLaterMap((prev) => ({ ...prev, ...res.data }));
+                    }
+                  });
+                }
               }
             }
           }
