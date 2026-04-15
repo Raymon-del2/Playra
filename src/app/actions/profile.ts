@@ -1,11 +1,10 @@
 'use server';
 
-import { turso } from "@/lib/turso";
 import { supabase } from "@/lib/supabase";
 import { createClient } from '@supabase/supabase-js';
 import { revalidatePath } from "next/cache";
 
-// New Supabase for Turso-migrated data
+// Engagement Supabase for profiles
 const newSupabaseUrl = 'https://cbfybannksdcajiiwjfl.supabase.co';
 const newSupabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNiZnliYW5ua3NkY2FqaWl3amZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyMzkwNDAsImV4cCI6MjA5MDgxNTA0MH0.qN6dqfAR5qIOh1T4ctRacBv0J12TdXHc4-NiGe2nLe4';
 const newSupabase = createClient(newSupabaseUrl, newSupabaseAnonKey);

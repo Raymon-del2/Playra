@@ -7,7 +7,7 @@ export async function fetchUserPlaylists(userId: string) {
   try {
     console.log('[fetchUserPlaylists] Fetching for userId:', userId);
 
-    // Get playlists from Turso
+    // Get playlists from Supabase
     const playlists = await listPlaylists(userId);
     console.log('[fetchUserPlaylists] Found', playlists.length, 'playlists');
 

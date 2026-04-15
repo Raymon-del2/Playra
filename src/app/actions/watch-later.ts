@@ -17,7 +17,7 @@ export async function fetchWatchLaterVideos(userId: string) {
   try {
     console.log('[fetchWatchLaterVideos] Fetching for userId:', userId);
 
-    // Get watch later video IDs from Turso
+    // Get watch later video IDs from Supabase
     const watchLaterRows = await listWatchLater(userId);
     console.log('[fetchWatchLaterVideos] Found', watchLaterRows.length, 'watch later items');
 
