@@ -201,7 +201,7 @@ export default function LayoutShell({ children, activeProfile }: LayoutShellProp
         <Sidebar isCollapsed={isSidebarCollapsed} isSignedIn={isSignedIn} activeProfile={activeProfile} />
 
         <main
-          className={`flex-1 min-w-0 ${isStylesPage ? 'h-screen overflow-hidden' : 'main-content-area'} ${isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'
+          className={`flex-1 min-w-0 ${isStylesPage ? 'h-screen overflow-hidden' : 'main-content-area'} ${isSidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-64'
             }`}
         >
           {children}
