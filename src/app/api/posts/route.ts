@@ -137,29 +137,25 @@ export async function GET(request: Request) {
     
     const posts = data || [];
 
-    // Get channel IDs and fetch join_order from channels table
+    // Get channel IDs and fetch profile data from profiles table
     const channelIds = [...new Set(posts.map((p: any) => p.channel_id).filter(Boolean))];
     let channelJoinOrders: Record<string, number> = {};
     
     if (channelIds.length > 0) {
-      // Fetch join_order from Supabase channels table
+      // Fetch profile data from Supabase profiles table
       try {
-        const { data: channelData, error: channelError } = await supabase
-          .from('channels')
-          .select('id, join_order')
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('id')
           .in('id', channelIds);
         
-        if (channelError) {
-          console.warn('Failed to fetch join_order from channels:', channelError);
-        } else if (channelData) {
-          channelData.forEach((row: any) => {
-            if (row.join_order !== null && row.join_order !== undefined) {
-              channelJoinOrders[row.id] = row.join_order;
-            }
-          });
+        if (profileError) {
+          console.warn('Failed to fetch profiles:', profileError);
         }
+        // join_order doesn't exist in Supabase profiles - set to null for all
+        // This field was from Turso channels table
       } catch (e) {
-        console.warn('Failed to fetch join_order from channels:', e);
+        console.warn('Failed to fetch profiles:', e);
       }
     }
 

@@ -63,7 +63,7 @@ export async function GET(req: Request) {
     if (profileIds.length > 0) {
       try {
         const { data: channelData } = await supabase
-          .from('channels')
+          .from('profiles')
           .select('id, name, avatar')
           .in('id', profileIds);
         
