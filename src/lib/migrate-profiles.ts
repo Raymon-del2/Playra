@@ -25,12 +25,7 @@ async function migrateProfiles() {
       const { data: existingProfiles } = await supabase.from('profiles').select('id, name');
       console.log(`Found ${existingProfiles?.length || 0} profiles already in engagement Supabase`);
       
-      if (existingProfiles && existingProfiles.length > 0) {
-        console.log('Profiles already exist in Supabase engagement database!');
-        return;
-      }
-      
-      // Check videos Supabase for channel data
+      // Check videos Supabase for additional channel data
       const { createClient } = await import('@supabase/supabase-js');
       const videosSupabaseUrl = 'https://dyhbrdijbxjrhfthknkw.supabase.co';
       const videosSupabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR5aGJyZGlqYnhqcmhmdGhrbmt3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkzNjM4MDYsImV4cCI6MjA4NDkzOTgwNn0.RSa6GmEkxO9Zf56JxSI7J9nG8upNY-9XrzAJu2QP5A8';
@@ -41,8 +36,10 @@ async function migrateProfiles() {
       
       if (videos && videos.length > 0) {
         const channelMap = new Map();
+        const existingIds = new Set(existingProfiles?.map(p => p.id) || []);
+        
         videos.forEach((v: any) => {
-          if (v.channel_id && !channelMap.has(v.channel_id)) {
+          if (v.channel_id && !existingIds.has(v.channel_id) && !channelMap.has(v.channel_id)) {
             channelMap.set(v.channel_id, {
               id: v.channel_id,
               name: v.channel_name,
@@ -50,8 +47,13 @@ async function migrateProfiles() {
             });
           }
         });
-        channels = Array.from(channelMap.values());
-        console.log(`Extracted ${channels.length} unique channels from videos table`);
+        
+        if (channelMap.size > 0) {
+          channels = Array.from(channelMap.values());
+          console.log(`Found ${channels.length} new channels from videos to add`);
+        } else {
+          console.log('All video channels already exist in profiles');
+        }
       }
     } else {
       throw tursoError;

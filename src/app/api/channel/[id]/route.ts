@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { engagementSupabase } from '@/lib/supabase';
 
 export async function GET(
   _req: Request,
@@ -12,7 +12,7 @@ export async function GET(
 
   try {
     // Get channel from profiles table in Supabase
-    const { data: profile, error } = await supabase
+    const { data: profile, error } = await engagementSupabase
       .from('profiles')
       .select('id, name, description, avatar, banner, verified, account_type, created_at')
       .eq('id', channelId)
@@ -52,7 +52,7 @@ export async function POST(
   }
 
   try {
-    await supabase
+    await engagementSupabase
       .from('profiles')
       .update({ banner })
       .eq('id', channelId);
