@@ -186,7 +186,7 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
         <Link
           suppressHydrationWarning
           href={item.protected && !isUserAuthenticated ? '/signin' : item.path}
-          className={`w-full transition-all duration-200 outline-none flex ${isCollapsed
+          className={`w-full outline-none flex ${isCollapsed
             ? 'flex-col items-center justify-center py-4 px-0'
             : 'items-center space-x-5 px-3 py-2.5 rounded-xl'
             } ${isActive
@@ -196,12 +196,12 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
               : 'text-gray-400 hover:text-white'
             }`}
         >
-          <div suppressHydrationWarning className={`flex items-center justify-center transition-colors w-6 h-6`}>
+          <div suppressHydrationWarning className={`flex items-center justify-center w-6 h-6`}>
             {getIcon(item.icon, isActive)}
           </div>
           <span
             suppressHydrationWarning
-            className={`truncate transition-all duration-200 ${isCollapsed ? 'text-[10px] w-full text-center px-1 mt-1' : 'text-[14px]'}`}
+            className={`truncate ${isCollapsed ? 'text-[10px] w-full text-center px-1 mt-1' : 'text-[14px]'}`}
           >
             {item.label}
           </span>
@@ -213,7 +213,7 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
   return (
     <aside
       suppressHydrationWarning
-      className={`fixed left-0 top-14 h-[calc(100vh-56px)] bg-[#18181b]/80 backdrop-blur-sm overflow-y-auto hidden lg:block transition-all duration-300 z-40 ${isCollapsed ? 'w-[72px]' : 'w-64 border-r border-white/5'
+      className={`fixed left-0 top-14 h-[calc(100vh-56px)] bg-[#18181b]/80 backdrop-blur-sm overflow-y-auto hidden lg:block z-40 ${isCollapsed ? 'w-[72px]' : 'w-64 border-r border-white/5'
         }`}
     >
       <div suppressHydrationWarning className={`py-2 w-full ${isCollapsed ? 'px-0' : 'px-3'}`}>
