@@ -213,7 +213,7 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
   return (
     <aside
       suppressHydrationWarning
-      className={`fixed left-0 top-14 h-[calc(100vh-56px)] bg-[#18181b]/80 backdrop-blur-sm overflow-y-auto hidden lg:block z-40 ${isCollapsed ? 'w-[72px]' : 'w-64 border-r border-white/5'
+      className={`fixed left-0 top-14 h-[calc(100vh-56px)] bg-[#18181b]/80 backdrop-blur-sm overflow-y-auto hidden lg:block z-[101] ${isCollapsed ? 'w-[72px]' : 'w-64 border-r border-white/5'
         }`}
     >
       <div suppressHydrationWarning className={`py-2 w-full ${isCollapsed ? 'px-0' : 'px-3'}`}>
