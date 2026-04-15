@@ -157,14 +157,15 @@ function StylesFeed({ styleId }: { styleId?: string }) {
               if (nextClip && !loadedMetadata.has(nextClip.id)) {
                 // Pre-load metadata for next video
                 fetchVideoEngagement(nextClip.id, activeProfile?.id, nextClip.channel_id).then((res) => {
-                  if (res && res.success && typeof res.likes === 'number') {
+                  if (res && res.success && 'likes' in res) {
+                    const { likes, views, userLiked, userDisliked } = res as any;
                     setReactions((prev) => ({ 
                       ...prev, 
                       [nextClip.id]: { 
-                        likes: res.likes || 0, 
-                        dislikes: res.views ? res.views - (res.likes || 0) : 0,
-                        isLiked: res.userLiked || false,
-                        isDisliked: res.userDisliked || false
+                        likes: likes || 0, 
+                        dislikes: views ? views - (likes || 0) : 0,
+                        isLiked: userLiked || false,
+                        isDisliked: userDisliked || false
                       } 
                     }));
                     setLoadedMetadata((prev) => new Set(prev).add(nextClip.id));
