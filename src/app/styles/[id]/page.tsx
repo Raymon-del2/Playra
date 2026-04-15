@@ -157,7 +157,7 @@ function StylesFeed({ styleId }: { styleId?: string }) {
               if (nextClip && !loadedMetadata.has(nextClip.id)) {
                 // Pre-load metadata for next video
                 fetchVideoEngagement(nextClip.id, activeProfile?.id, nextClip.channel_id).then((res) => {
-                  if (res && res.success) {
+                  if (res && res.success && typeof res.likes === 'number') {
                     setReactions((prev) => ({ 
                       ...prev, 
                       [nextClip.id]: { 
