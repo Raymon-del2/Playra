@@ -103,15 +103,12 @@ body {
   overflow-x: hidden !important;
   -webkit-overflow-scrolling: touch;
   background: #0f0f0f;
-  /* Navbar height is 56px (h-14) */
-  padding-top: 56px;
   /* Bottom nav (60px) */
   padding-bottom: 74px;
 }
 
 @media (min-width: 1024px) {
   .main-content-area {
-    padding-top: 56px;
     padding-bottom: 0;
   }
 }

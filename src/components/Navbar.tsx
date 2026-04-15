@@ -202,7 +202,7 @@ export default function Navbar({
 
   return (
     <>
-      <nav suppressHydrationWarning className={`fixed top-0 left-0 right-0 h-14 z-[100] flex items-center transition-all duration-300 ${
+      <nav suppressHydrationWarning className={`sticky top-0 left-0 right-0 h-14 z-[100] flex items-center transition-all duration-300 ${
         isScrolled 
           ? 'bg-[#18181b]/90 backdrop-blur-md shadow-lg shadow-black/30' 
           : 'bg-[#18181b]/80 backdrop-blur-sm'
