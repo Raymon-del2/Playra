@@ -142,10 +142,10 @@ export default function ProfileMenu({ isOpen, onClose, activeProfile, userEmail 
 
         {isFeedbackOpen && (
             <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-                <div className="absolute inset-0 bg-black/60" onClick={() => setIsFeedbackOpen(false)} />
+                <div className="absolute inset-0 bg-black/60" onClick={() => { setIsFeedbackOpen(false); onClose(); }} />
                 <div className="relative bg-zinc-900 border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl">
                     <button
-                        onClick={() => { setIsFeedbackOpen(false); setSubmitSuccess(false); setFeedbackMessage(''); }}
+                        onClick={() => { setIsFeedbackOpen(false); setSubmitSuccess(false); setFeedbackMessage(''); onClose(); }}
                         className="absolute top-4 right-4 p-1 text-zinc-500 hover:text-white transition-colors"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
