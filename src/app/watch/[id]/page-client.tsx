@@ -96,7 +96,15 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
   const [needsExpansion, setNeedsExpansion] = useState(false);
   const descriptionTextRef = useRef<HTMLParagraphElement | null>(null);
 
-  // Detect if page is in an iframe
+  // Detect if page is in an iframe and redirect to embed page silently
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.self !== window.top) {
+      // Silently redirect to embed page
+      window.location.replace(`/embed/${watchId}`);
+    }
+  }, []);
+
+  // Also track iframe state for any fallback logic
   useEffect(() => {
     setIsEmbedded(window.self !== window.top);
   }, []);
