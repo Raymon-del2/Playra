@@ -61,6 +61,7 @@ export default function StylesDetailPage() {
 
 function StylesFeed({ styleId }: { styleId?: string }) {
   const router = useRouter();
+  const [isEmbedded, setIsEmbedded] = useState(false);
   const [activeProfile, setActiveProfile] = useState<any>(null);
   const [clips, setClips] = useState<Video[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -87,6 +88,11 @@ function StylesFeed({ styleId }: { styleId?: string }) {
   const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const initializedRef = useRef(false);
+
+  // Detect if page is in an iframe
+  useEffect(() => {
+    setIsEmbedded(window.self !== window.top);
+  }, []);
 
   useEffect(() => {
     if (initializedRef.current) return;
@@ -420,6 +426,40 @@ function StylesFeed({ styleId }: { styleId?: string }) {
   };
 
   const activeClip = clips[activeIndex];
+
+  // If embedded in another website, show simple player for current video
+  if (isEmbedded && activeClip) {
+    return (
+      <div className="w-full h-full bg-black relative group">
+        <video
+          src={activeClip.video_url}
+          poster={activeClip.thumbnail_url}
+          className="w-full h-full object-contain"
+          controls
+          controlsList="nodownload noplaybackrate"
+          playsInline
+          autoPlay
+        />
+        {(activeClip.channel_avatar || activeClip.channel_name) && (
+          <div className="absolute top-4 left-4 flex items-center gap-3 z-20">
+            {activeClip.channel_avatar && (
+              <img src={activeClip.channel_avatar} alt="" className="w-10 h-10 rounded-full border border-white/20" />
+            )}
+            <div className="text-white drop-shadow-lg">
+              <p className="font-bold text-base leading-tight drop-shadow-md">{activeClip.title}</p>
+              {activeClip.channel_name && <p className="text-sm text-white/80 drop-shadow-md">{activeClip.channel_name}</p>}
+            </div>
+          </div>
+        )}
+        <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+          <a href={`/styles/${activeClip.id}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-black/70 backdrop-blur-sm px-4 py-2 rounded-lg text-sm text-white hover:bg-black/80 transition-colors">
+            <span>Watch on</span>
+            <img src="/offlinee.png" alt="Playra" className="h-5 w-auto object-contain" />
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="yt-shorts-root">
