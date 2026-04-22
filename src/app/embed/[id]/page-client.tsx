@@ -57,39 +57,6 @@ export default function EmbedPageClient({ params }: EmbedPageProps) {
     };
   }, []);
 
-
-  if (isLoading) {
-    return (
-      <div className="w-full h-full bg-black flex items-center justify-center m-0 p-0">
-        <div className="w-12 h-12 border-3 border-white/20 border-t-white rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (isOffline) {
-    return (
-      <div className="w-full h-full bg-white flex flex-col items-center justify-center p-4 m-0">
-        <img src="/offlinee.png" alt="Playra" className="w-16 h-16 mb-4" />
-        <p className="text-gray-800 text-lg font-medium mb-2">Sorry, something might have gone wrong</p>
-        <p className="text-gray-500 text-sm">Please check your internet connection</p>
-      </div>
-    );
-  }
-
-  if (error || !video) {
-    return (
-      <div className="w-full h-full bg-black flex flex-col items-center justify-center p-4 m-0">
-        <svg className="w-16 h-16 text-white/40 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-        </svg>
-        <p className="text-white/80 text-lg font-medium mb-2">Something went wrong</p>
-        <a href="/" target="_blank" rel="noopener noreferrer" className="text-blue-400 text-sm hover:underline">
-          Watch on Playra
-        </a>
-      </div>
-    );
-  }
-
   const togglePlay = () => {
     if (videoRef.current) {
       if (videoRef.current.paused) {
@@ -117,7 +84,7 @@ export default function EmbedPageClient({ params }: EmbedPageProps) {
 
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    const url = `${window.location.origin}/watch/${video?.id}`;
+    const url = `${window.location.origin}/watch/${video.id}`;
     await navigator.clipboard.writeText(url);
     setShareCopied(true);
     setTimeout(() => setShareCopied(false), 2000);
@@ -157,8 +124,43 @@ export default function EmbedPageClient({ params }: EmbedPageProps) {
     return () => video.removeEventListener('timeupdate', updateProgress);
   }, []);
 
-  const isStyle = video?.content_type === 'style' || video?.is_post;
+  const isStyle = video.content_type === 'style' || video.is_post;
   const playIcon = isStyle ? '/stylesicon.svg' : '/logo-play.png';
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="w-full h-full bg-black flex items-center justify-center m-0 p-0">
+        <div className="w-12 h-12 border-3 border-white/20 border-t-white rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // Offline state
+  if (isOffline) {
+    return (
+      <div className="w-full h-full bg-white flex flex-col items-center justify-center p-4 m-0">
+        <img src="/offlinee.png" alt="Playra" className="w-16 h-16 mb-4" />
+        <p className="text-gray-800 text-lg font-medium mb-2">Sorry, something might have gone wrong</p>
+        <p className="text-gray-500 text-sm">Please check your internet connection</p>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error || !video) {
+    return (
+      <div className="w-full h-full bg-black flex flex-col items-center justify-center p-4 m-0">
+        <svg className="w-16 h-16 text-white/40 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+        </svg>
+        <p className="text-white/80 text-lg font-medium mb-2">Something went wrong</p>
+        <a href="/" target="_blank" rel="noopener noreferrer" className="text-blue-400 text-sm hover:underline">
+          Watch on Playra
+        </a>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-full bg-black relative group m-0 p-0" onMouseMove={handleControlsShow} onWheel={handleWheel}>
