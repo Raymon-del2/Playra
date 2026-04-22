@@ -1,9 +1,5 @@
-'use server';
-
 import { ImageResponse } from 'next/og';
 import { getVideoById } from '@/lib/supabase';
-
-export const runtime = 'edge';
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
