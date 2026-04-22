@@ -21,11 +21,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
         const videoUrl = `https://playra.vercel.app/watch/${video.id}`;
         const embedUrl = `https://playra.vercel.app/embed/${video.id}`;
-        const thumbnailUrl = video.thumbnail_url || '/og-image.svg';
+        const ogImageUrl = `https://playra.vercel.app/og/${video.id}`;
 
         return {
-            title: `${video.title} | Playra`,
-            description: video.description?.substring(0, 160) || `Watch ${video.title} on Playra`,
+            title: `${video.title} - Watch on Playra`,
+            description: video.description?.substring(0, 160) || `Watch ${video.title} on Playra - The best videos from independent creators`,
             openGraph: {
                 title: video.title,
                 description: video.description?.substring(0, 160) || `Watch ${video.title} on Playra`,
@@ -33,9 +33,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
                 siteName: 'Playra',
                 images: [
                     {
-                        url: thumbnailUrl,
-                        width: 1280,
-                        height: 720,
+                        url: ogImageUrl,
+                        width: 1200,
+                        height: 630,
                         alt: video.title,
                     },
                 ],
@@ -51,9 +51,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             },
             twitter: {
                 card: 'summary_large_image',
-                title: video.title,
+                title: `${video.title} | Playra`,
                 description: video.description?.substring(0, 160) || `Watch ${video.title} on Playra`,
-                images: [thumbnailUrl],
+                images: [ogImageUrl],
             },
             alternates: {
                 canonical: videoUrl,
