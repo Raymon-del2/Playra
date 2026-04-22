@@ -124,9 +124,6 @@ export default function EmbedPageClient({ params }: EmbedPageProps) {
     return () => video.removeEventListener('timeupdate', updateProgress);
   }, []);
 
-  const isStyle = video.content_type === 'style' || video.is_post;
-  const playIcon = isStyle ? '/stylesicon.svg' : '/logo-play.png';
-
   // Loading state
   if (isLoading) {
     return (
@@ -161,6 +158,9 @@ export default function EmbedPageClient({ params }: EmbedPageProps) {
       </div>
     );
   }
+
+  const isStyle = video.content_type === 'style' || video.is_post;
+  const playIcon = isStyle ? '/stylesicon.svg' : '/logo-play.png';
 
   return (
     <div className="w-full h-full bg-black relative group m-0 p-0" onMouseMove={handleControlsShow} onWheel={handleWheel}>
