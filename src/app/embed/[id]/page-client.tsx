@@ -18,6 +18,7 @@ export default function EmbedPageClient({ params }: EmbedPageProps) {
   const [showMoreVideos, setShowMoreVideos] = useState(false);
   const [relatedVideos, setRelatedVideos] = useState<any[]>([]);
   const [progress, setProgress] = useState(0);
+  const [isMuted, setIsMuted] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
 
@@ -120,6 +121,14 @@ export default function EmbedPageClient({ params }: EmbedPageProps) {
     }
   };
 
+  const toggleMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (videoRef.current) {
+      videoRef.current.muted = !videoRef.current.muted;
+      setIsMuted(videoRef.current.muted);
+    }
+  };
+
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
     const url = `${window.location.origin}/watch/${video.id}`;
@@ -162,6 +171,9 @@ export default function EmbedPageClient({ params }: EmbedPageProps) {
     return () => video.removeEventListener('timeupdate', updateProgress);
   }, []);
 
+  const isStyle = video.content_type === 'style' || video.is_post;
+  const playIcon = isStyle ? '/stylesicon.svg' : '/logo-play.png';
+
   return (
     <div className="w-full h-full bg-black relative group m-0 p-0" onMouseMove={handleControlsShow} onWheel={handleWheel}>
       <video
@@ -173,6 +185,7 @@ export default function EmbedPageClient({ params }: EmbedPageProps) {
         onPlay={() => { setIsPlaying(true); setShowPlayBtn(false); }}
         onPause={() => { setIsPlaying(false); setShowPlayBtn(true); }}
         onEnded={() => { setIsPlaying(false); setShowPlayBtn(true); }}
+        controlsList="nodownload noplaybackrate"
       />
       
       {/* Play button overlay - shows when not playing */}
@@ -181,7 +194,7 @@ export default function EmbedPageClient({ params }: EmbedPageProps) {
           <div className="relative">
             <div className="absolute inset-0 rounded-full bg-white/20 blur-xl scale-150" />
             <img
-              src="/logo-play.png"
+              src={playIcon}
               alt="Play"
               className="w-20 h-20 object-contain drop-shadow-2xl hover:scale-110 transition-transform duration-200"
             />
@@ -261,7 +274,29 @@ export default function EmbedPageClient({ params }: EmbedPageProps) {
           </div>
 
           {/* Bottom-right: Watch on Playra */}
-          <div className="absolute bottom-8 right-4">
+          <div className="absolute bottom-8 right-4 flex items-center gap-2">
+            {/* Mute button */}
+            <button
+              onClick={toggleMute}
+              className="flex items-center justify-center bg-black/70 backdrop-blur-sm p-3 rounded-full text-white hover:bg-black/80 transition-all"
+            >
+              {isMuted ? (
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/>
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+                </svg>
+              )}
+            </button>
+
+            {/* Styles icon for style content */}
+            {isStyle && (
+              <img src="/stylesicon.svg" alt="Style" className="h-6 w-auto object-contain" />
+            )}
+
             <a 
               href={`/watch/${video.id}`} 
               target="_blank"
