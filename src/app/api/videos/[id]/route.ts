@@ -23,6 +23,8 @@ export async function GET(
       channel_name: video.channel_name,
       channel_id: video.channel_id,
       channel_avatar: video.channel_avatar,
+      content_type: video.content_type,
+      is_post: video.is_post,
     });
   } catch (error) {
     console.error('Error fetching video:', error);
