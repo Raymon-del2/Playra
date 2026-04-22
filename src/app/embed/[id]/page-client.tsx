@@ -52,7 +52,7 @@ export default function EmbedPageClient({ params }: EmbedPageProps) {
 
   if (isLoading) {
     return (
-      <div className="w-full h-full bg-black flex items-center justify-center">
+      <div className="w-full h-full bg-black flex items-center justify-center m-0 p-0">
         <div className="w-12 h-12 border-3 border-white/20 border-t-white rounded-full animate-spin" />
       </div>
     );
@@ -60,7 +60,7 @@ export default function EmbedPageClient({ params }: EmbedPageProps) {
 
   if (isOffline) {
     return (
-      <div className="w-full h-full bg-black flex flex-col items-center justify-center p-4">
+      <div className="w-full h-full bg-black flex flex-col items-center justify-center p-4 m-0">
         <svg className="w-16 h-16 text-white/40 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
           <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414" />
         </svg>
@@ -75,7 +75,7 @@ export default function EmbedPageClient({ params }: EmbedPageProps) {
 
   if (error || !video) {
     return (
-      <div className="w-full h-full bg-black flex flex-col items-center justify-center p-4">
+      <div className="w-full h-full bg-black flex flex-col items-center justify-center p-4 m-0">
         <svg className="w-16 h-16 text-white/40 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
         </svg>
@@ -88,7 +88,7 @@ export default function EmbedPageClient({ params }: EmbedPageProps) {
   }
 
   return (
-    <div className="w-full h-full bg-black relative group">
+    <div className="w-full h-full bg-black relative group m-0 p-0">
       <video
         src={video.video_url}
         poster={video.thumbnail_url}
