@@ -606,11 +606,9 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
   const videoViews = video ? `${Math.max(1, video.views ?? 0).toLocaleString()} views` : "";
   const videoDate = video ? formatDistanceToNow(new Date(video.created_at), { addSuffix: true }) : "";
   const videoDescription = video?.description || "";
-  const isVideoContent = video?.content_type === 'video';
-  const isStyleContent = video?.content_type === 'style';
 
-  // If embedded OR simple video content, show YouTube-style simple player (no comments/likes)
-  if (isEmbedded || isVideoContent) {
+  // If embedded in another website, show YouTube-style simple player
+  if (isEmbedded) {
     return (
       <div className="w-full h-full bg-black relative group">
         <video
@@ -643,8 +641,7 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
     );
   }
 
-  // Style content - show full card with likes/comments
-  // Normal watch page layout
+  // Normal watch page layout (full card with likes/comments)
   return (
     <div className={`flex ${isTheatreMode ? 'flex-col lg:flex-col' : 'flex-col lg:flex-row'} gap-6 p-0 lg:p-6 bg-[#0f0f0f] min-h-screen items-center lg:items-start`}>
       {/* Sticky Player */}
