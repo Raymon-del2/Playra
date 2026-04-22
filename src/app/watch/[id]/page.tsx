@@ -20,6 +20,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         }
 
         const videoUrl = `https://playra.vercel.app/watch/${video.id}`;
+        const embedUrl = `https://playra.vercel.app/embed/${video.id}`;
         const thumbnailUrl = video.thumbnail_url || '/og-image.svg';
 
         return {
@@ -39,6 +40,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
                     },
                 ],
                 type: 'video.other',
+                videos: [
+                    {
+                        url: embedUrl,
+                        width: 1280,
+                        height: 720,
+                        type: 'text/html',
+                    },
+                ],
             },
             twitter: {
                 card: 'summary_large_image',
