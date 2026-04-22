@@ -101,30 +101,31 @@ export default function ChannelContent() {
             if (!publishDataStr) return;
             
             const publishData = JSON.parse(publishDataStr);
-            const videoData = (window as any).__tempVideoData;
+            const videoUrl = sessionStorage.getItem('uploadVideoUrl');
+            const videoName = sessionStorage.getItem('uploadVideoName');
             const thumbnail = (window as any).__tempThumbnail || publishData.thumbnail;
             
-            if (!videoData) {
-                console.error('No video data found');
+            if (!videoUrl) {
+                console.error('No video URL found');
                 return;
             }
             
-            // Convert base64 video to File
-            const videoFile = await base64ToFile(videoData, 'uploaded-video.mp4');
-            
-            // Process the upload
+            // Process the upload with the existing URL
             setIsUploadModalOpen(true);
             setUploadStep('details');
-            setSelectedFile(videoFile);
-            setVideoTitle(publishData.title || 'Untitled');
+            setVideoTitle(publishData.title || videoName?.replace(/\.[^/.]+$/, '') || 'Untitled');
             setVideoDescription(publishData.description || '');
             if (thumbnail) {
                 setThumbnailData(thumbnail);
             }
             
+            // Store the video URL for later use
+            sessionStorage.setItem('uploadedVideoUrl', videoUrl);
+            
             // Clear the publish data
             sessionStorage.removeItem('publishData');
-            sessionStorage.removeItem('uploadVideo');
+            sessionStorage.removeItem('uploadVideoUrl');
+            sessionStorage.removeItem('uploadVideoName');
             delete (window as any).__tempVideoData;
             delete (window as any).__tempThumbnail;
             
@@ -196,32 +197,57 @@ export default function ChannelContent() {
     };
 
     const handleSave = async () => {
-        if (!selectedFile || !activeProfile) return;
+        if (!activeProfile) return;
 
         setIsSaving(true);
         try {
-            // Calculate video duration
-            setUploadProgress(10);
-            const duration = await getVideoDuration(selectedFile);
-            // 1. Upload to Storage
-            const timestamp = Date.now();
-            const filePath = `${activeProfile.id}/${timestamp}-${selectedFile.name}`;
+            // Check for any existing video URL (direct upload or browser base64 converted to URL)
+            const existingVideoUrl = sessionStorage.getItem('uploadedVideoUrl');
+            const browserVideoData = sessionStorage.getItem('uploadVideo');
+            let videoUrl = '';
+            let duration = '0:00';
 
-            // Note: In a real app, you'd use the progress callback if available via supabase client
-            setUploadProgress(40);
-            const videoUrl = await uploadVideoFile(selectedFile, filePath);
+            if (existingVideoUrl) {
+                // Direct upload - use existing URL
+                videoUrl = existingVideoUrl;
+                sessionStorage.removeItem('uploadedVideoUrl');
+                setUploadProgress(100);
+            } else if (browserVideoData) {
+                // Browser upload - convert base64 to file and upload
+                setUploadProgress(10);
+                const videoFile = await base64ToFile(browserVideoData, 'uploaded-video.mp4');
+                duration = await getVideoDuration(videoFile);
+                const timestamp = Date.now();
+                const filePath = `${activeProfile.id}/${timestamp}-${videoFile.name}`;
+                
+                setUploadProgress(40);
+                videoUrl = await uploadVideoFile(videoFile, filePath);
+                setUploadProgress(100);
+                sessionStorage.removeItem('uploadVideo');
+            } else if (selectedFile) {
+                // Normal drag/drop upload - upload file to storage
+                setUploadProgress(10);
+                duration = await getVideoDuration(selectedFile);
+                const timestamp = Date.now();
+                const filePath = `${activeProfile.id}/${timestamp}-${selectedFile.name}`;
 
-            setUploadProgress(65);
+                setUploadProgress(40);
+                videoUrl = await uploadVideoFile(selectedFile, filePath);
+                setUploadProgress(65);
+            } else {
+                throw new Error('No video selected');
+            }
 
-            // 1b. Upload thumbnail if provided
+            // Upload thumbnail if provided
             let thumbnailUrl = '';
             if (thumbnailFile) {
+                const timestamp = Date.now();
                 const thumbPath = `${activeProfile.id}/${timestamp}-thumb-${thumbnailFile.name}`;
                 thumbnailUrl = await uploadThumbnail(thumbnailFile, thumbPath);
                 setUploadProgress(80);
             }
 
-            // 2. Save to Database
+            // Save to Database
             await uploadVideo({
                 title: videoTitle,
                 description: videoDescription,
@@ -675,7 +701,8 @@ export default function ChannelContent() {
                         className="absolute inset-0"
                         onClick={() => setIsUploadModalOpen(false)}
                     />
-                    {/* UPDATED COMPACT MODAL DESIGN - MATCHING IMAGE */}
+
+                    {/* UPDATED COMPACT MODAL DESIGN - MATCHING IMAGE */}
                     <div className={`relative w-full ${uploadStep === 'idle' ? 'max-w-xl' : 'max-w-[800px] aspect-[16/10]'} bg-[#282828] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200 transition-all`}>
                         {/* Modal Header */}
                         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 select-none">

@@ -946,11 +946,42 @@ export async function getRelatedVideos(videoId: string, category?: string, chann
     return (videos || []) as Video[];
 }
 
-// Get top channels by subscriber count
+// Get top channels by subscriber count - only channels with posts, videos, or styles
 export async function getTopChannels(limit = 10): Promise<Channel[]> {
+    // Get channels that have posts (is_post = true)
+    const { data: channelsWithPosts } = await engagementSupabase
+        .from('videos')
+        .select('channel_id')
+        .eq('is_post', true);
+
+    // Get channels that have regular videos (not posts, not shorts)
+    const { data: channelsWithVideos } = await engagementSupabase
+        .from('videos')
+        .select('channel_id')
+        .eq('is_post', false)
+        .eq('is_short', false);
+
+    // Get channels that have styles (is_short = true)
+    const { data: channelsWithStyles } = await engagementSupabase
+        .from('videos')
+        .select('channel_id')
+        .eq('is_short', true);
+
+    // Combine all unique channel IDs
+    const allChannelIds = new Set<string>();
+    channelsWithPosts?.forEach(p => allChannelIds.add(p.channel_id));
+    channelsWithVideos?.forEach(p => allChannelIds.add(p.channel_id));
+    channelsWithStyles?.forEach(p => allChannelIds.add(p.channel_id));
+    
+    const channelIds = [...allChannelIds];
+    
+    if (channelIds.length === 0) return [];
+
+    // Get profiles for those channels
     const { data: profiles, error } = await engagementSupabase
         .from('profiles')
         .select('id, name, avatar')
+        .in('id', channelIds)
         .limit(limit);
 
     if (error) {
@@ -961,12 +992,12 @@ export async function getTopChannels(limit = 10): Promise<Channel[]> {
     if (!profiles || profiles.length === 0) return [];
 
     // Try to get subscriber counts from subscriptions table
-    const channelIds = profiles.map(p => p.id);
+    const profileIds = profiles.map(p => p.id);
     try {
         const { data: subs } = await engagementSupabase
             .from('subscriptions')
             .select('channel_id')
-            .in('channel_id', channelIds);
+            .in('channel_id', profileIds);
 
         const subscriberCounts = new Map<string, number>();
         subs?.forEach(s => {

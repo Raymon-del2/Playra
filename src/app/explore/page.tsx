@@ -1,14 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getTrendingVideos, getTopChannels, Video } from '@/lib/supabase';
+import { getTrendingVideos, Video } from '@/lib/supabase';
 import Link from 'next/link';
 
 const categories = ['Trending', 'Gaming', 'Music', 'Live', 'News', 'Sports', 'Technology', 'Entertainment'];
 
 export default function ExplorePage() {
   const [videos, setVideos] = useState<Video[]>([]);
-  const [channels, setChannels] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('Trending');
 
@@ -16,12 +15,8 @@ export default function ExplorePage() {
     const loadData = async () => {
       setIsLoading(true);
       try {
-        const [videosData, channelsData] = await Promise.all([
-          getTrendingVideos(50),
-          getTopChannels(20)
-        ]);
+        const videosData = await getTrendingVideos(50);
         setVideos(videosData || []);
-        setChannels(channelsData || []);
       } catch (err) {
         console.error('Failed to load explore data:', err);
       } finally {
@@ -37,8 +32,8 @@ export default function ExplorePage() {
 
   return (
     <div className="min-h-screen bg-black text-white pt-14 pb-20 lg:pb-8">
-      <div className="sticky top-14 z-40 bg-[#0f0f0f]/80 backdrop-blur-xl border-b border-white/5">
-        <div className="flex items-center gap-3 overflow-x-auto px-4 py-3 scrollbar-hide">
+      <div className="fixed top-14 left-0 right-0 z-30 bg-[#0f0f0f]/95 backdrop-blur-xl border-b border-white/5">
+        <div className="flex items-center gap-3 overflow-x-auto px-4 py-3 scrollbar-hide max-w-[1280px] mx-auto">
           {categories.map((cat) => (
             <button
               key={cat}
@@ -55,17 +50,17 @@ export default function ExplorePage() {
         </div>
       </div>
 
-      <div className="p-4 md:p-6">
+      <div className="p-4 md:p-6 pt-20">
         {selectedCategory === 'Trending' && (
           <>
             <div className="mb-8">
-              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <h2 className="sticky top-[98px] z-20 bg-black/80 backdrop-blur-sm py-3 text-xl font-bold mb-4 flex items-center gap-2">
                 <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M17.56 21c-.29 0-.58-.07-.82-.2l-7.44-4.02-4 6.52c-.38.62-1.19 1.04-1.96.7-3.58-1.57-6.02-4.93-6.45-8.47-.47-3.84 1.47-7.48 4.75-9.05C7.34 2.37 10.4 2 12.64 4.21c.43.42.67 1.02.67 1.65s-.24 1.23-.67 1.65c-.87.85-2.25.85-3.12 0-1.46-1.44-3.72-1.35-5.04.2-1.32 1.56-.9 4.04.94 5.55l7.44 4.02 4-6.52c.38-.62 1.19-1.04 1.96-.7l.12.06c.58.31.77.99.46 1.57l-.01.01z"/>
                 </svg>
                 Trending
               </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pt-12">
                 {isLoading ? (
                   Array(8).fill(0).map((_, i) => (
                     <div key={i} className="animate-pulse">
@@ -100,33 +95,6 @@ export default function ExplorePage() {
                     </Link>
                   ))
                 )}
-              </div>
-            </div>
-
-            <div className="mb-8">
-              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                Top Channels
-              </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {channels.slice(0, 10).map((channel) => (
-                  <Link key={channel.id} href={`/channel/${channel.id}`} className="flex flex-col items-center p-4 rounded-xl hover:bg-white/5 transition-colors">
-                    <div className="w-16 h-16 rounded-full overflow-hidden bg-zinc-800 mb-3">
-                      {channel.avatar_url ? (
-                        <img src={channel.avatar_url} alt={channel.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-xl font-bold text-zinc-400">
-                          {channel.name?.[0]?.toUpperCase() || '?'}
-                        </div>
-                      )}
-                    </div>
-                    <span className="text-sm font-bold text-white text-center line-clamp-1">{channel.name}</span>
-                    <span className="text-xs text-zinc-400">{channel.subscribers?.toLocaleString()} subscribers</span>
-                  </Link>
-                ))}
               </div>
             </div>
           </>

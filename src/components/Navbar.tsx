@@ -422,7 +422,7 @@ export default function Navbar({
                     </svg>
                   </button>
 
-                  <CreateMenu isOpen={isCreateMenuOpen} onClose={() => setIsCreateMenuOpen(false)} />
+                  <CreateMenu isOpen={isCreateMenuOpen} onClose={() => setIsCreateMenuOpen(false)} profileId={activeProfile?.id} />
                 </div>
               )}
 

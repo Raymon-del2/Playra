@@ -16,10 +16,14 @@ export default function PublishPage() {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        // Get video from session storage
-        const stored = sessionStorage.getItem('uploadVideo');
-        if (stored) {
-            setVideoData(stored);
+        // Check for direct upload URL first, then fall back to browser base64
+        const urlStored = sessionStorage.getItem('uploadVideoUrl');
+        const base64Stored = sessionStorage.getItem('uploadVideo');
+        
+        if (urlStored) {
+            setVideoData(urlStored);
+        } else if (base64Stored) {
+            setVideoData(base64Stored);
         }
         
         // Get active profile

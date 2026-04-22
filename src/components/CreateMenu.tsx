@@ -6,9 +6,10 @@ import Link from 'next/link';
 interface CreateMenuProps {
     isOpen: boolean;
     onClose: () => void;
+    profileId?: string;
 }
 
-export default function CreateMenu({ isOpen, onClose }: CreateMenuProps) {
+export default function CreateMenu({ isOpen, onClose, profileId }: CreateMenuProps) {
     const menuRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -60,7 +61,7 @@ export default function CreateMenu({ isOpen, onClose }: CreateMenuProps) {
             </Link>
 
             <Link
-                href="/create/post"
+                href={profileId ? `/channel/${profileId}/posts` : '/create/post'}
                 onClick={onClose}
                 className="flex items-center gap-4 px-4 py-2.5 hover:bg-white/10 transition-colors group w-full text-left"
             >

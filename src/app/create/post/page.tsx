@@ -56,6 +56,52 @@ export default function CreatePostPage() {
     const [imagePreviews, setImagePreviews] = useState<string[]>([]);
     const [isUploading, setIsUploading] = useState(false);
 
+    // Draft caching
+    const DRAFT_KEY = 'playra_post_draft';
+
+    // Load draft from localStorage on mount
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const savedDraft = localStorage.getItem(DRAFT_KEY);
+            if (savedDraft) {
+                try {
+                    const draft = JSON.parse(savedDraft);
+                    if (draft.text) setText(draft.text);
+                    if (draft.mode) setMode(draft.mode);
+                    if (draft.visibility) setVisibility(draft.visibility);
+                    if (draft.pollOptions) setPollOptions(draft.pollOptions);
+                    if (draft.quizQuestion) setQuizQuestion(draft.quizQuestion);
+                    if (draft.quizAnswers) setQuizAnswers(draft.quizAnswers);
+                } catch (e) {
+                    console.error('Failed to load draft:', e);
+                }
+            }
+        }
+    }, []);
+
+    // Save draft to localStorage on changes
+    useEffect(() => {
+        if (typeof window !== 'undefined' && (text || mode !== 'text' || pollOptions.some(o => o.text) || quizQuestion || quizAnswers.some(a => a.text))) {
+            const draft = {
+                text,
+                mode,
+                visibility,
+                pollOptions,
+                quizQuestion,
+                quizAnswers,
+                savedAt: Date.now(),
+            };
+            localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+        }
+    }, [text, mode, visibility, pollOptions, quizQuestion, quizAnswers]);
+
+    // Clear draft function
+    const clearDraft = () => {
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem(DRAFT_KEY);
+        }
+    };
+
     // Load auth
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (u) => {
@@ -224,6 +270,9 @@ export default function CreatePostPage() {
 
             // Clear previews
             imagePreviews.forEach(url => URL.revokeObjectURL(url));
+            
+            // Clear draft from localStorage
+            clearDraft();
             
             // Redirect to home
             router.push('/');

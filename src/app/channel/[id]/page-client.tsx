@@ -59,13 +59,40 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
   const [isOwner, setIsOwner] = useState(false);
   const [savingBanner, setSavingBanner] = useState(false);
   const [subscriberCount, setSubscriberCount] = useState(0);
-
-
+  const [posts, setPosts] = useState<Video[]>([]);
+  const [loadingPosts, setLoadingPosts] = useState(false);
 
   const handle = useMemo(() => {
     if (!channel?.name) return '';
     return `@${channel.name.replace(/^@+/, '').replace(/\s+/g, '').toLowerCase()}`;
   }, [channel?.name]);
+
+  const fetchPosts = async () => {
+    setLoadingPosts(true);
+    try {
+      const { data, error } = await supabase!
+        .from('videos')
+        .select('*')
+        .eq('channel_id', channelId)
+        .eq('is_post', true)
+        .order('created_at', { ascending: false });
+      if (error) {
+        console.error('Error fetching posts', error);
+      } else {
+        setPosts(data || []);
+      }
+    } catch (err) {
+      console.error('Error fetching posts:', err);
+    } finally {
+      setLoadingPosts(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'Posts' && posts.length === 0) {
+      fetchPosts();
+    }
+  }, [activeTab, posts.length]);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -98,17 +125,15 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
         // Fetch subscriber count
         try {
           const count = await getSubscriberCount(channelId);
-          console.log('Channel subscriber count:', count);
           setSubscriberCount(count);
-        } catch (err) {
-          console.error('Error fetching subscriber count:', err);
-        }
+        } catch (e) {}
       } catch (err) {
-        console.error(err);
+        console.error('Error in fetchAll:', err);
       } finally {
         setLoading(false);
       }
     };
+
     fetchAll();
   }, [channelId, router]);
 
@@ -198,6 +223,13 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
 
   return (
     <div className="min-h-screen bg-black text-white">
+      {/* Repair Notice */}
+      <div className="bg-zinc-800/50 border-b border-white/5 px-4 py-2 text-center">
+        <p className="text-zinc-400 text-sm">
+          This page needs many repairs and we will fix it as we can
+        </p>
+      </div>
+
       {/* Banner */}
       <div className="relative w-full">
         <div
@@ -441,15 +473,115 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
           )}
 
           {activeTab === 'Posts' && (
-            <div className="flex flex-col items-center justify-center py-32 text-zinc-500">
-              <div className="w-24 h-24 bg-zinc-900 rounded-full flex items-center justify-center mb-4 border border-white/5">
-                <svg className="w-10 h-10 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-                </svg>
+            loadingPosts ? (
+              <div className="flex items-center justify-center py-32">
+                <div className="w-10 h-10 border-4 border-white/10 border-t-white rounded-full animate-spin"></div>
               </div>
-              <p className="font-medium text-lg mb-2">Posts coming soon</p>
-              <p className="text-zinc-500">Share updates with your community</p>
-            </div>
+            ) : posts.length > 0 ? (
+              <div className="max-w-2xl mx-auto space-y-4">
+                {posts.map((post) => {
+                  let content: any = {};
+                  try {
+                    content = post.description ? JSON.parse(post.description) : {};
+                  } catch (e) {}
+                  const postType = content._post_type || 'text';
+                  
+                  return (
+                    <div key={post.id} className="bg-zinc-900/50 border border-white/5 rounded-2xl p-4 hover:bg-zinc-900 transition-colors">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-zinc-800">
+                          {post.channel_avatar ? (
+                            <img src={post.channel_avatar} alt={post.channel_name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-sm font-bold text-zinc-500">
+                              {post.channel_name?.[0]?.toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <div className="font-bold text-white text-sm">{post.channel_name}</div>
+                          <div className="text-zinc-500 text-xs">
+                            {post.created_at ? formatDistanceToNow(new Date(post.created_at), { addSuffix: true }) : ''}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {postType === 'text' && content.text && (
+                        <p className="text-white whitespace-pre-wrap mb-3">{content.text}</p>
+                      )}
+                      
+                      {postType === 'poll' && content.question && (
+                        <div className="mb-3">
+                          <p className="font-bold text-white mb-2">{content.question}</p>
+                          <div className="space-y-2">
+                            {content.options?.map((opt: any, idx: number) => (
+                              <div key={idx} className="bg-zinc-800 rounded-lg px-4 py-2 text-sm text-zinc-300">
+                                {opt.text || opt}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {postType === 'quiz' && content.question && (
+                        <div className="mb-3">
+                          <p className="font-bold text-white mb-2">{content.question}</p>
+                          <div className="space-y-2">
+                            {content.options?.map((opt: string, idx: number) => (
+                              <div key={idx} className={`rounded-lg px-4 py-2 text-sm ${idx === content.correct_index ? 'bg-green-900/30 text-green-400 border border-green-500/30' : 'bg-zinc-800 text-zinc-300'}`}>
+                                {opt}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {postType === 'image' && content.images && (
+                        <div className="mb-3">
+                          {content.text && <p className="text-white whitespace-pre-wrap mb-2">{content.text}</p>}
+                          <div className="grid grid-cols-2 gap-2">
+                            {content.images.map((img: string, idx: number) => (
+                              <img key={idx} src={img} alt="" className="w-full rounded-lg object-cover aspect-square" />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className="flex items-center gap-4 pt-2 border-t border-white/5">
+                        <button className="flex items-center gap-1.5 text-zinc-400 hover:text-white text-sm">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
+                          </svg>
+                          <span>Like</span>
+                        </button>
+                        <button className="flex items-center gap-1.5 text-zinc-400 hover:text-white text-sm">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                          </svg>
+                          <span>Comment</span>
+                        </button>
+                        <button className="flex items-center gap-1.5 text-zinc-400 hover:text-white text-sm">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                          </svg>
+                          <span>Share</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-32 text-zinc-500">
+                <div className="w-24 h-24 bg-zinc-900 rounded-full flex items-center justify-center mb-4 border border-white/5">
+                  <svg className="w-10 h-10 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                  </svg>
+                </div>
+                <p className="font-medium text-lg mb-2">No posts yet</p>
+                <p className="text-zinc-500">Share updates with your community</p>
+              </div>
+            )
           )}
         </div>
       </div>

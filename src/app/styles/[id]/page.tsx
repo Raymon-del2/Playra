@@ -93,10 +93,11 @@ function StylesFeed({ styleId }: { styleId?: string }) {
     initializedRef.current = true;
     const init = async () => {
       try {
-        // Stage 1: Show skeleton and load basic video data
+        // Stage 1: Show skeleton and load basic video data (without user ID)
         setIsLoading(true);
         const limit = 15;
-        const res = await getStylesFeed(activeProfile?.id, limit, 0);
+        const res = await getStylesFeed(undefined, limit, 0);
+        
         if (res.success && res.videos && res.videos.length > 0) {
           const data = res.videos;
           let startIndex = 0;
@@ -110,25 +111,54 @@ function StylesFeed({ styleId }: { styleId?: string }) {
           // Stage 2: Show video immediately (skeleton removed)
           setIsLoading(false);
           
-          // Stage 3: Load engagement metadata in background while video plays
-          // This happens after video is already visible
-          setTimeout(() => {
-            if (res.engagement) {
-              // Map engagement data to ReactionState type
-              const mappedReactions: Record<string, ReactionState> = {};
-              Object.entries(res.engagement).forEach(([id, eng]: [string, any]) => {
-                mappedReactions[id] = {
-                  likes: eng.likes || 0,
-                  dislikes: eng.views ? eng.views - (eng.likes || 0) : 0,
-                  isLiked: eng.userLiked || false,
-                  isDisliked: eng.userDisliked || false
-                };
+          // Stage 3: Load engagement metadata in background (without user-specific data)
+          if (res.engagement) {
+            const mappedReactions: Record<string, ReactionState> = {};
+            Object.entries(res.engagement).forEach(([id, eng]: [string, any]) => {
+              mappedReactions[id] = {
+                likes: eng.likes || 0,
+                dislikes: eng.views ? eng.views - (eng.likes || 0) : 0,
+                isLiked: false,
+                isDisliked: false
+              };
+            });
+            setReactions(mappedReactions);
+          }
+          if (res.watchLater) setWatchLaterMap(res.watchLater);
+          if (res.commentCounts) setCommentCounts(res.commentCounts);
+          
+          // Stage 4: Load profile and refresh engagement with user data
+          let profile;
+          try {
+            profile = await getActiveProfile();
+          } catch (e) {
+            // Fallback: try to get from localStorage
+            const stored = typeof window !== 'undefined' ? localStorage.getItem('playra_profile') : null;
+            if (stored) profile = JSON.parse(stored);
+          }
+          setActiveProfile(profile);
+          if (profile) localStorage.setItem('playra_profile', JSON.stringify(profile));
+          
+          if (profile?.id) {
+            // Fetch engagement again with user ID to get user-specific data
+            const videoIds = data.map(v => v.id);
+            const engagementRes = await fetchBatchVideoEngagement(videoIds, profile.id);
+            if (engagementRes.success && engagementRes.data) {
+              setReactions(prev => {
+                const updated = { ...prev };
+                Object.entries(engagementRes.data).forEach(([id, eng]: [string, any]) => {
+                  if (updated[id]) {
+                    updated[id] = {
+                      ...updated[id],
+                      isLiked: eng.userLiked || false,
+                      isDisliked: eng.userDisliked || false
+                    };
+                  }
+                });
+                return updated;
               });
-              setReactions(mappedReactions);
             }
-            if (res.watchLater) setWatchLaterMap(res.watchLater);
-            if (res.commentCounts) setCommentCounts(res.commentCounts);
-          }, 100);
+          }
         } else {
           setClips([]);
           setHasMore(false);
@@ -140,9 +170,6 @@ function StylesFeed({ styleId }: { styleId?: string }) {
       }
     };
     init();
-    
-    // Load profile in background (non-blocking)
-    getActiveProfile().then(profile => setActiveProfile(profile));
   }, [styleId]);
 
   // Pre-fetch next videos using Intersection Observer
@@ -292,7 +319,16 @@ function StylesFeed({ styleId }: { styleId?: string }) {
       if (!state) return prev;
       return { ...prev, [id]: { ...state, likes: isCurrentlyLiked ? state.likes - 1 : state.likes + 1, isLiked: !isCurrentlyLiked, isDisliked: false } };
     });
-    try { await toggleLikeVideo(id, activeProfile.id, isCurrentlyLiked); }
+    try { 
+      const result = await toggleLikeVideo(id, activeProfile.id, isCurrentlyLiked);
+      if (result.success && typeof result.likes === 'number') {
+        setReactions(prev => {
+          const state = prev[id];
+          if (!state) return prev;
+          return { ...prev, [id]: { ...state, likes: result.likes! } };
+        });
+      }
+    }
     catch { setReactions(prev => { const state = prev[id]; if (!state) return prev; return { ...prev, [id]: { ...state, likes: isCurrentlyLiked ? state.likes : state.likes - 1, isLiked: isCurrentlyLiked } }; }); }
   };
 
@@ -305,10 +341,19 @@ function StylesFeed({ styleId }: { styleId?: string }) {
     setReactions(prev => {
       const state = prev[id];
       if (!state) return prev;
-      return { ...prev, [id]: { ...state, isDisliked: !isCurrentlyDisliked, isLiked: false, likes: isCurrentlyLiked ? state.likes - 1 : state.likes } };
+      return { ...prev, [id]: { ...state, isDisliked: !isCurrentlyDisliked, isLiked: false, likes: isCurrentlyLiked ? state.likes - 1 : state.likes, dislikes: isCurrentlyDisliked ? state.dislikes - 1 : state.dislikes + 1 } };
     });
-    try { await toggleDislikeVideo(id, activeProfile.id, isCurrentlyDisliked); }
-    catch { setReactions(prev => { const state = prev[id]; if (!state) return prev; return { ...prev, [id]: { ...state, isDisliked: isCurrentlyDisliked, isLiked: isCurrentlyLiked, likes: isCurrentlyLiked ? state.likes : state.likes + 1 } }; }); }
+    try { 
+      const result = await toggleDislikeVideo(id, activeProfile.id, isCurrentlyDisliked);
+      if (result.success && typeof result.likes === 'number') {
+        setReactions(prev => {
+          const state = prev[id];
+          if (!state) return prev;
+          return { ...prev, [id]: { ...state, dislikes: result.likes! } };
+        });
+      }
+    }
+    catch { setReactions(prev => { const state = prev[id]; if (!state) return prev; return { ...prev, [id]: { ...state, isDisliked: isCurrentlyDisliked, isLiked: isCurrentlyLiked, likes: isCurrentlyLiked ? state.likes : state.likes + 1, dislikes: isCurrentlyDisliked ? state.dislikes : state.dislikes - 1 } }; }); }
   };
 
   const handleSave = async (id: string) => {
@@ -355,13 +400,17 @@ function StylesFeed({ styleId }: { styleId?: string }) {
   const handleCommentLike = async (commentId: string, currentlyLiked: boolean) => {
     if (!activeProfile) { alert('Please sign in'); return; }
     setComments(prev => prev.map(c => c.id === commentId ? { ...c, user_liked: !currentlyLiked, user_disliked: false, likes: !currentlyLiked ? c.likes + 1 : c.likes - 1 } : c));
-    try { await engageComment(commentId, activeProfile.id, currentlyLiked ? null : 'like'); } catch { console.error('Failed'); }
+    try { 
+      await engageComment(commentId, activeProfile.id, currentlyLiked ? null : 'like');
+    } catch { console.error('Failed'); }
   };
 
   const handleCommentDislike = async (commentId: string, currentlyDisliked: boolean) => {
     if (!activeProfile) { alert('Please sign in'); return; }
     setComments(prev => prev.map(c => c.id === commentId ? { ...c, user_disliked: !currentlyDisliked, user_liked: false, likes: c.user_liked ? c.likes - 1 : c.likes } : c));
-    try { await engageComment(commentId, activeProfile.id, currentlyDisliked ? null : 'dislike'); } catch { console.error('Failed'); }
+    try { 
+      await engageComment(commentId, activeProfile.id, currentlyDisliked ? null : 'dislike');
+    } catch { console.error('Failed'); }
   };
 
   const copyToClipboard = (id: string) => {
