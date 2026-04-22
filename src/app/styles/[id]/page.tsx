@@ -89,7 +89,19 @@ function StylesFeed({ styleId }: { styleId?: string }) {
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const initializedRef = useRef(false);
 
-  // Detect if page is in an iframe
+  // Detect if page is in an iframe and redirect to embed page silently
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.self !== window.top) {
+      // Get current style ID from URL
+      const pathParts = window.location.pathname.split('/');
+      const styleId = pathParts[pathParts.length - 1];
+      if (styleId) {
+        window.location.replace(`/embed/${styleId}`);
+      }
+    }
+  }, []);
+
+  // Also track iframe state for any fallback logic
   useEffect(() => {
     setIsEmbedded(window.self !== window.top);
   }, []);
