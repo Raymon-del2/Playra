@@ -158,6 +158,7 @@ export default function LayoutShell({ children, activeProfile: serverProfile }: 
   const mobileSidebarWidth = '0px';
 
   const isAuthPage = pathname === '/signin' || pathname === '/set-account' || pathname === '/select-profile';
+  const isEmbedPage = pathname.startsWith('/embed/');
 
   if (!isOnline) {
     return (
@@ -181,8 +182,8 @@ export default function LayoutShell({ children, activeProfile: serverProfile }: 
     );
   }
 
-  if (isAuthPage) {
-    return <main className="min-h-screen bg-black">{children}</main>;
+  if (isAuthPage || isEmbedPage) {
+    return <>{children}</>;
   }
 
   // Studio and Create pages have their own shell; avoid double nav/sidebars

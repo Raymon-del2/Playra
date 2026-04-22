@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Anton } from "next/font/google";
 import "./globals.css";
 import LayoutShell from "@/components/LayoutShell";
+import { getActiveProfile } from "@/app/actions/profile";
 
 const anton = Anton({ weight: "400", subsets: ["latin"], variable: "--font-anton" });
 
@@ -36,13 +37,14 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Playra - Next-Gen Video Discovery & Creation Platform",
-    description: "Discover, create, and share amazing videos on Playra. Join a community of creators and viewers exploring the future of video content!",
+    description: "Discover, create, and share amazing videos on Playra. Join a community of creators and viewers exploring the future of video content.",
     images: ["/og-image.svg"],
   },
 };
 
-
-import { getActiveProfile } from "@/app/actions/profile";
+function isEmbedRoute(pathname: string): boolean {
+  return pathname.startsWith('/embed/');
+}
 
 export default async function RootLayout({
   children,
