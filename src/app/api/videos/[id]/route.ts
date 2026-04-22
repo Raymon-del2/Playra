@@ -22,6 +22,7 @@ export async function GET(
       thumbnail_url: video.thumbnail_url,
       channel_name: video.channel_name,
       channel_id: video.channel_id,
+      channel_avatar: video.channel_avatar,
     });
   } catch (error) {
     console.error('Error fetching video:', error);

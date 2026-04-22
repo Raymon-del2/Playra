@@ -27,6 +27,7 @@ import {
 
 export default function WatchPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: watchId } = use(params);
+  const [isEmbedded, setIsEmbedded] = useState(false);
   const [video, setVideo] = useState<Video | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [likes, setLikes] = useState<number | null>(null);
@@ -94,6 +95,11 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [needsExpansion, setNeedsExpansion] = useState(false);
   const descriptionTextRef = useRef<HTMLParagraphElement | null>(null);
+
+  // Detect if page is in an iframe
+  useEffect(() => {
+    setIsEmbedded(window.self !== window.top);
+  }, []);
 
   useEffect(() => {
     if (descriptionTextRef.current) {
@@ -599,7 +605,47 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
   const channelAvatar = video?.channel_avatar || "";
   const videoViews = video ? `${Math.max(1, video.views ?? 0).toLocaleString()} views` : "";
   const videoDate = video ? formatDistanceToNow(new Date(video.created_at), { addSuffix: true }) : "";
-  const videoDescription = video?.description || "";  return (
+  const videoDescription = video?.description || "";
+  const isVideoContent = video?.content_type === 'video';
+  const isStyleContent = video?.content_type === 'style';
+
+  // If embedded OR simple video content, show YouTube-style simple player (no comments/likes)
+  if (isEmbedded || isVideoContent) {
+    return (
+      <div className="w-full h-full bg-black relative group">
+        <video
+          ref={videoRef}
+          src={videoSrc}
+          poster={video?.thumbnail_url}
+          className="w-full h-full object-contain"
+          controls
+          controlsList="nodownload noplaybackrate"
+          playsInline
+        />
+        {(channelAvatar || channelName) && (
+          <div className="absolute top-4 left-4 flex items-center gap-3 z-20">
+            {channelAvatar && (
+              <img src={channelAvatar} alt="" className="w-10 h-10 rounded-full border border-white/20" />
+            )}
+            <div className="text-white drop-shadow-lg">
+              <p className="font-bold text-base leading-tight drop-shadow-md">{videoTitle}</p>
+              {channelName && <p className="text-sm text-white/80 drop-shadow-md">{channelName}</p>}
+            </div>
+          </div>
+        )}
+        <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+          <Link href={`/watch/${watchId}`} target="_blank" className="flex items-center gap-2 bg-black/70 backdrop-blur-sm px-4 py-2 rounded-lg text-sm text-white hover:bg-black/80 transition-colors">
+            <span>Watch on</span>
+            <img src="/offlinee.png" alt="Playra" className="h-5 w-auto object-contain" />
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Style content - show full card with likes/comments
+  // Normal watch page layout
+  return (
     <div className={`flex ${isTheatreMode ? 'flex-col lg:flex-col' : 'flex-col lg:flex-row'} gap-6 p-0 lg:p-6 bg-[#0f0f0f] min-h-screen items-center lg:items-start`}>
       {/* Sticky Player */}
       {isStickyPlayer && (

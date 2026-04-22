@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import Link from 'next/link';
+import { useState, useEffect } from 'react';
 
 interface EmbedPageProps {
   params: Promise<{ id: string }>;
@@ -12,9 +11,6 @@ export default function EmbedPage({ params }: EmbedPageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isOffline, setIsOffline] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [showPlayBtn, setShowPlayBtn] = useState(true);
 
   useEffect(() => {
     const loadVideo = async () => {
@@ -53,29 +49,6 @@ export default function EmbedPage({ params }: EmbedPageProps) {
     };
   }, []);
 
-  const handlePlay = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
-    }
-  };
-
-  const togglePlay = () => {
-    if (videoRef.current) {
-      if (videoRef.current.paused) {
-        videoRef.current.play();
-        setIsPlaying(true);
-        setShowPlayBtn(false);
-      } else {
-        videoRef.current.pause();
-        setIsPlaying(false);
-      }
-    }
-  };
 
   if (isLoading) {
     return (
@@ -93,9 +66,9 @@ export default function EmbedPage({ params }: EmbedPageProps) {
         </svg>
         <p className="text-white/80 text-lg font-medium mb-2">Something went wrong</p>
         <p className="text-white/50 text-sm mb-4">Check your internet connection</p>
-        <Link href="/" className="text-blue-400 text-sm hover:underline">
+        <a href="/" target="_blank" rel="noopener noreferrer" className="text-blue-400 text-sm hover:underline">
           Watch on Playra
-        </Link>
+        </a>
       </div>
     );
   }
@@ -107,28 +80,21 @@ export default function EmbedPage({ params }: EmbedPageProps) {
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
         </svg>
         <p className="text-white/80 text-lg font-medium mb-2">Something went wrong</p>
-        <Link href="/" className="text-blue-400 text-sm hover:underline">
+        <a href="/" target="_blank" rel="noopener noreferrer" className="text-blue-400 text-sm hover:underline">
           Watch on Playra
-        </Link>
+        </a>
       </div>
     );
   }
 
   return (
-    <div 
-      className="w-full h-full bg-black relative group cursor-pointer"
-      onClick={togglePlay}
-    >
+    <div className="w-full h-full bg-black relative group">
       <video
-        ref={videoRef}
         src={video.video_url}
         poster={video.thumbnail_url}
         className="w-full h-full object-contain"
         controls
         controlsList="nodownload noplaybackrate"
-        onPlay={() => { setIsPlaying(true); setShowPlayBtn(false); }}
-        onPause={() => { setIsPlaying(false); setShowPlayBtn(true); }}
-        onEnded={() => setShowPlayBtn(true)}
         playsInline
       />
       
@@ -152,44 +118,18 @@ export default function EmbedPage({ params }: EmbedPageProps) {
           </>
         )}
       </div>
-      
-      {/* YouTube-style play button overlay */}
-      {showPlayBtn && !isPlaying && (
-        <div className="absolute inset-0 flex items-center justify-center z-20">
-          <div className="relative">
-            {/* Glow effect behind button */}
-            <div className="absolute inset-0 rounded-full bg-white/20 blur-xl scale-150" />
-            {/* Play button image */}
-            <img 
-              src="/logo-play.png" 
-              alt="Play" 
-              className="w-20 h-20 object-contain drop-shadow-2xl hover:scale-110 transition-transform duration-200"
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Play/Pause indicator */}
-      {isPlaying && (
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
-          <div className="bg-black/70 backdrop-blur-sm px-4 py-2 rounded-full">
-            <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-            </svg>
-          </div>
-        </div>
-      )}
 
       {/* Bottom-right: Watch on Playra (like YouTube's embed branding) */}
       <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-        <Link 
+        <a 
           href={`/watch/${video.id}`} 
           target="_blank"
+          rel="noopener noreferrer"
           className="flex items-center gap-2 bg-black/70 backdrop-blur-sm px-4 py-2 rounded-lg text-sm text-white hover:bg-black/80 transition-colors"
         >
           <span>Watch on</span>
           <img src="/offlinee.png" alt="Playra" className="h-5 w-auto object-contain" />
-        </Link>
+        </a>
       </div>
 
       {/* Prevent right-click download */}
