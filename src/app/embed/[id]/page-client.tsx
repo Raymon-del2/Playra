@@ -15,8 +15,6 @@ export default function EmbedPageClient({ params }: EmbedPageProps) {
   const [showPlayBtn, setShowPlayBtn] = useState(true);
   const [showControls, setShowControls] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
-  const [showMoreVideos, setShowMoreVideos] = useState(false);
-  const [relatedVideos, setRelatedVideos] = useState<any[]>([]);
   const [progress, setProgress] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -35,9 +33,6 @@ export default function EmbedPageClient({ params }: EmbedPageProps) {
         if (!res.ok) throw new Error('Video not found');
         const data = await res.json();
         setVideo(data);
-        
-        // Load related videos
-        loadRelatedVideos(data.channel_id);
       } catch (err) {
         if (!navigator.onLine) {
           setIsOffline(true);
@@ -50,18 +45,6 @@ export default function EmbedPageClient({ params }: EmbedPageProps) {
     };
     loadVideo();
   }, [params]);
-
-  const loadRelatedVideos = async (channelId: string) => {
-    try {
-      const res = await fetch(`/api/videos?channel_id=${channelId}&limit=10`);
-      if (res.ok) {
-        const data = await res.json();
-        setRelatedVideos(data.videos || []);
-      }
-    } catch (err) {
-      console.error('Failed to load related videos');
-    }
-  };
 
   useEffect(() => {
     const handleOnline = () => setIsOffline(false);
@@ -129,9 +112,12 @@ export default function EmbedPageClient({ params }: EmbedPageProps) {
     }
   };
 
+  // Don't load related videos - API doesn't exist
+  // const loadRelatedVideos = async (channelId: string) => { ... }
+
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    const url = `${window.location.origin}/watch/${video.id}`;
+    const url = `${window.location.origin}/watch/${video?.id}`;
     await navigator.clipboard.writeText(url);
     setShareCopied(true);
     setTimeout(() => setShareCopied(false), 2000);
@@ -171,7 +157,7 @@ export default function EmbedPageClient({ params }: EmbedPageProps) {
     return () => video.removeEventListener('timeupdate', updateProgress);
   }, []);
 
-  const isStyle = video.content_type === 'style' || video.is_post;
+  const isStyle = video?.content_type === 'style' || video?.is_post;
   const playIcon = isStyle ? '/stylesicon.svg' : '/logo-play.png';
 
   return (
@@ -260,17 +246,6 @@ export default function EmbedPageClient({ params }: EmbedPageProps) {
                 </>
               )}
             </button>
-
-            {/* More videos button */}
-            <button
-              onClick={(e) => { e.stopPropagation(); setShowMoreVideos(!showMoreVideos); }}
-              className="flex items-center gap-2 bg-black/70 backdrop-blur-sm px-4 py-2 rounded-full text-sm text-white hover:bg-black/80 transition-all"
-            >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
-              </svg>
-              <span>More videos</span>
-            </button>
           </div>
 
           {/* Bottom-right: Watch on Playra */}
@@ -306,41 +281,6 @@ export default function EmbedPageClient({ params }: EmbedPageProps) {
               <img src="/offlinee.png" alt="Playra" className="h-6 w-auto object-contain" />
               <span className="font-medium">Watch on Playra</span>
             </a>
-          </div>
-        </div>
-      )}
-
-      {/* More videos panel */}
-      {showMoreVideos && (
-        <div className="absolute inset-0 bg-black/95 z-30 overflow-y-auto">
-          <div className="p-4">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-white text-xl font-bold">More videos</h2>
-              <button
-                onClick={() => setShowMoreVideos(false)}
-                className="text-white hover:text-gray-300 transition-colors"
-              >
-                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-              </button>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {relatedVideos.map((v) => (
-                <a
-                  key={v.id}
-                  href={`/embed/${v.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block"
-                >
-                  <div className="relative aspect-video bg-gray-800 rounded-lg overflow-hidden">
-                    <img src={v.thumbnail_url} alt={v.title} className="w-full h-full object-cover" />
-                  </div>
-                  <p className="text-white text-sm mt-2 line-clamp-2">{v.title}</p>
-                </a>
-              ))}
-            </div>
           </div>
         </div>
       )}
