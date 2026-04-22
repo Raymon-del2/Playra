@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface EmbedPageProps {
   params: Promise<{ id: string }>;
@@ -11,6 +11,9 @@ export default function EmbedPageClient({ params }: EmbedPageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isOffline, setIsOffline] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [showPlayBtn, setShowPlayBtn] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     const loadVideo = async () => {
@@ -87,17 +90,58 @@ export default function EmbedPageClient({ params }: EmbedPageProps) {
     );
   }
 
+  const togglePlay = () => {
+    if (videoRef.current) {
+      if (videoRef.current.paused) {
+        videoRef.current.play();
+        setIsPlaying(true);
+        setShowPlayBtn(false);
+      } else {
+        videoRef.current.pause();
+        setIsPlaying(false);
+        setShowPlayBtn(true);
+      }
+    }
+  };
+
   return (
-    <div className="w-full h-full bg-black relative group m-0 p-0">
+    <div className="w-full h-full bg-black relative group m-0 p-0 cursor-pointer" onClick={togglePlay}>
       <video
+        ref={videoRef}
         src={video.video_url}
         poster={video.thumbnail_url}
         className="w-full h-full object-contain"
-        controls
-        controlsList="nodownload noplaybackrate"
         playsInline
+        onPlay={() => { setIsPlaying(true); setShowPlayBtn(false); }}
+        onPause={() => { setIsPlaying(false); setShowPlayBtn(true); }}
+        onEnded={() => { setIsPlaying(false); setShowPlayBtn(true); }}
       />
       
+      {/* Play button overlay - shows when not playing */}
+      {showPlayBtn && !isPlaying && (
+        <div className="absolute inset-0 flex items-center justify-center z-20">
+          <div className="relative">
+            <div className="absolute inset-0 rounded-full bg-white/20 blur-xl scale-150" />
+            <img
+              src="/logo-play.png"
+              alt="Play"
+              className="w-20 h-20 object-contain drop-shadow-2xl hover:scale-110 transition-transform duration-200"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Pause indicator - shows on hover when playing */}
+      {isPlaying && (
+        <div className="absolute inset-0 flex items-center justify-center z-20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+          <div className="bg-black/70 backdrop-blur-sm p-4 rounded-full">
+            <svg className="w-12 h-12 text-white" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+            </svg>
+          </div>
+        </div>
+      )}
+
       {/* Top-left: Channel info (like YouTube embed) */}
       <div className="absolute top-4 left-4 flex items-center gap-3 z-20">
         {(video.channel_avatar || video.channel_name) && (
