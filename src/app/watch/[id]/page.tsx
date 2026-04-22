@@ -50,10 +50,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
                 ],
             },
             twitter: {
-                card: 'summary_large_image',
+                card: 'player',
                 title: `${video.title} | Playra`,
                 description: video.description?.substring(0, 160) || `Watch ${video.title} on Playra`,
                 images: [ogImageUrl],
+                player: {
+                    url: embedUrl,
+                    width: 1280,
+                    height: 720,
+                },
+            },
+            other: {
+                'embed-url': embedUrl,
             },
             alternates: {
                 canonical: videoUrl,
