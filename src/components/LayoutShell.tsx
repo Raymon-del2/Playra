@@ -23,7 +23,7 @@ interface LayoutShellProps {
   activeProfile: any; // Using any to avoid complex type imports for now, or define a basic shape
 }
 
-export default function LayoutShell({ children, activeProfile }: LayoutShellProps) {
+export default function LayoutShell({ children, activeProfile: serverProfile }: LayoutShellProps) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -37,6 +37,26 @@ export default function LayoutShell({ children, activeProfile }: LayoutShellProp
   const [showWhoIsWatching, setShowWhoIsWatching] = useState(false);
   const [userProfiles, setUserProfiles] = useState<any[]>([]);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
+  const [activeProfile, setActiveProfile] = useState(serverProfile);
+
+  // Fallback: load profile from localStorage if not available from server
+  useEffect(() => {
+    if (!activeProfile && typeof window !== 'undefined') {
+      const stored = localStorage.getItem('playra_profile');
+      if (stored) {
+        try {
+          setActiveProfile(JSON.parse(stored));
+        } catch (e) {}
+      }
+    }
+  }, []);
+
+  // Save profile to localStorage when it changes
+  useEffect(() => {
+    if (activeProfile && typeof window !== 'undefined') {
+      localStorage.setItem('playra_profile', JSON.stringify(activeProfile));
+    }
+  }, [activeProfile]);
 
   const isStylesPage = pathname?.startsWith('/styles');
   const isStudio = pathname?.startsWith('/studio');
