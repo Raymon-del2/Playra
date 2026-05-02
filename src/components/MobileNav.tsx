@@ -15,7 +15,7 @@ export default function MobileNav({
     const pathname = usePathname();
     const [isCreateOpen, setIsCreateOpen] = useState(false);    const navItems = [
         { icon: 'home', label: 'Home', path: '/' },
-        { icon: 'shorts', label: 'Shorts', path: '/styles' },
+        { icon: 'shorts', label: 'Styles', path: '/styles' },
         { icon: 'search', label: '', path: '/results', isAction: true },
         { icon: 'subscriptions', label: 'Subs', path: '/subscriptions' },
         { icon: 'library', label: 'Library', path: '/library' },
