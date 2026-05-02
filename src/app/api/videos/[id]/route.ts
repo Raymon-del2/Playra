@@ -14,7 +14,7 @@ export async function GET(
     }
     
     // Return only necessary data for embed
-    return NextResponse.json({
+    const response = NextResponse.json({
       id: video.id,
       title: video.title,
       description: video.description,
@@ -26,8 +26,25 @@ export async function GET(
       content_type: video.content_type,
       is_post: video.is_post,
     });
+    
+    // Add CORS headers
+    response.headers.set('Access-Control-Allow-Origin', '*');
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type');
+    
+    return response;
   } catch (error) {
     console.error('Error fetching video:', error);
     return NextResponse.json({ error: 'Failed to fetch video' }, { status: 500 });
   }
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  });
 }
