@@ -398,6 +398,7 @@ function FeedItem({ item, hoveredId, previewingId, isMuted, onHoverStart, onHove
 }
 
 export default function Home() {
+  const router = useRouter();
   const [videos, setVideos] = useState<Video[]>([]);
   const [posts, setPosts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
