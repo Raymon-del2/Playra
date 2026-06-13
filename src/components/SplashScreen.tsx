@@ -77,7 +77,7 @@ export default function SplashScreen({ onFinish }: { onFinish: () => void }) {
             <div
                 className={`mt-8 transition-all duration-700 ${showWordmark ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
             >
-                <span className="text-2xl font-black tracking-tight text-white drop-shadow-[0_0_10px_rgba(99,102,241,0.4)]">
+                <span className="text-2xl font-black tracking-tight text-zinc-900 drop-shadow-[0_0_10px_rgba(99,102,241,0.4)]">
                     PLAYRA
                 </span>
             </div>
@@ -86,7 +86,7 @@ export default function SplashScreen({ onFinish }: { onFinish: () => void }) {
             <div
                 className={`absolute bottom-20 transition-opacity duration-500 ${showWordmark ? 'opacity-100' : 'opacity-0'}`}
             >
-                <div className="w-16 h-0.5 bg-white/10 rounded-full overflow-hidden">
+                <div className="w-16 h-0.5 bg-zinc-200/80 rounded-full overflow-hidden">
                     <div
                         className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 shimmer-effect"
                         style={{ width: '100%' }}

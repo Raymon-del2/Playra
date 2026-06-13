@@ -29,9 +29,9 @@
 }
 
 :root {
-  --background: #0f0f0f;
-  --foreground: #ffffff;
-  --yt-gray: #aaaaaa;
+  --background: #f9fafb;
+  --foreground: #18181b;
+  --yt-gray: #71717a;
 }
 
 /* Custom Scrollbar - YouTube Style */
@@ -45,14 +45,14 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #3f3f46;
+  background: #d4d4d8;
   border: 3px solid transparent;
   background-clip: padding-box;
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #52525b;
+  background: #a1a1aa;
   border: 3px solid transparent;
   background-clip: padding-box;
 }
@@ -69,7 +69,7 @@ html > * {
 /* For Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #3f3f3f transparent;
+  scrollbar-color: #d4d4d4 transparent;
 }
 
 *,
@@ -84,14 +84,14 @@ body {
   max-width: 100% !important;
   height: 100%;
   overflow-x: hidden;
-  background: #0f0f0f !important;
+  background: #f9fafb !important;
   margin: 0;
   padding: 0;
   overscroll-behavior-y: none; /* Prevents pull-to-refresh on mobile for better app feel */
 }
 
 body {
-  color: #ffffff;
+  color: #18181b;
   font-family: "Roboto", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -102,7 +102,7 @@ body {
   overflow-y: auto;
   overflow-x: hidden !important;
   -webkit-overflow-scrolling: touch;
-  background: #0f0f0f;
+  background: #f9fafb;
   /* Navbar height is 56px (h-14) */
   padding-top: 56px;
   /* Bottom nav (60px) */
@@ -130,8 +130,8 @@ body {
   z-index: 100;
   height: calc(60px + env(safe-area-inset-bottom, 0px));
   padding-bottom: env(safe-area-inset-bottom, 0px);
-  background: #0f0f0f;
-  border-top: 1px solid #2a2a2a;
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
 }
 
 html.styles-scrollbar-hidden,
@@ -245,6 +245,59 @@ body.styles-scrollbar-hidden::-webkit-scrollbar-thumb {
   /* IE and Edge */
   scrollbar-width: none;
   /* Firefox */
+}
+
+.scrollbar-show::-webkit-scrollbar {
+  display: block;
+  width: 8px;
+}
+
+.scrollbar-show::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-show::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+  border-radius: 4px;
+}
+
+.scrollbar-show::-webkit-scrollbar-thumb:hover {
+  background: #52525b;
+}
+
+/* Sidebar scrollbar - overlay style, doesn't push content */
+.sidebar-scrollbar {
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  -ms-overflow-style: none;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  background: transparent;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 4px;
+}
+
+.sidebar-scrollbar:hover {
+  scrollbar-color: #3f3f46 transparent;
+  -ms-overflow-style: auto;
+}
+
+.sidebar-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+}
+
+.sidebar-scrollbar:hover::-webkit-scrollbar-thumb:hover {
+  background: #52525b;
 }
 
 /* Early 2026 MD3 Support */
@@ -419,43 +472,22 @@ body.styles-scrollbar-hidden::-webkit-scrollbar-thumb {
 
   50% {
     opacity: 0.6;
-    transform: scale(1.1);
+    transform: scale(1.05);
   }
 }
 
-/* Shimmer effect for premium feel */
-.shimmer-effect {
-  background: linear-gradient(120deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.1) 50%,
-      transparent 100%);
-  background-size: 200% 100%;
-  animation: shimmer 2s ease-in-out infinite;
+/* Smooth fade out for the splash screen */
+.fade-out {
+  animation: fadeOut 0.5s ease-out forwards;
 }
 
-@keyframes shimmer {
-  0% {
-    background-position: 200% 0;
-  }
-
-  100% {
-    background-position: -200% 0;
-  }
-}
-
-/* Fade-in-up for splash elements */
-.animate-fade-in-up {
-  animation: fade-in-up 0.8s ease-out forwards;
-}
-
-@keyframes fade-in-up {
-  0% {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-
-  100% {
+@keyframes fadeOut {
+  from {
     opacity: 1;
-    transform: translateY(0);
+  }
+
+  to {
+    opacity: 0;
+    pointer-events: none;
   }
 }

@@ -39,32 +39,32 @@ export default function MobileDrawer({ isOpen, onClose, isSignedIn }: MobileDraw
             help: <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" /></svg>,
             feedback: <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>,
         };
-        return icons[icon] || <div className="w-6 h-6 bg-zinc-800 rounded" />;
+        return icons[icon] || <div className="w-6 h-6 bg-zinc-200 rounded" />;
     };
 
     return (
         <div className="fixed inset-0 z-[100] lg:hidden">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-            <div className="absolute left-0 top-0 bottom-0 w-[280px] bg-zinc-900 border-r border-white/5 animate-slide-in-left overflow-y-auto scrollbar-hide">
-                <div className="px-5 h-14 sm:h-16 flex items-center justify-between border-b border-white/5">
+            <div className="absolute inset-0 bg-white/60 backdrop-blur-sm" onClick={onClose} />
+            <div className="absolute left-0 top-0 bottom-0 w-[280px] bg-zinc-100 border-r border-zinc-200 animate-slide-in-left overflow-y-auto scrollbar-hide">
+                <div className="px-5 h-14 sm:h-16 flex items-center justify-between border-b border-zinc-200">
                     <Link href="/" onClick={onClose} className="flex items-center gap-1">
                         <img src="/Playra.png" alt="Playra" className="h-[18px] w-auto brightness-200" />
                     </Link>
-                    <button onClick={onClose} className="p-2 -mr-2 text-white/50 hover:text-white transition-colors">
+                    <button onClick={onClose} className="p-2 -mr-2 text-zinc-900/50 hover:text-zinc-900 transition-colors">
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" /></svg>
                     </button>
                 </div>
 
                 <div className="py-4">
                     <div className="px-5 mb-2">
-                        <h3 className="text-[11px] font-black text-white/30 uppercase tracking-widest">Explore</h3>
+                        <h3 className="text-[11px] font-black text-zinc-900/30 uppercase tracking-widest">Explore</h3>
                     </div>
                     <ul className="space-y-0.5 px-3">
                         {exploreItems.map((item) => (
                             <li key={item.label}>
                                 <Link
                                     href={item.path}
-                                    className="flex items-center gap-5 px-4 py-3 rounded-xl hover:bg-white/5 transition-all text-white/60 hover:text-white group"
+                                    className="flex items-center gap-5 px-4 py-3 rounded-xl hover:bg-zinc-200/80 transition-all text-zinc-900/60 hover:text-zinc-900 group"
                                     onClick={onClose}
                                 >
                                     <span className="group-hover:scale-110 transition-transform">{getIcon(item.icon)}</span>
@@ -74,14 +74,14 @@ export default function MobileDrawer({ isOpen, onClose, isSignedIn }: MobileDraw
                         ))}
                     </ul>
 
-                    <div className="h-px bg-white/5 mx-5 my-6" />
+                    <div className="h-px bg-zinc-200/80 mx-5 my-6" />
 
                     <ul className="space-y-0.5 px-3">
                         {settingItems.map((item) => (
                             <li key={item.label}>
                                 <Link
                                     href={item.path}
-                                    className="flex items-center gap-5 px-4 py-3 rounded-xl hover:bg-white/5 transition-all text-white/60 hover:text-white group"
+                                    className="flex items-center gap-5 px-4 py-3 rounded-xl hover:bg-zinc-200/80 transition-all text-zinc-900/60 hover:text-zinc-900 group"
                                     onClick={onClose}
                                 >
                                     <span className="group-hover:rotate-12 transition-transform">{getIcon(item.icon)}</span>
@@ -92,8 +92,8 @@ export default function MobileDrawer({ isOpen, onClose, isSignedIn }: MobileDraw
                     </ul>
 
                     {!isSignedIn && (
-                        <div className="mx-6 mt-8 p-6 rounded-[24px] bg-gradient-to-br from-indigo-500/10 to-purple-600/10 border border-white/5">
-                            <p className="text-[13px] font-bold text-white mb-4 leading-relaxed">Sign in to like videos, comment, and subscribe.</p>
+                        <div className="mx-6 mt-8 p-6 rounded-[24px] bg-gradient-to-br from-indigo-500/10 to-purple-600/10 border border-zinc-200">
+                            <p className="text-[13px] font-bold text-zinc-900 mb-4 leading-relaxed">Sign in to like videos, comment, and subscribe.</p>
                             <Link
                                 href="/signin"
                                 onClick={onClose}
@@ -105,10 +105,10 @@ export default function MobileDrawer({ isOpen, onClose, isSignedIn }: MobileDraw
                         </div>
                     )}
 
-                    <div className="mt-12 px-8 pb-12 flex flex-wrap gap-x-4 gap-y-2 text-[10px] font-black text-white/20 uppercase tracking-widest">
-                        <Link href="/privacy" onClick={onClose} className="hover:text-white transition-colors">Privacy</Link>
-                        <Link href="/terms" onClick={onClose} className="hover:text-white transition-colors">Terms</Link>
-                        <Link href="/help" onClick={onClose} className="hover:text-white transition-colors">Help</Link>
+                    <div className="mt-12 px-8 pb-12 flex flex-wrap gap-x-4 gap-y-2 text-[10px] font-black text-zinc-900/20 uppercase tracking-widest">
+                        <Link href="/privacy" onClick={onClose} className="hover:text-zinc-900 transition-colors">Privacy</Link>
+                        <Link href="/terms" onClick={onClose} className="hover:text-zinc-900 transition-colors">Terms</Link>
+                        <Link href="/help" onClick={onClose} className="hover:text-zinc-900 transition-colors">Help</Link>
                         <p className="w-full mt-4 text-[9px] font-bold italic tracking-normal">© 2026 Playra Discovery</p>
                     </div>
                 </div>

@@ -27,9 +27,9 @@ export default function StudioLivePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
+    <div className="min-h-screen bg-white text-zinc-900">
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-zinc-800">
+      <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-zinc-200">
         <div className="flex items-center justify-between h-14 px-4 md:px-6">
           <h1 className="text-lg font-semibold">Live Streaming</h1>
           <button
@@ -49,40 +49,40 @@ export default function StudioLivePage() {
       <div className="p-4 md:p-6">
         {/* Info Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
+          <div className="p-4 rounded-xl bg-zinc-100/50 border border-zinc-200">
             <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center mb-3">
               <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
               </svg>
             </div>
-            <p className="text-sm font-medium text-white">Stream to your audience</p>
+            <p className="text-sm font-medium text-zinc-900">Stream to your audience</p>
             <p className="text-xs text-zinc-500 mt-1">Go live and connect in real-time</p>
           </div>
 
-          <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
+          <div className="p-4 rounded-xl bg-zinc-100/50 border border-zinc-200">
             <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center mb-3">
               <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
             </div>
-            <p className="text-sm font-medium text-white">Real-time chat</p>
+            <p className="text-sm font-medium text-zinc-900">Real-time chat</p>
             <p className="text-xs text-zinc-500 mt-1">Interact with viewers instantly</p>
           </div>
 
-          <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
+          <div className="p-4 rounded-xl bg-zinc-100/50 border border-zinc-200">
             <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center mb-3">
               <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
-            <p className="text-sm font-medium text-white">Analytics</p>
+            <p className="text-sm font-medium text-zinc-900">Analytics</p>
             <p className="text-xs text-zinc-500 mt-1">Track your stream performance</p>
           </div>
         </div>
 
         {/* Coming Soon Notice */}
         <div className="text-center py-12">
-          <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-zinc-900 flex items-center justify-center">
+          <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-zinc-100 flex items-center justify-center">
             <svg className="w-10 h-10 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -97,8 +97,8 @@ export default function StudioLivePage() {
 
       {/* Mobile Popup */}
       {showPopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="w-full max-w-sm bg-zinc-900 rounded-2xl border border-zinc-800 p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/80 backdrop-blur-sm">
+          <div className="w-full max-w-sm bg-zinc-100 rounded-2xl border border-zinc-200 p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 rounded-full bg-red-600/20 flex items-center justify-center">
                 <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -110,7 +110,7 @@ export default function StudioLivePage() {
                 <p className="text-sm text-zinc-500">Coming soon to mobile</p>
               </div>
             </div>
-            <p className="text-zinc-400 text-sm mb-6">
+            <p className="text-zinc-500 text-sm mb-6">
               Live streaming from mobile is currently in development. 
               Use the desktop version to go live, or upload a video instead.
             </p>
@@ -126,7 +126,7 @@ export default function StudioLivePage() {
               </Link>
               <button
                 onClick={() => setShowPopup(false)}
-                className="w-full py-3 text-zinc-500 hover:text-white transition-colors"
+                className="w-full py-3 text-zinc-500 hover:text-zinc-900 transition-colors"
               >
                 Got it
               </button>

@@ -336,42 +336,42 @@ export default function CreateStylePage() {
 
     if (mode === 'details') {
         return (
-            <div className="fixed inset-0 bg-black flex flex-col z-50">
+            <div className="fixed inset-0 bg-white flex flex-col z-50">
                 {uploadStatus === 'posted' && (
-                    <div className="absolute inset-0 z-[60] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in duration-300">
+                    <div className="absolute inset-0 z-[60] bg-white/90 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in duration-300">
                         <div className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mb-6 shadow-[0_0_40px_rgba(34,197,94,0.3)] animate-in zoom-in duration-500">
-                            <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                            <svg className="w-12 h-12 text-zinc-900" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                             </svg>
                         </div>
-                        <h2 className="text-3xl font-bold text-white mb-2">Posted!</h2>
-                        <p className="text-zinc-400 text-lg">Your video is uploading in the background...</p>
+                        <h2 className="text-3xl font-bold text-zinc-900 mb-2">Posted!</h2>
+                        <p className="text-zinc-500 text-lg">Your video is uploading in the background...</p>
                     </div>
                 )}
                 {uploadStatus === 'error' && (
-                    <div className="absolute inset-0 z-[60] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in duration-300">
+                    <div className="absolute inset-0 z-[60] bg-white/90 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in duration-300">
                         <div className="w-24 h-24 bg-red-500/20 rounded-full flex items-center justify-center mb-6">
                             <svg className="w-12 h-12 text-red-500" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </div>
-                        <h2 className="text-2xl font-bold text-white mb-2">Upload Failed</h2>
-                        <p className="text-zinc-400 text-sm mb-4 max-w-xs text-center">{uploadError || 'Something went wrong'}</p>
+                        <h2 className="text-2xl font-bold text-zinc-900 mb-2">Upload Failed</h2>
+                        <p className="text-zinc-500 text-sm mb-4 max-w-xs text-center">{uploadError || 'Something went wrong'}</p>
                         <button 
                             onClick={() => setUploadStatus('idle')}
-                            className="px-6 py-3 bg-blue-600 rounded-full text-white font-semibold"
+                            className="px-6 py-3 bg-blue-600 rounded-full text-zinc-900 font-semibold"
                         >
                             Try Again
                         </button>
                     </div>
                 )}
-                <div className="flex items-center justify-between p-4 border-b border-white/10">
+                <div className="flex items-center justify-between p-4 border-b border-zinc-200">
                     <button onClick={() => setMode('editor')} className="p-2 -ml-2">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <svg className="w-6 h-6 text-zinc-900" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                         </svg>
                     </button>
-                    <div className="text-white font-bold">Details</div>
+                    <div className="text-zinc-900 font-bold">Details</div>
                     <div className="w-10" />
                 </div>
 
@@ -385,7 +385,7 @@ export default function CreateStylePage() {
                                 style={{ filter: !customThumbnailUrl ? getEffectFilter() : 'none' }}
                             />
                         ) : (
-                            <div className="w-full h-full bg-zinc-800 animate-pulse" />
+                            <div className="w-full h-full bg-zinc-200 animate-pulse" />
                         )}
 
                         {/* Card Overlay */}
@@ -394,17 +394,17 @@ export default function CreateStylePage() {
                         {/* Content Info */}
                         <div className="absolute bottom-0 left-0 right-0 p-3">
                             <div className="flex items-center gap-2 mb-2">
-                                <div className="w-6 h-6 rounded-full bg-zinc-700 overflow-hidden">
+                                <div className="w-6 h-6 rounded-full bg-zinc-300 overflow-hidden">
                                     {activeProfile?.avatar && <img src={activeProfile.avatar} className="w-full h-full object-cover" />}
                                 </div>
-                                <span className="text-xs font-bold text-white truncate">{activeProfile?.name || 'You'}</span>
+                                <span className="text-xs font-bold text-zinc-900 truncate">{activeProfile?.name || 'You'}</span>
                             </div>
-                            <h3 className="text-white font-bold text-sm leading-tight line-clamp-2">{title || 'Your Style Title'}</h3>
+                            <h3 className="text-zinc-900 font-bold text-sm leading-tight line-clamp-2">{title || 'Your Style Title'}</h3>
                         </div>
 
                         {/* Upload Overlay */}
-                        <div className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity ${customThumbnailUrl ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
-                            <div className="bg-black/60 backdrop-blur-md rounded-full px-4 py-2 text-xs font-bold text-white flex items-center gap-2 border border-white/20">
+                        <div className={`absolute inset-0 bg-white/40 flex items-center justify-center transition-opacity ${customThumbnailUrl ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
+                            <div className="bg-white/60 backdrop-blur-md rounded-full px-4 py-2 text-xs font-bold text-zinc-900 flex items-center gap-2 border border-white/20">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
                                 Click to Upload Thumbnail
                             </div>
@@ -427,24 +427,24 @@ export default function CreateStylePage() {
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
                                 placeholder="Describe your style... #shorts"
-                                className="w-full bg-zinc-900 border border-white/10 rounded-xl p-3 text-white placeholder:text-zinc-600 outline-none resize-none h-32"
+                                className="w-full bg-zinc-100 border border-zinc-200 rounded-xl p-3 text-zinc-900 placeholder:text-zinc-600 outline-none resize-none h-32"
                             />
                         </div>
 
-                        <div className="bg-zinc-900/50 rounded-xl p-4 border border-white/5">
+                        <div className="bg-zinc-100/50 rounded-xl p-4 border border-zinc-200">
                             <div className="flex items-center justify-between text-sm">
-                                <span className="text-zinc-400">Visibility</span>
-                                <span className="text-white font-bold">Public</span>
+                                <span className="text-zinc-500">Visibility</span>
+                                <span className="text-zinc-900 font-bold">Public</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="mt-auto p-6 border-t border-white/10 shrink-0">
+                <div className="mt-auto p-6 border-t border-zinc-200 shrink-0">
                     <button
                         onClick={handlePublish}
                         disabled={uploadStatus !== 'idle' || !title.trim()}
-                        className={`w-full py-4 rounded-full font-bold text-lg flex items-center justify-center gap-2 ${uploadStatus !== 'idle' || !title.trim() ? 'bg-zinc-800 text-zinc-500' : 'bg-blue-600 text-white hover:bg-blue-500'
+                        className={`w-full py-4 rounded-full font-bold text-lg flex items-center justify-center gap-2 ${uploadStatus !== 'idle' || !title.trim() ? 'bg-zinc-200 text-zinc-500' : 'bg-blue-600 text-zinc-900 hover:bg-blue-500'
                             }`}
                     >
                         {uploadStatus === 'uploading' ? (
@@ -470,21 +470,21 @@ export default function CreateStylePage() {
 
     if (mode === 'editor') {
         return (
-            <div className="fixed inset-0 bg-black flex flex-col z-50">
+            <div className="fixed inset-0 bg-white flex flex-col z-50">
                 {/* Editor Header */}
                 <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-4 bg-gradient-to-b from-black/80 to-transparent">
                     <button
                         onClick={() => setMode('camera')}
-                        className="p-2 rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors"
+                        className="p-2 rounded-full bg-white/40 text-zinc-900 hover:bg-white/60 transition-colors"
                     >
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                         </svg>
                     </button>
-                    <div className="text-white font-bold">Review</div>
+                    <div className="text-zinc-900 font-bold">Review</div>
                     <button
                         onClick={handleNext}
-                        className="px-5 py-2 bg-blue-600 hover:bg-blue-500 rounded-full text-white font-bold text-sm transition-colors"
+                        className="px-5 py-2 bg-blue-600 hover:bg-blue-500 rounded-full text-zinc-900 font-bold text-sm transition-colors"
                     >
                         Next
                     </button>
@@ -493,7 +493,7 @@ export default function CreateStylePage() {
                 {/* Video Preview Area */}
                 <div
                     ref={previewContainerRef}
-                    className="flex-1 flex items-center justify-center relative bg-black touch-none" // touch-none for better dragging
+                    className="flex-1 flex items-center justify-center relative bg-white touch-none" // touch-none for better dragging
                     onClick={(e) => {
                         // Only toggle play if we didn't just finish a drag
                         if (!isDraggingRef.current) togglePlay();
@@ -523,7 +523,7 @@ export default function CreateStylePage() {
                                     return (
                                         <div
                                             key={layer.id}
-                                            className="absolute text-white font-bold text-2xl shadow-black drop-shadow-md select-none"
+                                            className="absolute text-zinc-900 font-bold text-2xl shadow-zinc-400 drop-shadow-md select-none"
                                             // Draggable logic
                                             onPointerDown={(e) => handleTextDragStart(e, layer.id)}
                                             onClick={(e) => e.stopPropagation()} // Prevent play toggle
@@ -545,8 +545,8 @@ export default function CreateStylePage() {
 
                             {!isPlaying && (
                                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                    <div className="w-16 h-16 rounded-full bg-black/40 flex items-center justify-center backdrop-blur-sm">
-                                        <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                    <div className="w-16 h-16 rounded-full bg-white/40 flex items-center justify-center backdrop-blur-sm">
+                                        <svg className="w-8 h-8 text-zinc-900" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="M8 5v14l11-7z" />
                                         </svg>
                                     </div>
@@ -554,31 +554,31 @@ export default function CreateStylePage() {
                             )}
                         </>
                     ) : (
-                        <div className="text-white">Processing video...</div>
+                        <div className="text-zinc-900">Processing video...</div>
                     )}
                 </div>
 
                 {/* Editor UI - Overlay Tools */}
                 {activeTool === 'text' && (
-                    <div className="absolute inset-0 z-30 bg-black/80 flex flex-col items-center justify-center p-4">
+                    <div className="absolute inset-0 z-30 bg-white/80 flex flex-col items-center justify-center p-4">
                         <input
                             type="text"
                             value={inputText}
                             onChange={(e) => setInputText(e.target.value)}
                             placeholder="Type something..."
-                            className="bg-transparent text-white text-3xl font-bold text-center outline-none border-b-2 border-white/20 pb-2 w-full max-w-xs mb-8"
+                            className="bg-transparent text-zinc-900 text-3xl font-bold text-center outline-none border-b-2 border-white/20 pb-2 w-full max-w-xs mb-8"
                             autoFocus
                         />
                         <div className="flex gap-4">
                             <button
                                 onClick={() => setActiveTool('none')}
-                                className="px-6 py-2 rounded-full bg-white/10 text-white font-bold"
+                                className="px-6 py-2 rounded-full bg-zinc-200/80 text-zinc-900 font-bold"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleAddText}
-                                className="px-6 py-2 rounded-full bg-blue-600 text-white font-bold"
+                                className="px-6 py-2 rounded-full bg-blue-600 text-zinc-900 font-bold"
                             >
                                 Done
                             </button>
@@ -591,7 +591,7 @@ export default function CreateStylePage() {
                     {/* Timeline Scrubber */}
                     <div className="px-4 mb-6">
                         <div
-                            className="relative h-8 bg-white/10 rounded-lg overflow-hidden cursor-pointer"
+                            className="relative h-8 bg-zinc-200/80 rounded-lg overflow-hidden cursor-pointer"
                             onClick={(e) => {
                                 const rect = e.currentTarget.getBoundingClientRect();
                                 const pos = (e.clientX - rect.left) / rect.width;
@@ -628,7 +628,7 @@ export default function CreateStylePage() {
                                 style={{ left: `${(currentTime / duration) * 100}%` }}
                             />
                         </div>
-                        <div className="flex justify-between text-[10px] text-white/50 mt-1">
+                        <div className="flex justify-between text-[10px] text-zinc-900/50 mt-1">
                             <span>{Math.floor(currentTime)}s</span>
                             <span>{Math.floor(duration)}s</span>
                         </div>
@@ -638,7 +638,7 @@ export default function CreateStylePage() {
                     <div className="flex items-center justify-around px-4 pb-4">
                         <button
                             onClick={() => setActiveTool(activeTool === 'audio' ? 'none' : 'audio')}
-                            className={`flex flex-col items-center gap-1 transition-colors ${activeTool === 'audio' ? 'text-blue-400' : 'text-white/70 hover:text-white'}`}
+                            className={`flex flex-col items-center gap-1 transition-colors ${activeTool === 'audio' ? 'text-blue-400' : 'text-zinc-900/70 hover:text-zinc-900'}`}
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
@@ -648,7 +648,7 @@ export default function CreateStylePage() {
 
                         <button
                             onClick={() => setActiveTool('text')}
-                            className="flex flex-col items-center gap-1 text-white/70 hover:text-white transition-colors"
+                            className="flex flex-col items-center gap-1 text-zinc-900/70 hover:text-zinc-900 transition-colors"
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16m-7 6h7" />
@@ -656,7 +656,7 @@ export default function CreateStylePage() {
                             <span className="text-[10px] font-bold">Text</span>
                         </button>
 
-                        <button className="flex flex-col items-center gap-1 text-white/70 hover:text-white transition-colors">
+                        <button className="flex flex-col items-center gap-1 text-zinc-900/70 hover:text-zinc-900 transition-colors">
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
                             </svg>
@@ -667,8 +667,8 @@ export default function CreateStylePage() {
                     {/* Voiceover Recorder UI */}
                     {activeTool === 'audio' && (
                         <div className="absolute bottom-24 left-0 right-0 flex justify-center animate-in slide-in-from-bottom-10 fade-in duration-200">
-                            <div className="bg-zinc-900/90 backdrop-blur-xl rounded-full px-6 py-3 flex items-center gap-4 border border-white/10 shadow-2xl">
-                                <span className="text-white text-sm font-bold">Hold to record</span>
+                            <div className="bg-zinc-100/90 backdrop-blur-xl rounded-full px-6 py-3 flex items-center gap-4 border border-zinc-200 shadow-2xl">
+                                <span className="text-zinc-900 text-sm font-bold">Hold to record</span>
                                 <button
                                     onMouseDown={startVoiceover}
                                     onMouseUp={stopVoiceover}
@@ -677,7 +677,7 @@ export default function CreateStylePage() {
                                     onTouchEnd={stopVoiceover}
                                     className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${isRecordingVoiceover ? 'bg-red-500 scale-110' : 'bg-red-500/80 hover:bg-red-500'}`}
                                 >
-                                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                    <svg className="w-6 h-6 text-zinc-900" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                                     </svg>
                                 </button>
@@ -691,9 +691,9 @@ export default function CreateStylePage() {
 
     // Camera mode
     return (
-        <div className="fixed inset-0 bg-black flex flex-col overflow-hidden">
+        <div className="fixed inset-0 bg-white flex flex-col overflow-hidden">
             {/* Multi-Segment Progress Bar */}
-            <div className="absolute top-0 left-0 right-0 z-30 h-2 bg-black/20 flex gap-[2px] px-1 pt-1">
+            <div className="absolute top-0 left-0 right-0 z-30 h-2 bg-white/20 flex gap-[2px] px-1 pt-1">
                 {/* Existing segments */}
                 {segments.map((seg) => (
                     <div
@@ -715,13 +715,13 @@ export default function CreateStylePage() {
 
             {/* Timer Countdown Overlay */}
             {timerCountdown !== null && (
-                <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/60">
-                    <div className="text-9xl font-black text-white animate-pulse">
+                <div className="absolute inset-0 z-40 flex items-center justify-center bg-white/60">
+                    <div className="text-9xl font-black text-zinc-900 animate-pulse">
                         {timerCountdown}
                     </div>
                     <button
                         onClick={cancelTimer}
-                        className="absolute bottom-20 px-6 py-3 bg-white/20 rounded-full text-white font-bold"
+                        className="absolute bottom-20 px-6 py-3 bg-zinc-300/80 rounded-full text-zinc-900 font-bold"
                     >
                         Cancel
                     </button>
@@ -738,7 +738,7 @@ export default function CreateStylePage() {
                         }
                         router.back();
                     }}
-                    className="p-2 rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors"
+                    className="p-2 rounded-full bg-white/40 text-zinc-900 hover:bg-white/60 transition-colors"
                 >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -747,7 +747,7 @@ export default function CreateStylePage() {
 
                 <div className="flex items-center gap-3">
                     {/* Add Music - Feature placeholder */}
-                    <button className="px-4 py-1.5 rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors flex items-center gap-2">
+                    <button className="px-4 py-1.5 rounded-full bg-white/40 text-zinc-900 hover:bg-white/60 transition-colors flex items-center gap-2">
                         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" /></svg>
                         <span className="text-sm font-bold">Add Sound</span>
                     </button>
@@ -755,7 +755,7 @@ export default function CreateStylePage() {
                     {/* Flip Camera */}
                     <button
                         onClick={flipCamera}
-                        className="p-2 rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors"
+                        className="p-2 rounded-full bg-white/40 text-zinc-900 hover:bg-white/60 transition-colors"
                     >
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -770,7 +770,7 @@ export default function CreateStylePage() {
                 <div className="relative">
                     <button
                         onClick={() => setShowSpeedMenu(!showSpeedMenu)}
-                        className="w-12 h-12 rounded-full bg-black/40 border border-white/20 text-white hover:bg-black/60 transition-colors flex items-center justify-center"
+                        className="w-12 h-12 rounded-full bg-white/40 border border-white/20 text-zinc-900 hover:bg-white/60 transition-colors flex items-center justify-center"
                     >
                         <div className="flex flex-col items-center">
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -780,12 +780,12 @@ export default function CreateStylePage() {
                         </div>
                     </button>
                     {showSpeedMenu && (
-                        <div className="absolute right-full mr-2 top-0 bg-zinc-900 rounded-2xl p-2 flex flex-col gap-1 shadow-xl border border-white/10">
+                        <div className="absolute right-full mr-2 top-0 bg-zinc-100 rounded-2xl p-2 flex flex-col gap-1 shadow-xl border border-zinc-200">
                             {speedOptions.map((s) => (
                                 <button
                                     key={s}
                                     onClick={() => { setSpeed(s); setShowSpeedMenu(false); }}
-                                    className={`px-4 py-2 rounded-xl text-sm font-bold transition-colors ${speed === s ? 'bg-white text-black' : 'text-white hover:bg-white/10'}`}
+                                    className={`px-4 py-2 rounded-xl text-sm font-bold transition-colors ${speed === s ? 'bg-white text-black' : 'text-zinc-900 hover:bg-zinc-200/80'}`}
                                 >
                                     {s}x
                                 </button>
@@ -798,7 +798,7 @@ export default function CreateStylePage() {
                 <div className="relative">
                     <button
                         onClick={() => setShowTimerMenu(!showTimerMenu)}
-                        className="w-12 h-12 rounded-full bg-black/40 border border-white/20 text-white hover:bg-black/60 transition-colors flex items-center justify-center"
+                        className="w-12 h-12 rounded-full bg-white/40 border border-white/20 text-zinc-900 hover:bg-white/60 transition-colors flex items-center justify-center"
                     >
                         <div className="flex flex-col items-center">
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -808,12 +808,12 @@ export default function CreateStylePage() {
                         </div>
                     </button>
                     {showTimerMenu && (
-                        <div className="absolute right-full mr-2 top-0 bg-zinc-900 rounded-2xl p-2 flex flex-col gap-1 shadow-xl border border-white/10">
+                        <div className="absolute right-full mr-2 top-0 bg-zinc-100 rounded-2xl p-2 flex flex-col gap-1 shadow-xl border border-zinc-200">
                             {timerOptions.map((t) => (
                                 <button
                                     key={t}
                                     onClick={() => { setTimerDuration(t); setShowTimerMenu(false); }}
-                                    className={`px-4 py-2 rounded-xl text-sm font-bold transition-colors ${timerDuration === t ? 'bg-white text-black' : 'text-white hover:bg-white/10'}`}
+                                    className={`px-4 py-2 rounded-xl text-sm font-bold transition-colors ${timerDuration === t ? 'bg-white text-black' : 'text-zinc-900 hover:bg-zinc-200/80'}`}
                                 >
                                     {t === 0 ? 'Off' : `${t}s`}
                                 </button>
@@ -825,7 +825,7 @@ export default function CreateStylePage() {
                 {/* Effects */}
                 <button
                     onClick={() => setShowEffectsMenu(!showEffectsMenu)}
-                    className="w-12 h-12 rounded-full bg-black/40 border border-white/20 text-white hover:bg-black/60 transition-colors flex items-center justify-center"
+                    className="w-12 h-12 rounded-full bg-white/40 border border-white/20 text-zinc-900 hover:bg-white/60 transition-colors flex items-center justify-center"
                 >
                     <div className="flex flex-col items-center">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -836,7 +836,7 @@ export default function CreateStylePage() {
                 </button>
 
                 {/* Green Screen - Placeholder */}
-                <button className="w-12 h-12 rounded-full bg-black/40 border border-white/20 text-white/50 transition-colors flex items-center justify-center cursor-not-allowed">
+                <button className="w-12 h-12 rounded-full bg-white/40 border border-white/20 text-zinc-900/50 transition-colors flex items-center justify-center cursor-not-allowed">
                     <div className="flex flex-col items-center">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -849,7 +849,7 @@ export default function CreateStylePage() {
                 {lastFrameUrl && (
                     <button
                         onClick={toggleAlignmentOverlay}
-                        className={`w-12 h-12 rounded-full border border-white/20 transition-colors flex items-center justify-center ${showAlignmentOverlay ? 'bg-white text-black' : 'bg-black/40 text-white'}`}
+                        className={`w-12 h-12 rounded-full border border-white/20 transition-colors flex items-center justify-center ${showAlignmentOverlay ? 'bg-white text-black' : 'bg-white/40 text-zinc-900'}`}
                     >
                         <div className="flex flex-col items-center">
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -868,7 +868,7 @@ export default function CreateStylePage() {
                         <div className="text-red-400 text-lg font-bold mb-4">{error}</div>
                         <button
                             onClick={() => initCamera()}
-                            className="px-6 py-3 bg-white/10 rounded-full text-white font-bold hover:bg-white/20 transition-colors"
+                            className="px-6 py-3 bg-zinc-200/80 rounded-full text-zinc-900 font-bold hover:bg-zinc-300/80 transition-colors"
                         >
                             Try Again
                         </button>
@@ -903,12 +903,12 @@ export default function CreateStylePage() {
             {/* Effects Tray */}
             {showEffectsMenu && (
                 <div className="absolute bottom-32 left-0 right-0 z-30 px-4">
-                    <div className="bg-zinc-900/95 backdrop-blur-xl rounded-3xl p-4 border border-white/10">
+                    <div className="bg-zinc-100/95 backdrop-blur-xl rounded-3xl p-4 border border-zinc-200">
                         <div className="flex items-center justify-between mb-4">
-                            <span className="text-white font-bold">Effects</span>
+                            <span className="text-zinc-900 font-bold">Effects</span>
                             <button
                                 onClick={() => setShowEffectsMenu(false)}
-                                className="text-white/60 hover:text-white"
+                                className="text-zinc-900/60 hover:text-zinc-900"
                             >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -922,7 +922,7 @@ export default function CreateStylePage() {
                                     onClick={() => setSelectedEffect(effect.id === 'none' ? null : effect.id)}
                                     className={`flex flex-col items-center gap-2 p-3 rounded-2xl min-w-[70px] transition-all ${(effect.id === 'none' && !selectedEffect) || selectedEffect === effect.id
                                         ? 'bg-white text-black'
-                                        : 'bg-white/10 text-white hover:bg-white/20'
+                                        : 'bg-zinc-200/80 text-zinc-900 hover:bg-zinc-300/80'
                                         }`}
                                 >
                                     <span className="text-2xl">{effect.icon}</span>
@@ -939,8 +939,8 @@ export default function CreateStylePage() {
                 <div className="flex items-center justify-between px-8 pb-safe">
                     {/* Gallery / Drafts */}
                     {!isRecording && segments.length === 0 && (
-                        <button className="w-12 h-12 rounded-xl bg-zinc-800 border-2 border-white/20 overflow-hidden">
-                            <div className="w-full h-full bg-zinc-700" />
+                        <button className="w-12 h-12 rounded-xl bg-zinc-200 border-2 border-white/20 overflow-hidden">
+                            <div className="w-full h-full bg-zinc-300" />
                         </button>
                     )}
 
@@ -948,7 +948,7 @@ export default function CreateStylePage() {
                     {!isRecording && segments.length > 0 && (
                         <button
                             onClick={undoLastSegment}
-                            className="w-12 h-12 flex items-center justify-center text-white"
+                            className="w-12 h-12 flex items-center justify-center text-zinc-900"
                         >
                             <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
@@ -985,7 +985,7 @@ export default function CreateStylePage() {
                         undoStack.length > 0 && !isRecording && (
                             <button
                                 onClick={redoSegment}
-                                className="w-12 h-12 flex items-center justify-center text-white"
+                                className="w-12 h-12 flex items-center justify-center text-zinc-900"
                             >
                                 <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6" />

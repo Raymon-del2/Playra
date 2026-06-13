@@ -70,13 +70,13 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
 
 
     return (
-        <div className="min-h-screen bg-[#0f0f0f] text-white flex">
+        <div className="min-h-screen bg-white text-zinc-900 flex">
             {/* Mobile Header - Always visible */}
             {isMobile && (
-                <div className="fixed top-0 left-0 right-0 h-14 bg-[#0f0f0f] border-b border-white/10 flex items-center gap-3 px-4 z-50">
+                <div className="fixed top-0 left-0 right-0 h-14 bg-white border-b border-zinc-200 flex items-center gap-3 px-4 z-50">
                     <button
                         onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
-                        className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                        className="p-2 hover:bg-zinc-200/80 rounded-full transition-colors"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
@@ -92,13 +92,13 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
             {/* Overlay for mobile when sidebar is open - outside sidebar */}
             {isMobile && isMobileSidebarOpen && (
                 <div
-                    className="fixed inset-0 bg-black/50 z-40"
+                    className="fixed inset-0 bg-zinc-200/800 z-40"
                     onClick={() => setIsMobileSidebarOpen(false)}
                 />
             )}
 
             {/* Sidebar */}
-            <aside className={`fixed left-0 h-screen bg-[#0f0f0f] border-r border-white/10 flex flex-col transition-all duration-300 z-50 ${
+            <aside className={`fixed left-0 h-screen bg-white border-r border-zinc-200 flex flex-col transition-all duration-300 z-50 ${
                 isMobile
                     ? isMobileSidebarOpen
                         ? 'w-56 translate-x-0 top-14'
@@ -109,10 +109,10 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
             }`}>
                 {/* Header - Only on desktop */}
                 {!isMobile && (
-                    <div className="h-14 flex items-center gap-3 px-4 border-b border-white/10">
+                    <div className="h-14 flex items-center gap-3 px-4 border-b border-zinc-200">
                         <button
                             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                            className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                            className="p-2 hover:bg-zinc-200/80 rounded-full transition-colors"
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
@@ -128,9 +128,9 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
                 )}
 
                 {/* Profile */}
-                <div className={`py-4 border-b border-white/10 ${(isMobile ? !isMobileSidebarOpen : isSidebarCollapsed) ? 'px-2' : 'px-4'}`}>
+                <div className={`py-4 border-b border-zinc-200 ${(isMobile ? !isMobileSidebarOpen : isSidebarCollapsed) ? 'px-2' : 'px-4'}`}>
                     <div className={`flex ${(isMobile ? !isMobileSidebarOpen : isSidebarCollapsed) ? 'justify-center' : 'flex-col items-center'}`}>
-                        <div className={`${(isMobile ? !isMobileSidebarOpen : isSidebarCollapsed) ? 'w-10 h-10' : 'w-24 h-24'} rounded-full overflow-hidden bg-zinc-800`}>
+                        <div className={`${(isMobile ? !isMobileSidebarOpen : isSidebarCollapsed) ? 'w-10 h-10' : 'w-24 h-24'} rounded-full overflow-hidden bg-zinc-200`}>
                             {activeProfile?.avatar ? (
                                 <img src={activeProfile.avatar} alt="" className="w-full h-full object-cover" />
                             ) : (
@@ -156,8 +156,8 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
                                 key={item.path}
                                 href={item.path}
                                 className={`relative flex items-center gap-4 px-4 py-2.5 transition-colors ${pathname === item.path
-                                        ? 'bg-white/10 text-white'
-                                        : 'text-zinc-400 hover:bg-white/5 hover:text-white'
+                                        ? 'bg-zinc-200/80 text-zinc-900'
+                                        : 'text-zinc-500 hover:bg-zinc-200/80 hover:text-zinc-900'
                                     } ${(isMobile ? !isMobileSidebarOpen : isSidebarCollapsed) ? 'justify-center' : ''}`}
                             >
                                 {getIcon(item.icon)}
@@ -168,13 +168,13 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
                 </nav>
 
                 {/* Bottom Items */}
-                <div className="border-t border-white/10 py-2">
+                <div className="border-t border-zinc-200 py-2">
                     {bottomItems.map(item => {
                         return (
                             <Link
                                 key={item.path}
                                 href={item.path}
-                                className={`flex items-center gap-4 px-4 py-2.5 text-zinc-400 hover:bg-white/5 hover:text-white transition-colors ${(isMobile ? !isMobileSidebarOpen : isSidebarCollapsed) ? 'justify-center' : ''}`}
+                                className={`flex items-center gap-4 px-4 py-2.5 text-zinc-500 hover:bg-zinc-200/80 hover:text-zinc-900 transition-colors ${(isMobile ? !isMobileSidebarOpen : isSidebarCollapsed) ? 'justify-center' : ''}`}
                             >
                                 {getIcon(item.icon)}
                                 {!(isMobile ? !isMobileSidebarOpen : isSidebarCollapsed) && <span className="text-[13px] font-medium">{item.label}</span>}

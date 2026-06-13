@@ -30,7 +30,7 @@ const DownloadCard = ({
   isRecommended?: boolean;
 }) => {
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6 transition-all hover:bg-zinc-900 hover:border-zinc-700">
+    <div className="group relative overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-100/50 p-6 transition-all hover:bg-zinc-100 hover:border-zinc-300">
       <div className="flex items-start gap-4">
         {/* Modern Icon Container */}
         <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${color}`}>
@@ -39,14 +39,14 @@ const DownloadCard = ({
 
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="text-lg font-semibold text-white">{title}</h3>
+            <h3 className="text-lg font-semibold text-zinc-900">{title}</h3>
             {isRecommended && (
-              <span className="text-xs bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded-full border border-zinc-700">
+              <span className="text-xs bg-zinc-200 text-zinc-700 px-2 py-0.5 rounded-full border border-zinc-300">
                 Recommended
               </span>
             )}
           </div>
-          <p className="text-sm text-zinc-400">{subtitle}</p>
+          <p className="text-sm text-zinc-500">{subtitle}</p>
         </div>
       </div>
 
@@ -90,26 +90,26 @@ export default function DownloadPage() {
   }, []);
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-zinc-900 to-black text-white pb-24 lg:pb-8">
+        <div className="min-h-screen bg-gradient-to-b from-zinc-900 to-black text-zinc-900 pb-24 lg:pb-8">
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-white/5">
+            <div className="flex items-center justify-between p-4 border-b border-zinc-200">
                 <Link href="/" className="flex items-center gap-2">
                     <img src="/Playra.png" alt="Playra" className="w-8 h-8" />
                     <span className="font-bold text-lg">Playra</span>
                 </Link>
-                <Link href="/" className="text-sm text-zinc-400 hover:text-white transition-colors">
+                <Link href="/" className="text-sm text-zinc-500 hover:text-zinc-900 transition-colors">
                     Open in Browser
                 </Link>
             </div>
 
             {/* Hero */}
             <div className="max-w-4xl mx-auto px-6 py-16 text-center">
-                <div className="w-24 h-24 mx-auto mb-6 rounded-3xl bg-zinc-800/50 flex items-center justify-center">
+                <div className="w-24 h-24 mx-auto mb-6 rounded-3xl bg-zinc-200/50 flex items-center justify-center">
                     <img src="/Playra.png" alt="Playra" className="w-16 h-16" />
                 </div>
 
                 <h1 className="text-4xl font-black mb-3">Get Playra</h1>
-                <p className="text-zinc-400 mb-12 max-w-md mx-auto">
+                <p className="text-zinc-500 mb-12 max-w-md mx-auto">
                     Watch videos, subscribe to creators, and discover amazing content — all in one app.
                 </p>
 
@@ -141,16 +141,16 @@ export default function DownloadPage() {
                         downloadText=""
                         isRecommended={platform === 'tv'}
                         extraContent={
-                            <div className="bg-zinc-800/50 rounded-lg p-4 text-left border border-zinc-800">
-                                <p className="text-sm text-zinc-300 mb-3 font-medium">
+                            <div className="bg-zinc-200/50 rounded-lg p-4 text-left border border-zinc-200">
+                                <p className="text-sm text-zinc-700 mb-3 font-medium">
                                     TV App Coming Soon
                                 </p>
-                                <p className="text-xs text-zinc-400">
+                                <p className="text-xs text-zinc-500">
                                     For now, use Playra in your TV browser:
                                 </p>
-                                <ol className="text-xs text-zinc-400 space-y-2 list-decimal list-inside mt-2">
+                                <ol className="text-xs text-zinc-500 space-y-2 list-decimal list-inside mt-2">
                                     <li>Open your TV browser</li>
-                                    <li>Go to <strong className="text-zinc-300">playra.com</strong></li>
+                                    <li>Go to <strong className="text-zinc-700">playra.com</strong></li>
                                     <li>Watch and enjoy!</li>
                                 </ol>
                             </div>
@@ -169,14 +169,14 @@ export default function DownloadPage() {
                         downloadText=""
                         isRecommended={platform === 'ios'}
                         extraContent={
-                            <div className="bg-zinc-800/50 rounded-lg p-4 text-left border border-zinc-800">
-                                <p className="text-sm text-zinc-300 mb-3 font-medium">
+                            <div className="bg-zinc-200/50 rounded-lg p-4 text-left border border-zinc-200">
+                                <p className="text-sm text-zinc-700 mb-3 font-medium">
                                     How to install:
                                 </p>
-                                <ol className="text-xs text-zinc-400 space-y-2 list-decimal list-inside">
-                                    <li>Tap the <strong className="text-zinc-300">Share</strong> button in Safari</li>
-                                    <li>Select <strong className="text-zinc-300">"Add to Home Screen"</strong></li>
-                                    <li>Tap <strong className="text-zinc-300">"Add"</strong></li>
+                                <ol className="text-xs text-zinc-500 space-y-2 list-decimal list-inside">
+                                    <li>Tap the <strong className="text-zinc-700">Share</strong> button in Safari</li>
+                                    <li>Select <strong className="text-zinc-700">"Add to Home Screen"</strong></li>
+                                    <li>Tap <strong className="text-zinc-700">"Add"</strong></li>
                                 </ol>
                             </div>
                         }
@@ -186,31 +186,31 @@ export default function DownloadPage() {
                 {/* Features - Linear Style */}
                 <div className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-3xl mx-auto">
                     <div className="group">
-                        <div className="w-12 h-12 bg-zinc-800/50 rounded-xl flex items-center justify-center mx-auto mb-3 border border-zinc-800 group-hover:border-zinc-700 transition-colors">
+                        <div className="w-12 h-12 bg-zinc-200/50 rounded-xl flex items-center justify-center mx-auto mb-3 border border-zinc-200 group-hover:border-zinc-300 transition-colors">
                             <Play className="w-6 h-6 text-blue-400" />
                         </div>
-                        <h3 className="font-semibold text-sm text-white">Stream Videos</h3>
+                        <h3 className="font-semibold text-sm text-zinc-900">Stream Videos</h3>
                         <p className="text-xs text-zinc-500 mt-1">HD quality streaming</p>
                     </div>
                     <div className="group">
-                        <div className="w-12 h-12 bg-zinc-800/50 rounded-xl flex items-center justify-center mx-auto mb-3 border border-zinc-800 group-hover:border-zinc-700 transition-colors">
+                        <div className="w-12 h-12 bg-zinc-200/50 rounded-xl flex items-center justify-center mx-auto mb-3 border border-zinc-200 group-hover:border-zinc-300 transition-colors">
                             <Bell className="w-6 h-6 text-red-400" />
                         </div>
-                        <h3 className="font-semibold text-sm text-white">Subscribe</h3>
+                        <h3 className="font-semibold text-sm text-zinc-900">Subscribe</h3>
                         <p className="text-xs text-zinc-500 mt-1">Follow creators</p>
                     </div>
                     <div className="group">
-                        <div className="w-12 h-12 bg-zinc-800/50 rounded-xl flex items-center justify-center mx-auto mb-3 border border-zinc-800 group-hover:border-zinc-700 transition-colors">
+                        <div className="w-12 h-12 bg-zinc-200/50 rounded-xl flex items-center justify-center mx-auto mb-3 border border-zinc-200 group-hover:border-zinc-300 transition-colors">
                             <Upload className="w-6 h-6 text-green-400" />
                         </div>
-                        <h3 className="font-semibold text-sm text-white">Upload</h3>
+                        <h3 className="font-semibold text-sm text-zinc-900">Upload</h3>
                         <p className="text-xs text-zinc-500 mt-1">Share your videos</p>
                     </div>
                 </div>
             </div>
 
             {/* Footer */}
-            <div className="text-center py-8 border-t border-white/5">
+            <div className="text-center py-8 border-t border-zinc-200">
                 <p className="text-xs text-zinc-500">
                     © 2026 Playra. All rights reserved.
                 </p>

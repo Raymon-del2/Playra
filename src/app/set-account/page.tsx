@@ -55,29 +55,29 @@ export default function SetAccountPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-black flex items-center justify-center">
+            <div className="min-h-screen bg-white flex items-center justify-center">
                 <div className="w-10 h-10 border-4 border-white/20 border-t-white rounded-full animate-spin" />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-black flex items-center justify-center p-4">
+        <div className="min-h-screen bg-white flex items-center justify-center p-4">
             <div className="absolute top-0 right-0 w-[50%] h-[50%] bg-blue-600/10 blur-[150px] rounded-full" />
             <div className="absolute bottom-0 left-0 w-[50%] h-[50%] bg-purple-600/5 blur-[150px] rounded-full" />
 
             <div className="w-full max-w-[480px] z-10">
                 <div className="text-center mb-10">
-                    <h1 className="text-4xl font-black text-white mb-3 tracking-tight italic">Set up your identity</h1>
+                    <h1 className="text-4xl font-black text-zinc-900 mb-3 tracking-tight italic">Set up your identity</h1>
                     <p className="text-zinc-500 font-bold text-sm uppercase tracking-widest">Personalize your Discovery experience</p>
                 </div>
 
-                <div className="bg-zinc-900/50 backdrop-blur-3xl border border-white/5 p-8 rounded-[40px] shadow-2xl">
+                <div className="bg-zinc-100/50 backdrop-blur-3xl border border-zinc-200 p-8 rounded-[40px] shadow-2xl">
                     <form onSubmit={handleSave} className="space-y-8">
                         {/* Avatar preview */}
                         <div className="flex flex-col items-center gap-4">
                             <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-blue-500 to-purple-600 p-1">
-                                <div className="w-full h-full rounded-full bg-zinc-900 flex items-center justify-center overflow-hidden">
+                                <div className="w-full h-full rounded-full bg-zinc-100 flex items-center justify-center overflow-hidden">
                                     {user?.photoURL ? (
                                         <img src={user.photoURL} alt="" className="w-full h-full object-cover" />
                                     ) : (
@@ -98,7 +98,7 @@ export default function SetAccountPage() {
                                         value={username}
                                         onChange={(e) => setUsername(e.target.value)}
                                         placeholder="username"
-                                        className="w-full h-14 bg-white/[0.03] border border-white/5 rounded-2xl pl-10 pr-5 text-sm text-white placeholder:text-zinc-700 focus:bg-white/[0.06] focus:border-blue-500/30 transition-all outline-none font-bold"
+                                        className="w-full h-14 bg-white/[0.03] border border-zinc-200 rounded-2xl pl-10 pr-5 text-sm text-zinc-900 placeholder:text-zinc-700 focus:bg-white/[0.06] focus:border-blue-500/30 transition-all outline-none font-bold"
                                         required
                                     />
                                 </div>
@@ -110,7 +110,7 @@ export default function SetAccountPage() {
                                     value={bio}
                                     onChange={(e) => setBio(e.target.value)}
                                     placeholder="Tell the world who you are..."
-                                    className="w-full h-32 bg-white/[0.03] border border-white/5 rounded-2xl p-5 text-sm text-white placeholder:text-zinc-700 focus:bg-white/[0.06] focus:border-blue-500/30 transition-all outline-none font-bold resize-none"
+                                    className="w-full h-32 bg-white/[0.03] border border-zinc-200 rounded-2xl p-5 text-sm text-zinc-900 placeholder:text-zinc-700 focus:bg-white/[0.06] focus:border-blue-500/30 transition-all outline-none font-bold resize-none"
                                 />
                             </div>
                         </div>

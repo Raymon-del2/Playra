@@ -127,7 +127,7 @@ export default function EmbedPageClient({ params }: EmbedPageProps) {
   // Loading state
   if (isLoading) {
     return (
-      <div className="w-full h-full bg-black flex items-center justify-center m-0 p-0">
+      <div className="w-full h-full bg-white flex items-center justify-center m-0 p-0">
         <div className="w-12 h-12 border-3 border-white/20 border-t-white rounded-full animate-spin" />
       </div>
     );
@@ -147,11 +147,11 @@ export default function EmbedPageClient({ params }: EmbedPageProps) {
   // Error state
   if (error || !video) {
     return (
-      <div className="w-full h-full bg-black flex flex-col items-center justify-center p-4 m-0">
-        <svg className="w-16 h-16 text-white/40 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <div className="w-full h-full bg-white flex flex-col items-center justify-center p-4 m-0">
+        <svg className="w-16 h-16 text-zinc-900/40 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
         </svg>
-        <p className="text-white/80 text-lg font-medium mb-2">Something went wrong</p>
+        <p className="text-zinc-900/80 text-lg font-medium mb-2">Something went wrong</p>
         <a href="/" target="_blank" rel="noopener noreferrer" className="text-blue-400 text-sm hover:underline">
           Watch on Playra
         </a>
@@ -163,7 +163,7 @@ export default function EmbedPageClient({ params }: EmbedPageProps) {
   const playIcon = isStyle ? '/stylesicon.svg' : '/logo-play.png';
 
   return (
-    <div className="w-full h-full bg-black relative group m-0 p-0" onMouseMove={handleControlsShow} onWheel={handleWheel}>
+    <div className="w-full h-full bg-white relative group m-0 p-0" onMouseMove={handleControlsShow} onWheel={handleWheel}>
       <video
         ref={videoRef}
         src={video.video_url}
@@ -180,7 +180,7 @@ export default function EmbedPageClient({ params }: EmbedPageProps) {
       {showPlayBtn && !isPlaying && (
         <div className="absolute inset-0 flex items-center justify-center z-20" onClick={togglePlay}>
           <div className="relative">
-            <div className="absolute inset-0 rounded-full bg-white/20 blur-xl scale-150" />
+            <div className="absolute inset-0 rounded-full bg-zinc-300/80 blur-xl scale-150" />
             <img
               src={playIcon}
               alt="Play"
@@ -215,10 +215,10 @@ export default function EmbedPageClient({ params }: EmbedPageProps) {
                     className="w-10 h-10 rounded-full border border-white/20"
                   />
                 )}
-                <div className="text-white drop-shadow-lg">
+                <div className="text-zinc-900 drop-shadow-lg">
                   <p className="font-bold text-base leading-tight drop-shadow-md">{video.title}</p>
                   {video.channel_name && (
-                    <p className="text-sm text-white/80 drop-shadow-md">{video.channel_name}</p>
+                    <p className="text-sm text-zinc-900/80 drop-shadow-md">{video.channel_name}</p>
                   )}
                 </div>
               </>
@@ -230,7 +230,7 @@ export default function EmbedPageClient({ params }: EmbedPageProps) {
             {/* Share button */}
             <button
               onClick={handleShare}
-              className="flex items-center gap-2 bg-black/70 backdrop-blur-sm px-4 py-2 rounded-full text-sm text-white hover:bg-black/80 transition-all"
+              className="flex items-center gap-2 bg-white/70 backdrop-blur-sm px-4 py-2 rounded-full text-sm text-zinc-900 hover:bg-white/80 transition-all"
             >
               {shareCopied ? (
                 <>
@@ -255,7 +255,7 @@ export default function EmbedPageClient({ params }: EmbedPageProps) {
             {/* Mute button */}
             <button
               onClick={toggleMute}
-              className="flex items-center justify-center bg-black/70 backdrop-blur-sm p-3 rounded-full text-white hover:bg-black/80 transition-all"
+              className="flex items-center justify-center bg-white/70 backdrop-blur-sm p-3 rounded-full text-zinc-900 hover:bg-white/80 transition-all"
             >
               {isMuted ? (
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -278,7 +278,7 @@ export default function EmbedPageClient({ params }: EmbedPageProps) {
               href={`/watch/${video.id}`} 
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 bg-black/70 backdrop-blur-sm px-5 py-3 rounded-2xl text-base text-white hover:bg-black/80 transition-all shadow-lg"
+              className="flex items-center gap-2 bg-white/70 backdrop-blur-sm px-5 py-3 rounded-2xl text-base text-zinc-900 hover:bg-white/80 transition-all shadow-lg"
             >
               <img src="/offlinee.png" alt="Playra" className="h-6 w-auto object-contain" />
               <span className="font-medium">Watch on Playra</span>

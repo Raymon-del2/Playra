@@ -304,13 +304,13 @@ export default function SelectProfilePage() {
 
     if (initialLoad) {
         return (
-            <div className="min-h-screen bg-black flex items-center justify-center p-4">
+            <div className="min-h-screen bg-white flex items-center justify-center p-4">
                 <div className="flex flex-col items-center gap-8">
                     <div className="flex gap-8">
                         {[1, 2].map(i => (
                             <div key={i} className="flex flex-col items-center gap-4">
-                                <div className="w-32 h-32 rounded-full bg-zinc-900 animate-pulse" />
-                                <div className="w-24 h-4 bg-zinc-900 rounded animate-pulse" />
+                                <div className="w-32 h-32 rounded-full bg-zinc-100 animate-pulse" />
+                                <div className="w-24 h-4 bg-zinc-100 rounded animate-pulse" />
                             </div>
                         ))}
                     </div>
@@ -321,13 +321,13 @@ export default function SelectProfilePage() {
 
     if (loading || !authInitialized) {
         return (
-            <div className="min-h-screen bg-black flex items-center justify-center p-4">
+            <div className="min-h-screen bg-white flex items-center justify-center p-4">
                 <div className="flex flex-col items-center gap-8">
                     <div className="flex gap-8">
                         {[1, 2].map(i => (
                             <div key={i} className="flex flex-col items-center gap-4">
-                                <div className="w-32 h-32 rounded-full bg-zinc-900 animate-pulse" />
-                                <div className="w-24 h-4 bg-zinc-900 rounded animate-pulse" />
+                                <div className="w-32 h-32 rounded-full bg-zinc-100 animate-pulse" />
+                                <div className="w-24 h-4 bg-zinc-100 rounded animate-pulse" />
                             </div>
                         ))}
                     </div>
@@ -337,12 +337,12 @@ export default function SelectProfilePage() {
     }
 
     return (
-        <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 sm:p-12 relative overflow-hidden">
+        <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 sm:p-12 relative overflow-hidden">
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full" />
             <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/5 blur-[120px] rounded-full" />
 
             <div className="w-full max-w-6xl mx-auto flex flex-col items-center relative z-10">
-                <h1 className="text-4xl sm:text-5xl font-black text-white mb-4 tracking-tight text-center">Who is watching?</h1>
+                <h1 className="text-4xl sm:text-5xl font-black text-zinc-900 mb-4 tracking-tight text-center">Who is watching?</h1>
                 <p className="text-zinc-500 font-bold mb-16 uppercase tracking-[0.2em] text-xs sm:text-sm text-center opacity-60">Select your identity</p>
 
                 <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleEditFileChange} />
@@ -353,14 +353,14 @@ export default function SelectProfilePage() {
                         <div key={profile.id} className="flex flex-col items-center gap-2 sm:gap-3 w-[100px] sm:w-[120px] md:max-w-[140px]">
                             {/* Profile Avatar - No hover effects */}
                             <div
-                                className="w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full p-[3px] bg-zinc-800 cursor-pointer flex-shrink-0"
+                                className="w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full p-[3px] bg-zinc-200 cursor-pointer flex-shrink-0"
                                 onClick={() => handleSelect(profile.id)}
                             >
-                                <div className="w-full h-full rounded-full overflow-hidden border-4 border-zinc-900 relative">
+                                <div className="w-full h-full rounded-full overflow-hidden border-4 border-zinc-100 relative">
                                     {profile.avatar ? (
                                         <img src={profile.avatar} alt={profile.name} className="w-full h-full object-cover" />
                                     ) : (
-                                        <div className="w-full h-full bg-zinc-900 flex items-center justify-center text-4xl font-black text-zinc-700 uppercase">
+                                        <div className="w-full h-full bg-zinc-100 flex items-center justify-center text-4xl font-black text-zinc-700 uppercase">
                                             {profile.name[0]}
                                         </div>
                                     )}
@@ -369,7 +369,7 @@ export default function SelectProfilePage() {
 
                             {/* Profile Info */}
                             <div className="flex flex-col items-center text-center w-full">
-                                <span className="text-zinc-400 font-bold text-lg sm:text-xl capitalize truncate w-full">{profile.name}</span>
+                                <span className="text-zinc-500 font-bold text-lg sm:text-xl capitalize truncate w-full">{profile.name}</span>
                                 <span className={`text-[10px] font-black uppercase tracking-tighter mt-1 px-2.5 py-1 rounded-md ${
                                     profile.account_type === 'kids' ? 'text-green-400 bg-green-400/10' :
                                     profile.account_type === 'family' ? 'text-yellow-400 bg-yellow-400/10' :
@@ -383,7 +383,7 @@ export default function SelectProfilePage() {
                             {/* Edit Button */}
                             <button
                                 onClick={() => handleEditClick(profile)}
-                                className="text-zinc-500 hover:text-white text-sm font-medium transition-colors mt-1"
+                                className="text-zinc-500 hover:text-zinc-900 text-sm font-medium transition-colors mt-1"
                             >
                                 Edit
                             </button>
@@ -392,13 +392,13 @@ export default function SelectProfilePage() {
 
                     {profiles.length < 4 && (
                         <div className="group flex flex-col items-center gap-3 sm:gap-5 cursor-pointer w-[100px] sm:w-[120px] md:w-auto" onClick={() => setShowCreate(true)}>
-                            <div className="w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full bg-zinc-900/50 border-2 border-dashed border-zinc-700/50 flex items-center justify-center group-hover:border-white/20 group-hover:bg-zinc-800/80 transition-all duration-300 flex-shrink-0">
-                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/5 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                    <svg className="w-8 h-8 text-zinc-500 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                            <div className="w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full bg-zinc-100/50 border-2 border-dashed border-zinc-300/50 flex items-center justify-center group-hover:border-white/20 group-hover:bg-zinc-200/80 transition-all duration-300 flex-shrink-0">
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-zinc-200/80 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <svg className="w-8 h-8 text-zinc-500 group-hover:text-zinc-900 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4.5v15m7.5-7.5h-15" /></svg>
                                 </div>
                             </div>
                             <div className="flex flex-col items-center">
-                                <span className="text-zinc-500 font-bold text-xs sm:text-sm md:text-base tracking-widest uppercase group-hover:text-zinc-300 transition-colors text-center">Add Profile</span>
+                                <span className="text-zinc-500 font-bold text-xs sm:text-sm md:text-base tracking-widest uppercase group-hover:text-zinc-700 transition-colors text-center">Add Profile</span>
                                 <div className="h-5" />
                             </div>
                         </div>
@@ -408,31 +408,31 @@ export default function SelectProfilePage() {
 
             {/* Edit Profile Modal */}
             {editingProfile && (
-                <div className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[100] flex items-center justify-center p-4">
-                    <div className="bg-zinc-950 border border-white/5 p-8 sm:p-10 rounded-[32px] max-w-sm w-full shadow-[0_0_100px_rgba(0,0,0,1)] relative overflow-hidden">
+                <div className="fixed inset-0 bg-white/90 backdrop-blur-xl z-[100] flex items-center justify-center p-4">
+                    <div className="bg-zinc-50 border border-zinc-200 p-8 sm:p-10 rounded-[32px] max-w-sm w-full shadow-[0_0_100px_rgba(0,0,0,1)] relative overflow-hidden">
                         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 to-purple-600"></div>
                         
                         {editMode === 'menu' && (
                             <>
-                                <h2 className="text-2xl font-black text-white mb-8 text-center">Edit Profile</h2>
+                                <h2 className="text-2xl font-black text-zinc-900 mb-8 text-center">Edit Profile</h2>
                                 
                                 <div className="flex flex-col items-center mb-8">
-                                    <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-zinc-800">
+                                    <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-zinc-200">
                                         {editingProfile.avatar ? (
                                             <img src={editingProfile.avatar} alt={editingProfile.name} className="w-full h-full object-cover" />
                                         ) : (
-                                            <div className="w-full h-full bg-zinc-900 flex items-center justify-center text-3xl font-black text-zinc-700 uppercase">
+                                            <div className="w-full h-full bg-zinc-100 flex items-center justify-center text-3xl font-black text-zinc-700 uppercase">
                                                 {editingProfile.name[0]}
                                             </div>
                                         )}
                                     </div>
-                                    <span className="text-white font-bold mt-4">{editingProfile.name}</span>
+                                    <span className="text-zinc-900 font-bold mt-4">{editingProfile.name}</span>
                                 </div>
 
                                 <div className="space-y-3">
                                     <button
                                         onClick={() => editFileInputRef.current?.click()}
-                                        className="w-full h-14 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-black text-sm uppercase tracking-widest transition-colors flex items-center justify-center gap-3"
+                                        className="w-full h-14 bg-zinc-200/80 hover:bg-zinc-200/80 text-zinc-900 rounded-2xl font-black text-sm uppercase tracking-widest transition-colors flex items-center justify-center gap-3"
                                     >
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2z" /></svg>
                                         Change Photo
@@ -440,7 +440,7 @@ export default function SelectProfilePage() {
                                     
                                     <button
                                         onClick={() => setEditMode('name')}
-                                        className="w-full h-14 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-black text-sm uppercase tracking-widest transition-colors flex items-center justify-center gap-3"
+                                        className="w-full h-14 bg-zinc-200/80 hover:bg-zinc-200/80 text-zinc-900 rounded-2xl font-black text-sm uppercase tracking-widest transition-colors flex items-center justify-center gap-3"
                                     >
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                                         Edit Name
@@ -457,7 +457,7 @@ export default function SelectProfilePage() {
 
                                 <button
                                     onClick={() => setEditingProfile(null)}
-                                    className="w-full h-14 mt-6 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-black text-sm uppercase tracking-widest transition-colors"
+                                    className="w-full h-14 mt-6 bg-zinc-200/80 hover:bg-zinc-200/80 text-zinc-900 rounded-2xl font-black text-sm uppercase tracking-widest transition-colors"
                                 >
                                     Cancel
                                 </button>
@@ -466,7 +466,7 @@ export default function SelectProfilePage() {
 
                         {editMode === 'name' && (
                             <>
-                                <h2 className="text-2xl font-black text-white mb-8 text-center">Edit Name</h2>
+                                <h2 className="text-2xl font-black text-zinc-900 mb-8 text-center">Edit Name</h2>
                                 
                                 <form onSubmit={handleUpdateName} className="space-y-6">
                                     <div>
@@ -487,9 +487,9 @@ export default function SelectProfilePage() {
                                             value={editName}
                                             onChange={(e) => handleEditNameChange(e.target.value)}
                                             placeholder="@username"
-                                            className={`w-full h-14 bg-white/5 border rounded-2xl px-5 text-white font-bold outline-none transition-all ${
+                                            className={`w-full h-14 bg-zinc-200/80 border rounded-2xl px-5 text-zinc-900 font-bold outline-none transition-all ${
                                                 editNameStatus.available && editName.length > 1 ? 'border-green-500/30 bg-green-500/5' :
-                                                editNameStatus.error ? 'border-red-500/30 bg-red-500/5' : 'border-white/10'
+                                                editNameStatus.error ? 'border-red-500/30 bg-red-500/5' : 'border-zinc-200'
                                             }`}
                                             required
                                         />
@@ -499,7 +499,7 @@ export default function SelectProfilePage() {
                                         <button
                                             type="button"
                                             onClick={() => setEditMode('menu')}
-                                            className="flex-1 h-14 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-colors"
+                                            className="flex-1 h-14 bg-zinc-200/80 hover:bg-zinc-200/80 text-zinc-900 rounded-2xl font-black text-xs uppercase tracking-widest transition-colors"
                                         >
                                             Back
                                         </button>
@@ -520,19 +520,19 @@ export default function SelectProfilePage() {
 
             {/* Create Modal */}
             {showCreate && (
-                <div className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[100] flex items-center justify-center p-4">
-                    <div className="bg-zinc-950 border border-white/5 p-8 sm:p-10 rounded-[48px] max-w-sm w-full shadow-[0_0_100px_rgba(0,0,0,1)] relative overflow-hidden">
+                <div className="fixed inset-0 bg-white/90 backdrop-blur-xl z-[100] flex items-center justify-center p-4">
+                    <div className="bg-zinc-50 border border-zinc-200 p-8 sm:p-10 rounded-[48px] max-w-sm w-full shadow-[0_0_100px_rgba(0,0,0,1)] relative overflow-hidden">
                         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 to-purple-600"></div>
-                        <h2 className="text-3xl font-black text-white mb-8">New Identity</h2>
+                        <h2 className="text-3xl font-black text-zinc-900 mb-8">New Identity</h2>
                         <form onSubmit={handleCreate} className="space-y-8">
                             <div className="flex justify-center">
                                 <label className="relative cursor-pointer group">
-                                    <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-zinc-900 border border-white/5 flex items-center justify-center overflow-hidden shadow-2xl">
+                                    <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center overflow-hidden shadow-2xl">
                                         {newAvatar ? <img src={newAvatar} alt="Preview" className="w-full h-full object-cover" /> : <svg className="w-10 h-10 text-zinc-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}
                                     </div>
                                     <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} required />
-                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 rounded-full flex items-center justify-center transition-all">
-                                        <span className="text-[10px] font-black text-white uppercase tracking-widest">Update</span>
+                                    <div className="absolute inset-0 bg-white/60 opacity-0 group-hover:opacity-100 rounded-full flex items-center justify-center transition-all">
+                                        <span className="text-[10px] font-black text-zinc-900 uppercase tracking-widest">Update</span>
                                     </div>
                                 </label>
                             </div>
@@ -549,8 +549,8 @@ export default function SelectProfilePage() {
                                     value={newName}
                                     onChange={(e) => handleNameChange(e.target.value)}
                                     placeholder="@username"
-                                    className={`w-full h-14 bg-white/5 border rounded-2xl px-5 text-white font-bold outline-none transition-all ${nameStatus.available ? 'border-green-500/30 bg-green-500/5' :
-                                        nameStatus.error ? 'border-red-500/30 bg-red-500/5' : 'border-white/5'
+                                    className={`w-full h-14 bg-zinc-200/80 border rounded-2xl px-5 text-zinc-900 font-bold outline-none transition-all ${nameStatus.available ? 'border-green-500/30 bg-green-500/5' :
+                                        nameStatus.error ? 'border-red-500/30 bg-red-500/5' : 'border-zinc-200'
                                         }`}
                                     required
                                 />
@@ -562,7 +562,7 @@ export default function SelectProfilePage() {
                                                 key={s}
                                                 type="button"
                                                 onClick={() => handleNameChange(s)}
-                                                className="px-3 py-1.5 bg-white/5 rounded-lg text-[10px] font-black text-zinc-400 hover:bg-white/10 hover:text-white transition-all uppercase tracking-tighter"
+                                                className="px-3 py-1.5 bg-zinc-200/80 rounded-lg text-[10px] font-black text-zinc-500 hover:bg-zinc-200/80 hover:text-zinc-900 transition-all uppercase tracking-tighter"
                                             >
                                                 {s}
                                             </button>
@@ -579,7 +579,7 @@ export default function SelectProfilePage() {
                                             key={type}
                                             type="button"
                                             onClick={() => setNewAccountType(type)}
-                                            className={`py-3 rounded-xl text-[10px] font-black uppercase transition-all tracking-widest border ${newAccountType === type ? 'bg-white text-black border-white shadow-lg' : 'bg-white/5 text-zinc-600 border-transparent hover:border-white/10'}`}
+                                            className={`py-3 rounded-xl text-[10px] font-black uppercase transition-all tracking-widest border ${newAccountType === type ? 'bg-white text-black border-white shadow-lg' : 'bg-zinc-200/80 text-zinc-600 border-transparent hover:border-zinc-200'}`}
                                         >
                                             {type}
                                         </button>
@@ -588,7 +588,7 @@ export default function SelectProfilePage() {
                             </div>
 
                             <div className="flex gap-4 pt-4">
-                                <button type="button" onClick={() => setShowCreate(false)} className="flex-1 h-14 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-colors">Back</button>
+                                <button type="button" onClick={() => setShowCreate(false)} className="flex-1 h-14 bg-zinc-200/80 hover:bg-zinc-200/80 text-zinc-900 rounded-2xl font-black text-xs uppercase tracking-widest transition-colors">Back</button>
                                 <button
                                     type="submit"
                                     disabled={creating || nameStatus.loading || (newName.length > 0 && !nameStatus.available)}
@@ -604,15 +604,15 @@ export default function SelectProfilePage() {
 
             {/* Delete Confirmation Modal */}
             {profileToDelete && (
-                <div className="fixed inset-0 bg-black/95 backdrop-blur-2xl z-[200] flex items-center justify-center p-4">
-                    <div className="bg-zinc-950 border border-white/5 p-8 sm:p-10 rounded-[48px] max-w-sm w-full text-center relative overflow-hidden">
+                <div className="fixed inset-0 bg-white/95 backdrop-blur-2xl z-[200] flex items-center justify-center p-4">
+                    <div className="bg-zinc-50 border border-zinc-200 p-8 sm:p-10 rounded-[48px] max-w-sm w-full text-center relative overflow-hidden">
                         <div className="absolute top-0 left-0 right-0 h-1 bg-red-600"></div>
                         <div className="w-20 h-20 bg-red-600/10 rounded-full flex items-center justify-center mx-auto mb-6 text-red-500">
                             <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                         </div>
-                        <h2 className="text-2xl font-black text-white mb-2 uppercase tracking-tighter">Wait a moment!</h2>
-                        <p className="text-zinc-400 text-sm font-bold mb-8">
-                            Are you sure you wish to delete <span className="text-white">{profileToDelete.name}</span>?
+                        <h2 className="text-2xl font-black text-zinc-900 mb-2 uppercase tracking-tighter">Wait a moment!</h2>
+                        <p className="text-zinc-500 text-sm font-bold mb-8">
+                            Are you sure you wish to delete <span className="text-zinc-900">{profileToDelete.name}</span>?
                             {videoCount > 0 ? (
                                 <span className="block mt-4 text-red-400 p-4 bg-red-500/5 rounded-2xl border border-red-500/10">
                                     This profile has <span className="font-black underline">{videoCount} uploaded videos</span>. Correcting this: if you delete, your uploads will be permanently removed. Please rethink this!
@@ -624,14 +624,14 @@ export default function SelectProfilePage() {
                         <div className="flex gap-4">
                             <button
                                 onClick={() => setProfileToDelete(null)}
-                                className="flex-1 h-14 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-colors"
+                                className="flex-1 h-14 bg-zinc-200/80 hover:bg-zinc-200/80 text-zinc-900 rounded-2xl font-black text-xs uppercase tracking-widest transition-colors"
                             >
                                 Rethink
                             </button>
                             <button
                                 onClick={confirmDelete}
                                 disabled={deleting}
-                                className="flex-1 h-14 bg-red-600 hover:bg-red-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl disabled:opacity-50 active:scale-95"
+                                className="flex-1 h-14 bg-red-600 hover:bg-red-500 text-zinc-900 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl disabled:opacity-50 active:scale-95"
                             >
                                 {deleting ? 'Removing...' : 'Delete'}
                             </button>

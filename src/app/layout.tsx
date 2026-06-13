@@ -68,7 +68,7 @@ export default async function RootLayout({
         <link rel="shortcut icon" href="/icon-192x192.png" />
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
       </head>
-      <body className={`bg-[#0f0f0f] text-white selection:bg-blue-500/30 ${anton.variable}`} suppressHydrationWarning>
+      <body className={`bg-white text-zinc-900 selection:bg-blue-500/30 ${anton.variable}`} suppressHydrationWarning>
         <LayoutShell activeProfile={activeProfile}>{children}</LayoutShell>
       </body>
     </html>

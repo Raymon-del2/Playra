@@ -252,16 +252,16 @@ export default function CameraRecorder() {
 
     if (permissionDenied) {
         return (
-            <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6">
+            <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6">
                 <div className="text-center">
                     <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                         <X size={40} className="text-red-500" />
                     </div>
-                    <h2 className="text-xl font-bold text-white mb-2">Camera Access Denied</h2>
-                    <p className="text-zinc-400 mb-6">Please allow camera access in your browser settings to record videos.</p>
+                    <h2 className="text-xl font-bold text-zinc-900 mb-2">Camera Access Denied</h2>
+                    <p className="text-zinc-500 mb-6">Please allow camera access in your browser settings to record videos.</p>
                     <button 
                         onClick={() => router.back()}
-                        className="px-6 py-3 bg-zinc-800 rounded-full text-white font-semibold"
+                        className="px-6 py-3 bg-zinc-200 rounded-full text-zinc-900 font-semibold"
                     >
                         Go Back
                     </button>
@@ -273,19 +273,19 @@ export default function CameraRecorder() {
     if (showPreview && recordedBlob) {
         const videoUrl = URL.createObjectURL(recordedBlob);
         return (
-            <div className="min-h-screen bg-black flex flex-col">
+            <div className="min-h-screen bg-white flex flex-col">
                 {/* Header */}
                 <header className="flex items-center justify-between px-4 py-4">
                     <button 
                         onClick={handleDiscard}
-                        className="text-white p-2"
+                        className="text-zinc-900 p-2"
                     >
                         <X size={24} />
                     </button>
-                    <h1 className="text-white font-semibold">Preview</h1>
+                    <h1 className="text-zinc-900 font-semibold">Preview</h1>
                     <button 
                         onClick={handlePost}
-                        className="text-white font-semibold px-4 py-2 bg-blue-600 rounded-full"
+                        className="text-zinc-900 font-semibold px-4 py-2 bg-blue-600 rounded-full"
                     >
                         Next
                     </button>
@@ -299,7 +299,7 @@ export default function CameraRecorder() {
                         playsInline
                         className="w-full max-w-sm rounded-xl"
                     />
-                    <p className="text-zinc-400 mt-4 text-sm">
+                    <p className="text-zinc-500 mt-4 text-sm">
                         Duration: {formatTime(recordingTime)}
                     </p>
                 </main>
@@ -308,11 +308,11 @@ export default function CameraRecorder() {
     }
 
     return (
-        <div className="relative w-full h-screen bg-black overflow-hidden flex flex-col">
+        <div className="relative w-full h-screen bg-white overflow-hidden flex flex-col">
             {/* Loading State */}
             {isLoading && (
-                <div className="absolute inset-0 z-50 bg-black flex items-center justify-center">
-                    <Loader2 size={40} className="text-white animate-spin" />
+                <div className="absolute inset-0 z-50 bg-white flex items-center justify-center">
+                    <Loader2 size={40} className="text-zinc-900 animate-spin" />
                 </div>
             )}
 
@@ -327,9 +327,9 @@ export default function CameraRecorder() {
 
             {/* Recording Indicator */}
             {isRecording && (
-                <div className="absolute top-16 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-black/50 px-4 py-2 rounded-full">
+                <div className="absolute top-16 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-zinc-200/800 px-4 py-2 rounded-full">
                     <div className={`w-3 h-3 rounded-full ${isPaused ? 'bg-yellow-500' : 'bg-red-500 animate-pulse'}`} />
-                    <span className="text-white font-mono text-sm">{formatTime(recordingTime)}</span>
+                    <span className="text-zinc-900 font-mono text-sm">{formatTime(recordingTime)}</span>
                     {isPaused && <span className="text-yellow-500 text-xs">PAUSED</span>}
                 </div>
             )}
@@ -350,7 +350,7 @@ export default function CameraRecorder() {
                             }
                             router.back();
                         }}
-                        className="p-3 bg-black/40 backdrop-blur-md rounded-full text-white active:scale-90 transition-transform"
+                        className="p-3 bg-white/40 backdrop-blur-md rounded-full text-zinc-900 active:scale-90 transition-transform"
                     >
                         <X size={24} />
                     </button>
@@ -403,14 +403,14 @@ export default function CameraRecorder() {
                             </div>
                         )}
                         
-                        {!isRecording && <span className="text-white/60 text-xs">Tap to record</span>}
+                        {!isRecording && <span className="text-zinc-900/60 text-xs">Tap to record</span>}
                     </div>
 
                     {/* Flip Camera Button */}
                     <button 
                         onClick={toggleCamera}
                         disabled={isRecording}
-                        className="p-3 bg-black/40 backdrop-blur-md rounded-full text-white hover:bg-black/60 active:scale-90 transition-all disabled:opacity-50"
+                        className="p-3 bg-white/40 backdrop-blur-md rounded-full text-zinc-900 hover:bg-white/60 active:scale-90 transition-all disabled:opacity-50"
                     >
                         <RefreshCw size={24} />
                     </button>

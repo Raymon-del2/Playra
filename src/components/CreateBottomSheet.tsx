@@ -45,7 +45,7 @@ export default function CreateBottomSheet({ isOpen, onClose }: CreateBottomSheet
         {
             icon: (
                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-red-500 via-yellow-500 to-blue-500 flex items-center justify-center">
-                    <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-6 h-6 text-zinc-900" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
                     </svg>
                 </div>
@@ -56,8 +56,8 @@ export default function CreateBottomSheet({ isOpen, onClose }: CreateBottomSheet
         },
         {
             icon: (
-                <div className="w-12 h-12 rounded-2xl bg-zinc-800 border border-white/10 flex items-center justify-center">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <div className="w-12 h-12 rounded-2xl bg-zinc-200 border border-zinc-200 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-zinc-900" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                     </svg>
                 </div>
@@ -97,23 +97,23 @@ export default function CreateBottomSheet({ isOpen, onClose }: CreateBottomSheet
         <div suppressHydrationWarning className="fixed inset-0 z-[200] lg:hidden">
             {/* Scrim overlay */}
             <div
-                className={`absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-300 ${isAnimating ? 'opacity-100' : 'opacity-0'}`}
+                className={`absolute inset-0 bg-white/70 backdrop-blur-sm transition-opacity duration-300 ${isAnimating ? 'opacity-100' : 'opacity-0'}`}
                 onClick={handleClose}
             />
 
             {/* Bottom sheet */}
             <div
-                className={`absolute bottom-0 left-0 right-0 bg-zinc-900 rounded-t-[32px] transition-transform duration-300 ease-out ${isAnimating ? 'translate-y-0' : 'translate-y-full'}`}
+                className={`absolute bottom-0 left-0 right-0 bg-zinc-100 rounded-t-[32px] transition-transform duration-300 ease-out ${isAnimating ? 'translate-y-0' : 'translate-y-full'}`}
                 style={{ paddingBottom: 'env(safe-area-inset-bottom, 20px)' }}
             >
                 {/* Handle bar */}
                 <div className="flex justify-center pt-3 pb-2">
-                    <div className="w-10 h-1 bg-zinc-600 rounded-full" />
+                    <div className="w-10 h-1 bg-zinc-400 rounded-full" />
                 </div>
 
                 {/* Header */}
                 <div className="px-6 pb-4">
-                    <h2 className="text-xl font-black text-white tracking-tight">Create</h2>
+                    <h2 className="text-xl font-black text-zinc-900 tracking-tight">Create</h2>
                 </div>
 
                 {/* Menu items */}
@@ -122,11 +122,11 @@ export default function CreateBottomSheet({ isOpen, onClose }: CreateBottomSheet
                         <button
                             key={index}
                             onClick={item.action}
-                            className="w-full flex items-center gap-4 p-3 rounded-2xl hover:bg-white/5 active:bg-white/10 active:scale-[0.98] transition-all text-left"
+                            className="w-full flex items-center gap-4 p-3 rounded-2xl hover:bg-zinc-200/80 active:bg-zinc-200/80 active:scale-[0.98] transition-all text-left"
                         >
                             {item.icon}
                             <div className="flex-1">
-                                <div className="text-white font-bold text-[15px]">{item.label}</div>
+                                <div className="text-zinc-900 font-bold text-[15px]">{item.label}</div>
                                 <div className="text-zinc-500 text-xs">{item.description}</div>
                             </div>
                             <svg className="w-5 h-5 text-zinc-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -140,7 +140,7 @@ export default function CreateBottomSheet({ isOpen, onClose }: CreateBottomSheet
                 <div className="px-4 pb-4">
                     <button
                         onClick={handleClose}
-                        className="w-full py-3.5 bg-zinc-800 rounded-2xl text-white font-bold text-sm hover:bg-zinc-700 active:scale-[0.98] transition-all"
+                        className="w-full py-3.5 bg-zinc-200 rounded-2xl text-zinc-900 font-bold text-sm hover:bg-zinc-300 active:scale-[0.98] transition-all"
                     >
                         Cancel
                     </button>

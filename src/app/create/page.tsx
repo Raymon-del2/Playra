@@ -33,9 +33,9 @@ export default function CreatePage() {
     // Record mode view
     if (mode === 'record') {
         return (
-            <div className="min-h-screen bg-black flex flex-col">
+            <div className="min-h-screen bg-white flex flex-col">
                 {/* Camera Viewfinder */}
-                <div className="flex-1 relative bg-zinc-900">
+                <div className="flex-1 relative bg-zinc-100">
                     {/* Mock camera preview */}
                     <div className="absolute inset-0 flex items-center justify-center">
                         <div className="text-zinc-600 text-center">
@@ -48,18 +48,18 @@ export default function CreatePage() {
                     <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center bg-gradient-to-b from-black/60 to-transparent">
                         <button 
                             onClick={() => setMode('select')}
-                            className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white"
+                            className="w-10 h-10 rounded-full bg-white/40 backdrop-blur-md flex items-center justify-center text-zinc-900"
                         >
                             <X size={20} />
                         </button>
                         <div className="flex gap-3">
-                            <button className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white">
+                            <button className="w-10 h-10 rounded-full bg-white/40 backdrop-blur-md flex items-center justify-center text-zinc-900">
                                 <FlipHorizontal size={18} />
                             </button>
-                            <button className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white">
+                            <button className="w-10 h-10 rounded-full bg-white/40 backdrop-blur-md flex items-center justify-center text-zinc-900">
                                 <Zap size={18} />
                             </button>
-                            <button className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white">
+                            <button className="w-10 h-10 rounded-full bg-white/40 backdrop-blur-md flex items-center justify-center text-zinc-900">
                                 <Timer size={18} />
                             </button>
                         </div>
@@ -83,7 +83,7 @@ export default function CreatePage() {
                 <header className="flex items-center justify-between px-4 py-4 border-b border-[#1A1A1A]">
                     <button 
                         onClick={() => setMode('select')}
-                        className="text-[#888888] hover:text-white transition-colors"
+                        className="text-[#888888] hover:text-zinc-900 transition-colors"
                     >
                         <ArrowLeft size={24} />
                     </button>
@@ -105,10 +105,10 @@ export default function CreatePage() {
                         className="w-full max-w-sm aspect-[3/4] border-2 border-dashed border-[#333333] rounded-3xl flex flex-col items-center justify-center gap-4 hover:border-[#555555] transition-colors group"
                     >
                         <div className="w-20 h-20 rounded-2xl bg-[#1A1A1A] flex items-center justify-center group-hover:bg-[#222222] transition-colors">
-                            <Upload size={32} className="text-[#888888] group-hover:text-white transition-colors" />
+                            <Upload size={32} className="text-[#888888] group-hover:text-zinc-900 transition-colors" />
                         </div>
                         <div className="text-center">
-                            <p className="text-white font-semibold mb-1">Tap to select video</p>
+                            <p className="text-zinc-900 font-semibold mb-1">Tap to select video</p>
                             <p className="text-[#666666] text-sm">From your gallery</p>
                         </div>
                     </button>
@@ -123,7 +123,7 @@ export default function CreatePage() {
             <header className="flex items-center justify-between px-4 py-4 border-b border-[#1A1A1A]">
                 <button 
                     onClick={() => router.back()}
-                    className="text-[#888888] hover:text-white transition-colors"
+                    className="text-[#888888] hover:text-zinc-900 transition-colors"
                 >
                     <X size={24} />
                 </button>
@@ -136,13 +136,13 @@ export default function CreatePage() {
                     {/* Record Option */}
                     <button
                         onClick={() => setMode('record')}
-                        className="aspect-square rounded-3xl bg-gradient-to-br from-purple-600/20 to-blue-600/20 border border-white/10 flex flex-col items-center justify-center gap-3 hover:border-white/20 transition-all active:scale-95"
+                        className="aspect-square rounded-3xl bg-gradient-to-br from-purple-600/20 to-blue-600/20 border border-zinc-200 flex flex-col items-center justify-center gap-3 hover:border-white/20 transition-all active:scale-95"
                     >
                         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
-                            <Camera size={28} className="text-white" />
+                            <Camera size={28} className="text-zinc-900" />
                         </div>
                         <div className="text-center">
-                            <p className="text-white font-bold">Record</p>
+                            <p className="text-zinc-900 font-bold">Record</p>
                             <p className="text-[#888888] text-xs">Create a video</p>
                         </div>
                     </button>
@@ -153,10 +153,10 @@ export default function CreatePage() {
                         className="aspect-square rounded-3xl bg-[#1A1A1A] border border-[#333333] flex flex-col items-center justify-center gap-3 hover:border-[#555555] transition-all active:scale-95"
                     >
                         <div className="w-16 h-16 rounded-2xl bg-[#222222] flex items-center justify-center">
-                            <Upload size={28} className="text-white" />
+                            <Upload size={28} className="text-zinc-900" />
                         </div>
                         <div className="text-center">
-                            <p className="text-white font-bold">Upload</p>
+                            <p className="text-zinc-900 font-bold">Upload</p>
                             <p className="text-[#888888] text-xs">From gallery</p>
                         </div>
                     </button>
@@ -178,15 +178,15 @@ export default function CreatePage() {
                     {/* Short Option */}
                     <button
                         onClick={() => router.push('/create/style')}
-                        className="aspect-square rounded-3xl bg-gradient-to-br from-yellow-500/20 via-orange-500/20 to-pink-500/20 border border-white/10 flex flex-col items-center justify-center gap-3 hover:border-white/20 transition-all active:scale-95"
+                        className="aspect-square rounded-3xl bg-gradient-to-br from-yellow-500/20 via-orange-500/20 to-pink-500/20 border border-zinc-200 flex flex-col items-center justify-center gap-3 hover:border-white/20 transition-all active:scale-95"
                     >
                         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-yellow-400 via-orange-500 to-pink-500 flex items-center justify-center">
-                            <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-7 h-7 text-zinc-900" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
                             </svg>
                         </div>
                         <div className="text-center">
-                            <p className="text-white font-bold">Style</p>
+                            <p className="text-zinc-900 font-bold">Style</p>
                             <p className="text-[#888888] text-xs">Short vertical</p>
                         </div>
                     </button>

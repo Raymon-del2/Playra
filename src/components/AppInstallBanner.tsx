@@ -84,17 +84,17 @@ export default function AppInstallBanner() {
             className="fixed z-[100] lg:hidden animate-slide-in-up"
             style={{ bottom: 'calc(90px + env(safe-area-inset-bottom, 0px))', right: '0.5rem', left: 'auto', maxWidth: '300px' }}
         >
-            <div className="bg-zinc-900 border border-white/10 rounded-2xl p-4 shadow-2xl">
+            <div className="bg-zinc-100 border border-zinc-200 rounded-2xl p-4 shadow-2xl">
                 <div className="flex items-start gap-3">
                     {/* App Icon */}
-                    <div className="w-12 h-12 rounded-xl bg-zinc-800 flex items-center justify-center flex-shrink-0 shadow-lg">
+                    <div className="w-12 h-12 rounded-xl bg-zinc-200 flex items-center justify-center flex-shrink-0 shadow-lg">
                         <img src="/Playra.png" alt="Playra" className="w-8 h-8" />
                     </div>
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-white text-sm">Get the Playra App</h3>
-                        <p className="text-xs text-zinc-400 mt-0.5">
+                        <h3 className="font-bold text-zinc-900 text-sm">Get the Playra App</h3>
+                        <p className="text-xs text-zinc-500 mt-0.5">
                             {isIOS
                                 ? 'Tap Share → Add to Home Screen'
                                 : 'Install for a better experience'
@@ -105,7 +105,7 @@ export default function AppInstallBanner() {
                     {/* Close Button */}
                     <button
                         onClick={handleDismiss}
-                        className="text-zinc-500 hover:text-white p-1"
+                        className="text-zinc-500 hover:text-zinc-900 p-1"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

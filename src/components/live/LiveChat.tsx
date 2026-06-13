@@ -107,7 +107,7 @@ export function LiveChat({ streamId, activeProfile, isCreator }: LiveChatProps) 
   return (
     <div className="flex flex-col h-full">
       {/* Chat Header */}
-      <div className="p-3 border-b border-white/10">
+      <div className="p-3 border-b border-zinc-200">
         <h3 className="font-bold">Live Chat</h3>
       </div>
 
@@ -115,7 +115,7 @@ export function LiveChat({ streamId, activeProfile, isCreator }: LiveChatProps) 
       <div className="flex-1 overflow-y-auto p-3 space-y-2">
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
-            <div className="w-6 h-6 border-2 border-zinc-600 border-t-zinc-400 rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-zinc-400 border-t-zinc-400 rounded-full animate-spin" />
           </div>
         ) : messages.length === 0 ? (
           <div className="text-center text-zinc-500 py-8 text-sm">
@@ -137,7 +137,7 @@ export function LiveChat({ streamId, activeProfile, isCreator }: LiveChatProps) 
                     {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
-                <p className="text-sm text-white break-words">{msg.message}</p>
+                <p className="text-sm text-zinc-900 break-words">{msg.message}</p>
               </div>
             </div>
           ))
@@ -146,7 +146,7 @@ export function LiveChat({ streamId, activeProfile, isCreator }: LiveChatProps) 
       </div>
 
       {/* Input */}
-      <form onSubmit={sendMessage} className="p-3 border-t border-white/10">
+      <form onSubmit={sendMessage} className="p-3 border-t border-zinc-200">
         <div className="flex items-center gap-2">
           <input
             type="text"
@@ -154,12 +154,12 @@ export function LiveChat({ streamId, activeProfile, isCreator }: LiveChatProps) 
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder={activeProfile ? "Send a message..." : "Sign in to chat"}
             disabled={!activeProfile}
-            className="flex-1 bg-zinc-800 border-none rounded-full px-4 py-2 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+            className="flex-1 bg-zinc-200 border-none rounded-full px-4 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
           />
           <button
             type="submit"
             disabled={!activeProfile || !newMessage.trim()}
-            className="p-2 bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-700 disabled:cursor-not-allowed rounded-full transition-colors"
+            className="p-2 bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-300 disabled:cursor-not-allowed rounded-full transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />

@@ -111,12 +111,12 @@ function ResultCard({ item }: { item: ResultItem }) {
     <Link
       key={item.id}
       href={`/watch/${item.id}`}
-      className="flex flex-col lg:flex-row gap-4 group p-2 rounded-2xl transition-all duration-300 hover:bg-[#2d1a1a] hover:shadow-2xl"
+      className="flex flex-col lg:flex-row gap-4 group p-2 rounded-2xl transition-all duration-300 hover:bg-zinc-100 hover:shadow-2xl"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
       <div className="relative flex-shrink-0">
-        <div className="relative aspect-video w-full lg:w-96 overflow-hidden rounded-xl bg-zinc-900 shadow-lg">
+        <div className="relative aspect-video w-full lg:w-96 overflow-hidden rounded-xl bg-zinc-100 shadow-lg">
           {previewSrc && (
             <video
               ref={videoRef}
@@ -137,7 +137,7 @@ function ResultCard({ item }: { item: ResultItem }) {
           {/* Playra-style Progress Seeker Bar */}
           {isPlaying && (
             <div
-              className="absolute bottom-0 left-0 right-0 h-1.5 bg-white/20 cursor-pointer group/seeker z-10"
+              className="absolute bottom-0 left-0 right-0 h-1.5 bg-zinc-300/80 cursor-pointer group/seeker z-10"
               onClick={handleSeek}
               onMouseMove={handleSeekerMouseMove}
               onMouseLeave={() => setSeekerHover(null)}
@@ -149,7 +149,7 @@ function ResultCard({ item }: { item: ResultItem }) {
                   style={{ left: `${seekerHover.x}%` }}
                 >
                   <div className="flex flex-col items-center">
-                    <div className="w-32 aspect-video bg-zinc-800 rounded border border-white/20 overflow-hidden shadow-2xl mb-1 relative">
+                    <div className="w-32 aspect-video bg-zinc-200 rounded border border-white/20 overflow-hidden shadow-2xl mb-1 relative">
                       <video
                         ref={tooltipVideoRef}
                         src={item.previewVideo}
@@ -159,7 +159,7 @@ function ResultCard({ item }: { item: ResultItem }) {
                         preload="auto"
                       />
                     </div>
-                    <span className="bg-black/80 text-white text-[10px] px-1.5 py-0.5 rounded font-bold">{seekerHover.time}</span>
+                    <span className="bg-white/80 text-zinc-900 text-[10px] px-1.5 py-0.5 rounded font-bold">{seekerHover.time}</span>
                   </div>
                 </div>
               )}
@@ -174,7 +174,7 @@ function ResultCard({ item }: { item: ResultItem }) {
           )}
 
           {item.duration && (
-            <div className="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] px-1.5 py-0.5 rounded font-bold tracking-wider z-0">
+            <div className="absolute bottom-2 right-2 bg-white/80 text-zinc-900 text-[10px] px-1.5 py-0.5 rounded font-bold tracking-wider z-0">
               {item.duration}
             </div>
           )}
@@ -183,17 +183,17 @@ function ResultCard({ item }: { item: ResultItem }) {
 
       <div className="flex-1 min-w-0 py-1">
         <div className="flex items-start gap-2">
-          <h3 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors leading-tight">
+          <h3 className="text-lg font-bold text-zinc-900 group-hover:text-blue-400 transition-colors leading-tight">
             {item.title}
           </h3>
-          <button className="ml-auto text-gray-400 hover:text-white p-1 hover:bg-white/10 rounded-full transition-colors flex-shrink-0">
+          <button className="ml-auto text-gray-500 hover:text-zinc-900 p-1 hover:bg-zinc-100 rounded-full transition-colors flex-shrink-0">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v.01M12 12v.01M12 18v.01" />
             </svg>
           </button>
         </div>
 
-        <div className="flex items-center gap-2 text-sm text-gray-400 mt-1 font-medium">
+        <div className="flex items-center gap-2 text-sm text-gray-500 mt-1 font-medium">
           <span>{item.views}</span>
           <span>•</span>
           <span>{item.timestamp}</span>
@@ -203,12 +203,12 @@ function ResultCard({ item }: { item: ResultItem }) {
           <img
             src={item.channelAvatar}
             alt={item.channel}
-            className="w-8 h-8 rounded-full object-cover border border-white/5"
+            className="w-8 h-8 rounded-full object-cover border border-zinc-200"
           />
-          <span className="text-sm text-gray-300 font-bold group-hover/channel:text-white transition-colors">{item.channel}</span>
+          <span className="text-sm text-gray-700 font-bold group-hover/channel:text-zinc-900 transition-colors">{item.channel}</span>
         </div>
 
-        <p className="text-sm text-gray-400 mt-3 line-clamp-2 leading-relaxed">
+        <p className="text-sm text-gray-500 mt-3 line-clamp-2 leading-relaxed">
           {item.description}
         </p>
 
@@ -216,7 +216,7 @@ function ResultCard({ item }: { item: ResultItem }) {
           {item.badges.map((badge) => (
             <span
               key={badge}
-              className="text-[10px] px-2 py-0.5 rounded font-bold bg-zinc-800 text-gray-300 uppercase tracking-widest"
+              className="text-[10px] px-2 py-0.5 rounded font-bold bg-zinc-200 text-gray-700 uppercase tracking-widest"
             >
               {badge}
             </span>
@@ -296,7 +296,7 @@ function StylesCarouselItem({
         onMouseLeave(item.id);
       }}
     >
-      <div className="relative overflow-hidden rounded-xl transition-all duration-300 group-hover:p-1 group-hover:bg-[#2d1a1a] shadow-lg group-hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+      <div className="relative overflow-hidden rounded-xl transition-all duration-300 group-hover:p-1 group-hover:bg-zinc-100 shadow-lg group-hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)]">
         <div className="relative aspect-[9/16] overflow-hidden rounded-lg">
           {item.previewVideo && (
             <video
@@ -318,7 +318,7 @@ function StylesCarouselItem({
           {/* Seeker */}
           {isHovered && (
             <div
-              className="absolute bottom-0 left-0 right-0 h-1.5 bg-white/20 cursor-pointer z-10"
+              className="absolute bottom-0 left-0 right-0 h-1.5 bg-zinc-300/80 cursor-pointer z-10"
               onClick={handleSeek}
               onMouseMove={handleSeekerMouseMove}
               onMouseLeave={() => setSeekerHover(null)}
@@ -330,7 +330,7 @@ function StylesCarouselItem({
                   style={{ left: `${seekerHover.x}%` }}
                 >
                   <div className="flex flex-col items-center">
-                    <div className="w-24 aspect-[9/16] bg-zinc-800 rounded border border-white/20 overflow-hidden shadow-2xl mb-1 relative">
+                    <div className="w-24 aspect-[9/16] bg-zinc-200 rounded border border-white/20 overflow-hidden shadow-2xl mb-1 relative">
                       <video
                         ref={tooltipVideoRef}
                         src={item.previewVideo}
@@ -340,7 +340,7 @@ function StylesCarouselItem({
                         preload="auto"
                       />
                     </div>
-                    <span className="bg-black/80 text-white text-[9px] px-1.5 py-0.5 rounded font-bold">{seekerHover.time}</span>
+                    <span className="bg-white/80 text-zinc-900 text-[9px] px-1.5 py-0.5 rounded font-bold">{seekerHover.time}</span>
                   </div>
                 </div>
               )}
@@ -356,12 +356,12 @@ function StylesCarouselItem({
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
 
           {/* Duration Badge */}
-          <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-sm text-white text-[10px] px-1.5 py-0.5 rounded font-bold">
+          <div className="absolute bottom-2 left-2 bg-zinc-100/70 backdrop-blur-sm text-zinc-900 text-[10px] px-1.5 py-0.5 rounded font-bold">
             {item.duration}
           </div>
 
           <div className="absolute top-2 right-2">
-            <span className="text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full tracking-tighter flex items-center gap-1 bg-black/40 backdrop-blur-md">
+            <span className="text-zinc-900 text-[9px] font-bold px-1.5 py-0.5 rounded-full tracking-tighter flex items-center gap-1 bg-zinc-100/40 backdrop-blur-md">
               <img src="/styles-icon.svg?v=blue" alt="" className="w-3 h-3 object-contain" />
               STYLES
             </span>
@@ -370,10 +370,10 @@ function StylesCarouselItem({
 
         {/* Title & Channel */}
         <div className="mt-2.5 px-1 pb-2">
-          <h3 className="text-[13px] font-bold text-white line-clamp-2 leading-tight group-hover:text-blue-400 transition-colors">
+          <h3 className="text-[13px] font-bold text-zinc-900 line-clamp-2 leading-tight group-hover:text-blue-400 transition-colors">
             {item.title}
           </h3>
-          <p className="text-[11px] text-gray-400 mt-1">
+          <p className="text-[11px] text-gray-500 mt-1">
             {item.views}
           </p>
         </div>
@@ -424,13 +424,13 @@ function StylesCarousel({ items }: { items: ResultItem[] }) {
           <div className="w-8 h-8 flex items-center justify-center">
             <img src="/styles-icon.svg?v=blue" alt="STYLES" className="w-full h-full object-contain" />
           </div>
-          <h2 className="text-xl font-bold text-white tracking-tight">STYLES</h2>
+          <h2 className="text-xl font-bold text-zinc-900 tracking-tight">STYLES</h2>
         </div>
         <div className="flex-1" />
         <div className="flex gap-2">
           <button
             onClick={() => scroll('left')}
-            className="w-10 h-10 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-white transition-all shadow-lg active:scale-90"
+            className="w-10 h-10 rounded-full bg-zinc-200 hover:bg-zinc-200 flex items-center justify-center text-zinc-900 transition-all shadow-lg active:scale-90"
             aria-label="Scroll left"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -439,7 +439,7 @@ function StylesCarousel({ items }: { items: ResultItem[] }) {
           </button>
           <button
             onClick={() => scroll('right')}
-            className="w-10 h-10 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-white transition-all shadow-lg active:scale-90"
+            className="w-10 h-10 rounded-full bg-zinc-200 hover:bg-zinc-200 flex items-center justify-center text-zinc-900 transition-all shadow-lg active:scale-90"
             aria-label="Scroll right"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -469,7 +469,7 @@ function StylesCarousel({ items }: { items: ResultItem[] }) {
       </div>
 
       {/* Divider */}
-      <div className="mt-4 h-px bg-zinc-800/50" />
+      <div className="mt-4 h-px bg-zinc-200/50" />
     </div>
   );
 }
@@ -483,14 +483,6 @@ export default function ResultsPage() {
   const [profiles, setProfiles] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchInput, setSearchInput] = useState(queryParam);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchInput.trim()) {
-      window.location.href = `/results?search_query=${encodeURIComponent(searchInput.trim())}`;
-    }
-  };
 
   useEffect(() => {
     let isMounted = true;
@@ -618,35 +610,14 @@ export default function ResultsPage() {
 
   return (
     <div className="px-4 sm:px-6 pt-6 sm:pt-8 pb-24 lg:pb-8 w-full max-w-full overflow-x-hidden">
-      {/* Search Input */}
-      <form onSubmit={handleSearch} className="mb-6">
-        <div className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-full px-4 py-2.5 focus-within:border-zinc-700">
-          <svg className="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <input
-            type="text"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="Search"
-            className="flex-1 bg-transparent text-white placeholder-zinc-500 outline-none"
-          />
-          <button type="submit" className="text-zinc-400 hover:text-white">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-          </button>
-        </div>
-      </form>
-
       <div className="flex items-center gap-3 overflow-x-auto pb-5 scrollbar-hide">
         {filters.map((filter) => (
           <button
             key={filter}
             onClick={() => setActiveFilter(filter)}
             className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ${filter === activeFilter
-              ? 'bg-white text-gray-900'
-              : 'bg-gray-800 text-gray-200 hover:bg-gray-700'
+              ? 'bg-zinc-800 text-white'
+              : 'bg-zinc-200 text-zinc-700 hover:bg-zinc-300'
               }`}
           >
             {filter}
@@ -657,15 +628,15 @@ export default function ResultsPage() {
       {/* Profiles Section - Show when filter is All or Channels */}
       {(activeFilter === 'All' || activeFilter === 'Channels') && profiles.length > 0 && (
         <div className="mb-8">
-          <h2 className="text-lg font-bold text-white mb-4">Profiles</h2>
+          <h2 className="text-lg font-bold text-zinc-900 mb-4">Profiles</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {profiles.map((profile: any) => (
               <Link
                 key={profile.id}
                 href={`/channel/${profile.id}`}
-                className="group flex flex-col items-center gap-3 p-4 rounded-xl bg-zinc-900/50 hover:bg-zinc-800/50 transition-colors border border-white/5"
+                className="group flex flex-col items-center gap-3 p-4 rounded-xl bg-zinc-100/50 hover:bg-zinc-200/50 transition-colors border border-zinc-200"
               >
-                <div className="w-16 h-16 rounded-full overflow-hidden bg-zinc-800 flex-shrink-0">
+                <div className="w-16 h-16 rounded-full overflow-hidden bg-zinc-200 flex-shrink-0">
                   {profile.avatar ? (
                     <img src={profile.avatar} alt={profile.name} className="w-full h-full object-cover" />
                   ) : (
@@ -675,8 +646,8 @@ export default function ResultsPage() {
                   )}
                 </div>
                 <div className="text-center">
-                  <h3 className="text-sm font-bold text-white truncate max-w-[140px]">{profile.name}</h3>
-                  <p className="text-xs text-zinc-400 truncate max-w-[140px]">@{profile.name?.replace(/^@+/, '').replace(/\s+/g, '').toLowerCase()}</p>
+                  <h3 className="text-sm font-bold text-zinc-900 truncate max-w-[140px]">{profile.name}</h3>
+                  <p className="text-xs text-zinc-500 truncate max-w-[140px]">@{profile.name?.replace(/^@+/, '').replace(/\s+/g, '').toLowerCase()}</p>
                 </div>
               </Link>
             ))}
@@ -695,7 +666,7 @@ export default function ResultsPage() {
 
         {/* No results fallback: only if no profiles and no videos */}
         {profiles.length === 0 && filteredResults.length === 0 && stylesItems.length === 0 && (
-          <div className="bg-gray-800 rounded-2xl p-6 flex flex-col md:flex-row items-center gap-6">
+          <div className="bg-gray-200 rounded-2xl p-6 flex flex-col md:flex-row items-center gap-6">
             <video
               src="/No-results.mp4"
               autoPlay
@@ -706,7 +677,7 @@ export default function ResultsPage() {
             />
             <div>
               <p className="text-lg font-semibold mb-2">No results for &quot;{queryLabel}&quot;</p>
-              <p className="text-gray-400">
+              <p className="text-gray-500">
                 Try different keywords or check your spelling.
               </p>
             </div>

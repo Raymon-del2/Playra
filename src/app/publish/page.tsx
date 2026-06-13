@@ -97,12 +97,12 @@ export default function PublishPage() {
     const isValid = title.trim().length > 0;
 
     return (
-        <div className="min-h-screen bg-[#0A0A0A] text-white flex flex-col font-sans">
+        <div className="min-h-screen bg-[#0A0A0A] text-zinc-900 flex flex-col font-sans">
             {/* Top Navigation */}
             <header className="flex items-center justify-between px-4 py-4 border-b border-[#1A1A1A]">
                 <button 
                     onClick={() => router.back()}
-                    className="text-[#888888] hover:text-white transition-colors"
+                    className="text-[#888888] hover:text-zinc-900 transition-colors"
                 >
                     <ArrowLeft size={24} />
                 </button>
@@ -151,7 +151,7 @@ export default function PublishPage() {
                                 className="w-full h-full object-cover"
                             />
                         ) : (
-                            <div className="flex flex-col items-center space-y-2 text-[#666666] group-hover:text-white transition-colors">
+                            <div className="flex flex-col items-center space-y-2 text-[#666666] group-hover:text-zinc-900 transition-colors">
                                 <Camera size={28} />
                                 <span className="text-sm font-medium">Tap to upload thumbnail</span>
                             </div>
@@ -193,7 +193,7 @@ export default function PublishPage() {
                 {/* Profile Info */}
                 {profile && (
                     <section className="flex items-center gap-3 py-2">
-                        <div className="w-10 h-10 rounded-full bg-zinc-800 overflow-hidden">
+                        <div className="w-10 h-10 rounded-full bg-zinc-200 overflow-hidden">
                             {profile.avatar ? (
                                 <img src={profile.avatar} alt={profile.name} className="w-full h-full object-cover" />
                             ) : (
@@ -203,7 +203,7 @@ export default function PublishPage() {
                             )}
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-white">{profile.name}</p>
+                            <p className="text-sm font-medium text-zinc-900">{profile.name}</p>
                             <p className="text-xs text-[#888888]">Publishing as</p>
                         </div>
                     </section>

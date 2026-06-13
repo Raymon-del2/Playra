@@ -64,22 +64,22 @@ export default function StudioAnalyticsPage() {
     activeContentTab === 'Posts' ? 'Create post' : activeContentTab === 'Styles' ? 'Upload style' : 'Upload video';
 
   return (
-    <div className="min-h-screen p-4 sm:p-8 text-white w-full max-w-full overflow-x-hidden pb-24 lg:pb-8">
+    <div className="min-h-screen p-4 sm:p-8 text-zinc-900 w-full max-w-full overflow-x-hidden pb-24 lg:pb-8">
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <h1 className="text-xl sm:text-2xl font-bold">Channel analytics</h1>
-        <div className="flex items-center gap-3 text-sm text-zinc-300">
-          <div className="rounded-full border border-white/10 px-3 py-1.5">Last 28 days</div>
+        <div className="flex items-center gap-3 text-sm text-zinc-700">
+          <div className="rounded-full border border-zinc-200 px-3 py-1.5">Last 28 days</div>
         </div>
       </div>
 
       {/* Stats Overview */}
       <div className="grid gap-4 sm:grid-cols-3 mb-6">
-        <div className="bg-[#1a1a1a] rounded-xl border border-white/5 p-4 sm:p-6">
-          <p className="text-xs text-zinc-400 mb-1">Total views</p>
+        <div className="bg-[#1a1a1a] rounded-xl border border-zinc-200 p-4 sm:p-6">
+          <p className="text-xs text-zinc-500 mb-1">Total views</p>
           <p className="text-2xl sm:text-3xl font-bold">{totalViews.toLocaleString()}</p>
         </div>
-        <div className="bg-[#1a1a1a] rounded-xl border border-white/5 p-4 sm:p-6">
-          <p className="text-xs text-zinc-400 mb-1">Peak viewing time</p>
+        <div className="bg-[#1a1a1a] rounded-xl border border-zinc-200 p-4 sm:p-6">
+          <p className="text-xs text-zinc-500 mb-1">Peak viewing time</p>
           <p className="text-2xl sm:text-3xl font-bold">{peakTime}</p>
           {viewDistribution.morning + viewDistribution.afternoon + viewDistribution.evening + viewDistribution.night > 0 && (
             <p className="text-xs text-zinc-500 mt-1">
@@ -87,22 +87,22 @@ export default function StudioAnalyticsPage() {
             </p>
           )}
         </div>
-        <div className="bg-[#1a1a1a] rounded-xl border border-white/5 p-4 sm:p-6">
-          <p className="text-xs text-zinc-400 mb-1">Total content</p>
+        <div className="bg-[#1a1a1a] rounded-xl border border-zinc-200 p-4 sm:p-6">
+          <p className="text-xs text-zinc-500 mb-1">Total content</p>
           <p className="text-2xl sm:text-3xl font-bold">{contentItems.length}</p>
         </div>
       </div>
 
       {/* Content Section */}
-      <div className="mt-8 bg-[#121212] rounded-2xl border border-white/10 p-4 sm:p-6">
+      <div className="mt-8 bg-[#121212] rounded-2xl border border-zinc-200 p-4 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <div>
-            <p className="text-xs sm:text-sm text-zinc-400">Your content</p>
+            <p className="text-xs sm:text-sm text-zinc-500">Your content</p>
             <h2 className="text-lg sm:text-xl font-bold">Videos, Styles, and Posts</h2>
           </div>
           <Link
             href="/studio/content"
-            className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-white/10 hover:bg-white/20 text-xs sm:text-sm border border-white/10 transition-colors"
+            className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-zinc-200/80 hover:bg-zinc-300/80 text-xs sm:text-sm border border-zinc-200 transition-colors"
           >
             Go to Content
           </Link>
@@ -113,7 +113,7 @@ export default function StudioAnalyticsPage() {
             <button
               key={tab}
               onClick={() => setActiveContentTab(tab)}
-              className={`pb-2 border-b-2 transition-colors whitespace-nowrap ${activeContentTab === tab ? 'border-white text-white' : 'border-transparent text-zinc-400 hover:text-white'
+              className={`pb-2 border-b-2 transition-colors whitespace-nowrap ${activeContentTab === tab ? 'border-white text-zinc-900' : 'border-transparent text-zinc-500 hover:text-zinc-900'
                 }`}
             >
               {tab}
@@ -123,28 +123,28 @@ export default function StudioAnalyticsPage() {
 
         {isLoadingContent ? (
           <div className="flex justify-center py-12">
-            <div className="w-10 h-10 border-4 border-white/10 border-t-white rounded-full animate-spin" />
+            <div className="w-10 h-10 border-4 border-zinc-200 border-t-white rounded-full animate-spin" />
           </div>
         ) : filteredContent.length > 0 ? (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {filteredContent.slice(0, 6).map((item) => (
               <div
                 key={item.id}
-                className="rounded-xl border border-white/10 bg-[#1a1a1a] p-3 sm:p-4 flex gap-3 hover:border-white/20 transition-colors"
+                className="rounded-xl border border-zinc-200 bg-[#1a1a1a] p-3 sm:p-4 flex gap-3 hover:border-white/20 transition-colors"
               >
-                <div className="w-20 sm:w-28 aspect-video rounded-lg overflow-hidden bg-zinc-900 flex-shrink-0 relative">
+                <div className="w-20 sm:w-28 aspect-video rounded-lg overflow-hidden bg-zinc-100 flex-shrink-0 relative">
                   {item.thumbnail_url ? (
                     <img src={item.thumbnail_url} alt={item.title} className="w-full h-full object-cover" />
                   ) : (
                     <div className="absolute inset-0 grid place-items-center text-zinc-600 text-xs">No thumbnail</div>
                   )}
-                  <span className="absolute top-1 left-1 text-[10px] px-1.5 py-0.5 rounded-full bg-black/60 border border-white/10 uppercase tracking-tight">
+                  <span className="absolute top-1 left-1 text-[10px] px-1.5 py-0.5 rounded-full bg-white/60 border border-zinc-200 uppercase tracking-tight">
                     {item.is_post ? 'Post' : item.is_short ? 'Style' : item.is_live ? 'Live' : 'Video'}
                   </span>
                 </div>
                 <div className="min-w-0 flex-1 flex flex-col gap-1">
                   <p className="text-xs sm:text-sm font-semibold truncate">{item.title}</p>
-                  <p className="text-[10px] sm:text-xs text-zinc-400 truncate">{item.description || 'No description yet'}</p>
+                  <p className="text-[10px] sm:text-xs text-zinc-500 truncate">{item.description || 'No description yet'}</p>
                   <div className="text-[10px] sm:text-[11px] text-zinc-500 uppercase tracking-tight flex gap-2 sm:gap-3 mt-auto">
                     <span>{new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                     <span className="flex items-center gap-1">
@@ -160,7 +160,7 @@ export default function StudioAnalyticsPage() {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <p className="text-sm text-zinc-400 mb-2">
+            <p className="text-sm text-zinc-500 mb-2">
               No {activeContentTab.toLowerCase()} found for your channel.
             </p>
             <p className="text-xs text-zinc-500 mb-4">Start creating to see your {activeContentTab.toLowerCase()} analytics.</p>

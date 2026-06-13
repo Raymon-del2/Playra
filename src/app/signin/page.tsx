@@ -123,7 +123,7 @@ export default function SignInPage() {
     };
 
     return (
-        <div className="min-h-screen w-full max-w-full bg-black flex items-center justify-center p-4 relative overflow-x-hidden">
+        <div className="min-h-screen w-full max-w-full bg-white flex items-center justify-center p-4 relative overflow-x-hidden">
             {/* Ambient Background Glow - contained within viewport */}
             <div className="absolute top-0 left-0 w-[50%] h-[40%] bg-blue-600/20 blur-[120px] rounded-full animate-pulse pointer-events-none" />
             <div className="absolute bottom-0 right-0 w-[50%] h-[40%] bg-purple-600/10 blur-[120px] rounded-full animate-pulse pointer-events-none" style={{ animationDelay: '2s' }} />
@@ -134,16 +134,16 @@ export default function SignInPage() {
                     <div className="h-12 flex items-center justify-center mb-6">
                         <img src="/Playra.png" alt="Playra" className="h-full w-auto brightness-200" />
                     </div>
-                    <h1 className="text-3xl font-black tracking-tight text-white mb-2">
+                    <h1 className="text-3xl font-black tracking-tight text-zinc-900 mb-2">
                         {isSignUp ? 'Create your account' : 'Welcome back'}
                     </h1>
-                    <p className="text-zinc-400 font-bold text-sm tracking-wide">
+                    <p className="text-zinc-500 font-bold text-sm tracking-wide">
                         If you use Google first, set a password via “Create account” or “Forgot password” to sign in with email later.
                     </p>
                 </div>
 
                 {/* Auth Card */}
-                <div className="bg-zinc-900/40 backdrop-blur-3xl border border-white/5 p-8 rounded-[32px] shadow-2xl relative overflow-hidden group">
+                <div className="bg-zinc-100/40 backdrop-blur-3xl border border-zinc-200 p-8 rounded-[32px] shadow-2xl relative overflow-hidden group">
                     <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-50" />
 
                     {error && (
@@ -168,7 +168,7 @@ export default function SignInPage() {
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                     placeholder="Enter your name"
-                                    className="w-full h-14 bg-white/5 border border-white/5 rounded-2xl px-5 text-sm text-white placeholder:text-zinc-600 focus:bg-white/10 focus:border-blue-500/50 transition-all outline-none font-bold ring-0"
+                                    className="w-full h-14 bg-zinc-200/80 border border-zinc-200 rounded-2xl px-5 text-sm text-zinc-900 placeholder:text-zinc-600 focus:bg-zinc-200/80 focus:border-blue-500/50 transition-all outline-none font-bold ring-0"
                                     required
                                 />
                             </div>
@@ -181,7 +181,7 @@ export default function SignInPage() {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="name@example.com"
-                                className="w-full h-14 bg-white/5 border border-white/5 rounded-2xl px-5 text-sm text-white placeholder:text-zinc-600 focus:bg-white/10 focus:border-blue-500/50 transition-all outline-none font-bold ring-0"
+                                className="w-full h-14 bg-zinc-200/80 border border-zinc-200 rounded-2xl px-5 text-sm text-zinc-900 placeholder:text-zinc-600 focus:bg-zinc-200/80 focus:border-blue-500/50 transition-all outline-none font-bold ring-0"
                                 required
                             />
                         </div>
@@ -193,7 +193,7 @@ export default function SignInPage() {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 placeholder="••••••••"
-                                className="w-full h-14 bg-white/5 border border-white/5 rounded-2xl px-5 text-sm text-white placeholder:text-zinc-600 focus:bg-white/10 focus:border-blue-500/50 transition-all outline-none font-bold ring-0"
+                                className="w-full h-14 bg-zinc-200/80 border border-zinc-200 rounded-2xl px-5 text-sm text-zinc-900 placeholder:text-zinc-600 focus:bg-zinc-200/80 focus:border-blue-500/50 transition-all outline-none font-bold ring-0"
                                 required
                             />
                         </div>
@@ -223,14 +223,14 @@ export default function SignInPage() {
                     </form>
 
                     <div className="my-8 flex items-center gap-4">
-                        <div className="flex-1 h-[1px] bg-white/5" />
+                        <div className="flex-1 h-[1px] bg-zinc-200/80" />
                         <span className="text-[10px] font-black text-zinc-600 uppercase">Or continue with</span>
-                        <div className="flex-1 h-[1px] bg-white/5" />
+                        <div className="flex-1 h-[1px] bg-zinc-200/80" />
                     </div>
 
                     <button
                         onClick={handleGoogleSignIn}
-                        className="w-full h-14 bg-white/5 border border-white/5 hover:bg-white/10 text-white rounded-2xl font-black text-sm active:scale-95 transition-all flex items-center justify-center gap-3 group/google"
+                        className="w-full h-14 bg-zinc-200/80 border border-zinc-200 hover:bg-zinc-200/80 text-zinc-900 rounded-2xl font-black text-sm active:scale-95 transition-all flex items-center justify-center gap-3 group/google"
                     >
                         <svg className="w-5 h-5 group-hover/google:scale-110 transition-transform" viewBox="0 0 24 24">
                             <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
@@ -244,7 +244,7 @@ export default function SignInPage() {
                     <div className="mt-8 text-center">
                         <button
                             onClick={() => setIsSignUp(!isSignUp)}
-                            className="text-sm font-bold text-zinc-500 hover:text-white transition-colors"
+                            className="text-sm font-bold text-zinc-500 hover:text-zinc-900 transition-colors"
                         >
                             {isSignUp ? (
                                 <>Already have an account? <span className="text-blue-400 font-black">Sign In</span></>
@@ -257,11 +257,11 @@ export default function SignInPage() {
 
                 {/* Footer links */}
                 <div className="mt-10 flex items-center justify-center gap-6 text-[10px] font-black text-zinc-600 tracking-widest uppercase">
-                    <Link href="/privacy" className="hover:text-zinc-400 transition-colors">Privacy</Link>
-                    <div className="w-1 h-1 bg-zinc-800 rounded-full" />
-                    <Link href="/terms" className="hover:text-zinc-400 transition-colors">Terms</Link>
-                    <div className="w-1 h-1 bg-zinc-800 rounded-full" />
-                    <Link href="/help" className="hover:text-zinc-400 transition-colors">Help</Link>
+                    <Link href="/privacy" className="hover:text-zinc-500 transition-colors">Privacy</Link>
+                    <div className="w-1 h-1 bg-zinc-200 rounded-full" />
+                    <Link href="/terms" className="hover:text-zinc-500 transition-colors">Terms</Link>
+                    <div className="w-1 h-1 bg-zinc-200 rounded-full" />
+                    <Link href="/help" className="hover:text-zinc-500 transition-colors">Help</Link>
                 </div>
             </div>
         </div>

@@ -81,7 +81,7 @@ export default function CommunityPage() {
             💬
           </div>
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-white">Community</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-zinc-900">Community</h1>
             <p className="text-xs sm:text-sm text-emerald-100/70">
               Drop problems or feature requests. We’ll review every note.
             </p>
@@ -90,17 +90,17 @@ export default function CommunityPage() {
 
         <div className="grid md:grid-cols-3 gap-4 md:gap-6">
           <div className="md:col-span-2">
-            <div className="rounded-3xl border border-white/5 bg-[#111b21] shadow-2xl overflow-hidden">
+            <div className="rounded-3xl border border-zinc-200 bg-[#111b21] shadow-2xl overflow-hidden">
               <div className="bg-[#202c33] px-4 py-3 flex flex-wrap items-center gap-2 justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-white/70 font-semibold">Send as</span>
+                  <span className="text-xs text-zinc-900/70 font-semibold">Send as</span>
                   <div className="flex gap-2">
                     <button
                       onClick={() => setSelectedType('problem')}
                       className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
                         selectedType === 'problem'
                           ? 'bg-red-500/30 text-red-50 border border-red-400/50 shadow-inner'
-                          : 'bg-white/5 text-white/80 border border-white/10 hover:bg-white/10'
+                          : 'bg-zinc-200/80 text-zinc-900/80 border border-zinc-200 hover:bg-zinc-200/80'
                       }`}
                     >
                       Problem
@@ -110,7 +110,7 @@ export default function CommunityPage() {
                       className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
                         selectedType === 'feature'
                           ? 'bg-emerald-500/30 text-emerald-50 border border-emerald-400/50 shadow-inner'
-                          : 'bg-white/5 text-white/80 border border-white/10 hover:bg-white/10'
+                          : 'bg-zinc-200/80 text-zinc-900/80 border border-zinc-200 hover:bg-zinc-200/80'
                       }`}
                     >
                       Feature
@@ -119,7 +119,7 @@ export default function CommunityPage() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-white/70 font-semibold">Filter</span>
+                  <span className="text-xs text-zinc-900/70 font-semibold">Filter</span>
                   <div className="flex gap-2">
                     {(['all', 'problem', 'feature'] as const).map((val) => (
                       <button
@@ -128,7 +128,7 @@ export default function CommunityPage() {
                         className={`px-3 py-1.5 rounded-full text-[11px] font-semibold transition-colors ${
                           filter === val
                             ? 'bg-emerald-500/30 text-emerald-50 border border-emerald-400/50 shadow-inner'
-                            : 'bg-white/5 text-white/80 border border-white/10 hover:bg-white/10'
+                            : 'bg-zinc-200/80 text-zinc-900/80 border border-zinc-200 hover:bg-zinc-200/80'
                         }`}
                       >
                         {val === 'all' ? 'All' : val === 'problem' ? 'Problems' : 'Features'}
@@ -145,7 +145,7 @@ export default function CommunityPage() {
                 <div className="absolute inset-0 bg-gradient-to-b from-white/0 via-[#0b141a]/60 to-[#0b141a]/80" />
                 <div className="relative z-10 p-4 space-y-3 max-h-[60vh] overflow-y-auto">
                   {items.length === 0 && (
-                    <div className="text-center text-sm text-white/60 py-8">
+                    <div className="text-center text-sm text-zinc-900/60 py-8">
                       No submissions yet. Be the first to send a message.
                     </div>
                   )}
@@ -158,8 +158,8 @@ export default function CommunityPage() {
                       >
                         <div className={`max-w-[78%] rounded-2xl px-4 py-3 text-sm shadow-lg border ${
                           item.type === 'feature'
-                            ? 'bg-[#005c4b] text-white border-[#0a7b65]'
-                            : 'bg-[#202c33] text-white border-[#2a3942]'
+                            ? 'bg-[#005c4b] text-zinc-900 border-[#0a7b65]'
+                            : 'bg-[#202c33] text-zinc-900 border-[#2a3942]'
                         }`}>
                           <div className="flex items-center gap-2 text-[11px] mb-1 opacity-80">
                             <span
@@ -169,10 +169,10 @@ export default function CommunityPage() {
                             >
                               {item.type === 'feature' ? 'Feature' : 'Problem'}
                             </span>
-                            {item.created_at && <span className="text-white/60">{formatTime(item.created_at)}</span>}
+                            {item.created_at && <span className="text-zinc-900/60">{formatTime(item.created_at)}</span>}
                             <button
                               onClick={() => handleDelete(item.id)}
-                              className="ml-auto text-white/60 hover:text-white text-[11px]"
+                              className="ml-auto text-zinc-900/60 hover:text-zinc-900 text-[11px]"
                               title="Delete message"
                             >
                               ✕
@@ -191,13 +191,13 @@ export default function CommunityPage() {
                   <textarea
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    className="flex-1 bg-[#0b141a] border border-white/10 rounded-2xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 min-h-[80px]"
+                    className="flex-1 bg-[#0b141a] border border-zinc-200 rounded-2xl px-4 py-3 text-zinc-900 focus:outline-none focus:border-emerald-500 min-h-[80px]"
                     placeholder="Type your message..."
                   />
                   <button
                     onClick={submit}
                     disabled={isSubmitting || !message.trim()}
-                    className="h-[48px] px-4 rounded-2xl bg-emerald-600 text-white font-semibold shadow-lg hover:bg-emerald-500 transition-colors disabled:opacity-60"
+                    className="h-[48px] px-4 rounded-2xl bg-emerald-600 text-zinc-900 font-semibold shadow-lg hover:bg-emerald-500 transition-colors disabled:opacity-60"
                   >
                     {isSubmitting ? 'Sending...' : 'Send'}
                   </button>
@@ -207,9 +207,9 @@ export default function CommunityPage() {
           </div>
 
           <div className="space-y-4">
-            <div className="bg-[#111b21] border border-white/5 rounded-2xl p-4 text-sm text-white/80 space-y-2">
-              <h3 className="text-white font-semibold">Tips</h3>
-              <ul className="list-disc list-inside space-y-1 text-white/70">
+            <div className="bg-[#111b21] border border-zinc-200 rounded-2xl p-4 text-sm text-zinc-900/80 space-y-2">
+              <h3 className="text-zinc-900 font-semibold">Tips</h3>
+              <ul className="list-disc list-inside space-y-1 text-zinc-900/70">
                 <li>Keep it concise and specific.</li>
                 <li>Include steps to reproduce problems.</li>
                 <li>For features, share the “why” and desired outcome.</li>

@@ -83,11 +83,11 @@ export default function ProfileMenu({ isOpen, onClose, activeProfile, userEmail 
         <>
         <div
             ref={menuRef}
-            className="absolute top-full mt-2 right-0 w-[300px] bg-[#282828] rounded-xl shadow-2xl py-2 z-50 text-white border border-gray-700/50"
+            className="absolute top-full mt-2 right-0 w-[300px] bg-[#282828] rounded-xl shadow-2xl py-2 z-50 text-zinc-900 border border-gray-700/50"
         >
             {/* Header */}
             <div className="px-4 py-3 border-b border-gray-700/50 flex gap-4">
-                <div className="w-10 h-10 rounded-full overflow-hidden bg-zinc-700 flex-shrink-0">
+                <div className="w-10 h-10 rounded-full overflow-hidden bg-zinc-300 flex-shrink-0">
                     {activeProfile.avatar ? (
                         <img src={activeProfile.avatar} alt={activeProfile.name} className="w-full h-full object-cover" />
                     ) : (
@@ -98,7 +98,7 @@ export default function ProfileMenu({ isOpen, onClose, activeProfile, userEmail 
                 </div>
                 <div className="flex flex-col min-w-0">
                     <span className="font-semibold truncate">{activeProfile.name}</span>
-                    <span className="text-gray-400 text-sm truncate">{displayHandle}</span>
+                    <span className="text-gray-500 text-sm truncate">{displayHandle}</span>
                     <Link href={`/channel/${activeProfile.id}`} className="text-blue-400 text-sm mt-1 hover:text-blue-300">
                         View your channel
                     </Link>
@@ -142,11 +142,11 @@ export default function ProfileMenu({ isOpen, onClose, activeProfile, userEmail 
 
         {isFeedbackOpen && (
             <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-                <div className="absolute inset-0 bg-black/60" onClick={() => { setIsFeedbackOpen(false); onClose(); }} />
-                <div className="relative bg-zinc-900 border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl">
+                <div className="absolute inset-0 bg-white/60" onClick={() => { setIsFeedbackOpen(false); onClose(); }} />
+                <div className="relative bg-zinc-100 border border-zinc-200 rounded-2xl w-full max-w-md p-6 shadow-2xl">
                     <button
                         onClick={() => { setIsFeedbackOpen(false); setSubmitSuccess(false); setFeedbackMessage(''); onClose(); }}
-                        className="absolute top-4 right-4 p-1 text-zinc-500 hover:text-white transition-colors"
+                        className="absolute top-4 right-4 p-1 text-zinc-500 hover:text-zinc-900 transition-colors"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -155,22 +155,22 @@ export default function ProfileMenu({ isOpen, onClose, activeProfile, userEmail 
 
                     {!submitSuccess ? (
                         <>
-                            <h3 className="text-xl font-bold text-white mb-2">Help Playra Grow</h3>
-                            <p className="text-sm text-zinc-400 mb-4">Share your ideas, feedback, or suggestions to help improve Playra.</p>
+                            <h3 className="text-xl font-bold text-zinc-900 mb-2">Help Playra Grow</h3>
+                            <p className="text-sm text-zinc-500 mb-4">Share your ideas, feedback, or suggestions to help improve Playra.</p>
 
                             <form onSubmit={handleFeedbackSubmit}>
                                 <textarea
                                     value={feedbackMessage}
                                     onChange={(e) => setFeedbackMessage(e.target.value)}
                                     placeholder="What would you like to share?"
-                                    className="w-full h-32 bg-zinc-800 border border-white/10 rounded-xl p-3 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none mb-4"
+                                    className="w-full h-32 bg-zinc-200 border border-zinc-200 rounded-xl p-3 text-zinc-900 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none mb-4"
                                     disabled={isSubmitting}
                                 />
 
                                 <button
                                     type="submit"
                                     disabled={!feedbackMessage.trim() || isSubmitting}
-                                    className="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-700 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl transition-all active:scale-95"
+                                    className="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-300 disabled:cursor-not-allowed text-zinc-900 font-bold py-3 rounded-xl transition-all active:scale-95"
                                 >
                                     {isSubmitting ? 'Sending...' : 'Send Feedback'}
                                 </button>
@@ -179,12 +179,12 @@ export default function ProfileMenu({ isOpen, onClose, activeProfile, userEmail 
                     ) : (
                         <div className="text-center py-8">
                             <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                                <svg className="w-8 h-8 text-zinc-900" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                 </svg>
                             </div>
-                            <h3 className="text-xl font-bold text-white mb-2">Thank You!</h3>
-                            <p className="text-sm text-zinc-400">Your feedback helps make Playra better.</p>
+                            <h3 className="text-xl font-bold text-zinc-900 mb-2">Thank You!</h3>
+                            <p className="text-sm text-zinc-500">Your feedback helps make Playra better.</p>
                         </div>
                     )}
                 </div>
@@ -208,14 +208,14 @@ function MenuItem({
     return (
         <button
             onClick={onClick}
-            className="w-full px-4 py-2 flex items-center justify-between hover:bg-zinc-700/50 transition-colors text-left group"
+            className="w-full px-4 py-2 flex items-center justify-between hover:bg-zinc-300/50 transition-colors text-left group"
         >
             <div className="flex items-center gap-4">
-                <span className="text-gray-300 group-hover:text-white">{icon}</span>
-                <span className="text-sm font-normal text-gray-200 group-hover:text-white">{label}</span>
+                <span className="text-gray-700 group-hover:text-zinc-900">{icon}</span>
+                <span className="text-sm font-normal text-gray-200 group-hover:text-zinc-900">{label}</span>
             </div>
             {hasSubmenu && (
-                <svg className="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-5 h-5 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                 </svg>
             )}

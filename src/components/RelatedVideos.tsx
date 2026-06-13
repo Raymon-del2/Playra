@@ -52,16 +52,16 @@ export default function RelatedVideos({ videoId, category, channelId, onVideosLo
     if (isLoading) {
         return (
             <div className="space-y-3">
-                <h3 className="text-base font-bold text-white mb-4 px-3 lg:px-0">
+                <h3 className="text-base font-bold text-zinc-900 mb-4 px-3 lg:px-0">
                     Related videos
                 </h3>
                 {[1, 2, 3, 4, 5].map((i) => (
                     <div key={i} className="flex gap-2 animate-pulse">
-                        <div className="w-40 aspect-video bg-zinc-800 rounded-lg flex-shrink-0" />
+                        <div className="w-40 aspect-video bg-zinc-200 rounded-lg flex-shrink-0" />
                         <div className="flex-1 space-y-2 py-1">
-                            <div className="h-3 bg-zinc-800 rounded w-full" />
-                            <div className="h-3 bg-zinc-800 rounded w-3/4" />
-                            <div className="h-2 bg-zinc-800 rounded w-1/2" />
+                            <div className="h-3 bg-zinc-200 rounded w-full" />
+                            <div className="h-3 bg-zinc-200 rounded w-3/4" />
+                            <div className="h-2 bg-zinc-200 rounded w-1/2" />
                         </div>
                     </div>
                 ))}
@@ -79,7 +79,7 @@ export default function RelatedVideos({ videoId, category, channelId, onVideosLo
 
     return (
         <div>
-            <h3 className="text-base font-bold text-white mb-4 px-3 lg:px-0">
+            <h3 className="text-base font-bold text-zinc-900 mb-4 px-3 lg:px-0">
                 Related videos
             </h3>
 
@@ -88,11 +88,11 @@ export default function RelatedVideos({ videoId, category, channelId, onVideosLo
                     <Link
                         key={video.id}
                         href={video.is_short ? `/styles/${video.id}` : `/watch/${video.id}`}
-                        className="flex gap-2 group p-2 rounded-xl hover:bg-white/5 transition-colors -mx-2"
+                        className="flex gap-2 group p-2 rounded-xl hover:bg-zinc-200/80 transition-colors -mx-2"
                     >
                         {/* Thumbnail */}
                         <div className={`relative ${video.is_short ? 'w-24' : 'w-40'} flex-shrink-0 transition-all duration-300`}>
-                            <div className={`relative ${video.is_short ? 'aspect-[9/16]' : 'aspect-video'} rounded-lg overflow-hidden bg-zinc-800 border border-white/5`}>
+                            <div className={`relative ${video.is_short ? 'aspect-[9/16]' : 'aspect-video'} rounded-lg overflow-hidden bg-zinc-200 border border-zinc-200`}>
                                 <img
                                     src={video.thumbnail_url}
                                     alt={video.title}
@@ -100,12 +100,12 @@ export default function RelatedVideos({ videoId, category, channelId, onVideosLo
                                 />
                             </div>
                             {video.duration && (
-                                <div className="absolute bottom-1 right-1 bg-black/80 text-white text-[10px] font-bold px-1 py-0.5 rounded">
+                                <div className="absolute bottom-1 right-1 bg-white/80 text-zinc-900 text-[10px] font-bold px-1 py-0.5 rounded">
                                     {formatDuration(video.duration)}
                                 </div>
                             )}
                             {video.is_live && (
-                                <div className="absolute bottom-1 left-1 bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase">
+                                <div className="absolute bottom-1 left-1 bg-red-600 text-zinc-900 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase">
                                     Live
                                 </div>
                             )}
@@ -119,14 +119,14 @@ export default function RelatedVideos({ videoId, category, channelId, onVideosLo
                             <div className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1.5 z-20">
                                 <button
                                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); /* Logic to toggle watch later */ }}
-                                    className="bg-black/80 p-1.5 rounded-md text-white hover:bg-black transition-colors"
+                                    className="bg-white/80 p-1.5 rounded-md text-zinc-900 hover:bg-white transition-colors"
                                     title="Watch Later"
                                 >
                                     <Clock size={16} />
                                 </button>
                                 <button
                                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); /* Logic to show more options */ }}
-                                    className="bg-black/80 p-1.5 rounded-md text-white hover:bg-black transition-colors"
+                                    className="bg-white/80 p-1.5 rounded-md text-zinc-900 hover:bg-white transition-colors"
                                     title="More"
                                 >
                                     <MoreVertical size={16} />
@@ -136,10 +136,10 @@ export default function RelatedVideos({ videoId, category, channelId, onVideosLo
 
                         {/* Info */}
                         <div className="flex-1 min-w-0 py-0.5">
-                            <h4 className="text-[13px] font-bold text-white line-clamp-2 leading-tight group-hover:text-blue-400 transition-colors">
+                            <h4 className="text-[13px] font-bold text-zinc-900 line-clamp-2 leading-tight group-hover:text-blue-400 transition-colors">
                                 {video.title}
                             </h4>
-                            <p className="text-[11px] text-zinc-400 mt-1.5 hover:text-zinc-300 transition-colors">
+                            <p className="text-[11px] text-zinc-500 mt-1.5 hover:text-zinc-700 transition-colors">
                                 {video.channel_name}
                             </p>
                             <div className="flex items-center gap-1 text-[11px] text-zinc-500 mt-0.5">

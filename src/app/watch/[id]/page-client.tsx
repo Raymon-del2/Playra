@@ -618,7 +618,7 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
   // If embedded in another website, show YouTube-style simple player
   if (isEmbedded) {
     return (
-      <div className="w-full h-full bg-black relative group">
+      <div className="w-full h-full bg-white relative group">
         <video
           ref={videoRef}
           src={videoSrc}
@@ -633,14 +633,14 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
             {channelAvatar && (
               <img src={channelAvatar} alt="" className="w-10 h-10 rounded-full border border-white/20" />
             )}
-            <div className="text-white drop-shadow-lg">
+            <div className="text-zinc-900 drop-shadow-lg">
               <p className="font-bold text-base leading-tight drop-shadow-md">{videoTitle}</p>
-              {channelName && <p className="text-sm text-white/80 drop-shadow-md">{channelName}</p>}
+              {channelName && <p className="text-sm text-zinc-900/80 drop-shadow-md">{channelName}</p>}
             </div>
           </div>
         )}
         <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-          <Link href={`/watch/${watchId}`} target="_blank" className="flex items-center gap-2 bg-black/70 backdrop-blur-sm px-4 py-2 rounded-lg text-sm text-white hover:bg-black/80 transition-colors">
+          <Link href={`/watch/${watchId}`} target="_blank" className="flex items-center gap-2 bg-white/70 backdrop-blur-sm px-4 py-2 rounded-lg text-sm text-zinc-900 hover:bg-white/80 transition-colors">
             <span>Watch on</span>
             <img src="/offlinee.png" alt="Playra" className="h-5 w-auto object-contain" />
           </Link>
@@ -651,13 +651,13 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
 
   // Normal watch page layout (full card with likes/comments)
   return (
-    <div className={`flex ${isTheatreMode ? 'flex-col lg:flex-col' : 'flex-col lg:flex-row'} gap-6 p-0 lg:p-6 bg-[#0f0f0f] min-h-screen items-center lg:items-start`}>
+    <div className={`flex ${isTheatreMode ? 'flex-col lg:flex-col' : 'flex-col lg:flex-row'} gap-6 p-0 lg:p-6 bg-zinc-50 min-h-screen items-center lg:items-start`}>
       {/* Sticky Player */}
       {isStickyPlayer && (
-        <div className="fixed top-4 right-4 z-50 w-[280px] sm:w-[320px] rounded-xl overflow-hidden shadow-2xl bg-black border border-white/10">
+        <div className="fixed top-4 right-4 z-50 w-[280px] sm:w-[320px] rounded-xl overflow-hidden shadow-2xl bg-white border border-zinc-200">
           <button
             onClick={() => setIsStickyPlayer(false)}
-            className="absolute top-2 right-2 z-10 p-1 bg-black/60 rounded-full text-white hover:bg-black/80"
+            className="absolute top-2 right-2 z-10 p-1 bg-white/60 rounded-full text-zinc-900 hover:bg-white/80"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -676,9 +676,9 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
               />
             )}
           </div>
-          <div className="p-2 bg-zinc-900">
-            <h4 className="text-sm font-bold text-white line-clamp-1">{video?.title}</h4>
-            <p className="text-xs text-zinc-400">{video?.channel_name}</p>
+          <div className="p-2 bg-zinc-100">
+            <h4 className="text-sm font-bold text-zinc-900 line-clamp-1">{video?.title}</h4>
+            <p className="text-xs text-zinc-500">{video?.channel_name}</p>
           </div>
         </div>
       )}
@@ -686,12 +686,12 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
       <div id="video-section" className={`w-full ${isTheatreMode ? 'max-w-none' : 'flex-1 lg:max-w-[calc(100vw-450px)]'}`}>
         {/* Video Player Section */}
         <div 
-          className="aspect-video bg-zinc-900 sm:rounded-xl overflow-hidden mb-4 relative shadow-2xl group/player cursor-pointer"
+          className="aspect-video bg-zinc-100 sm:rounded-xl overflow-hidden mb-4 relative shadow-2xl group/player cursor-pointer"
           onClick={() => !hasStarted && handleStartPlay()}
         >
           {/* Splash Screen / Play Button overlay */}
           {!hasStarted && video && (
-            <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40 group/player overflow-hidden">
+            <div className="absolute inset-0 z-30 flex items-center justify-center bg-white/40 group/player overflow-hidden">
               {/* Animated Splash Triangle Loader */}
               <div className={`relative transition-all duration-500 transform 
                 ${isAnimatingPlay ? 'scale-[2.5] opacity-0' : 'scale-100 opacity-100 hover:scale-110 active:scale-95'}`}
@@ -738,7 +738,7 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
           )}
 
           {(!videoLoaded || !video) && !hasStarted && (
-            <div className="absolute inset-0 bg-zinc-900 flex items-center justify-center pointer-events-none">
+            <div className="absolute inset-0 bg-zinc-100 flex items-center justify-center pointer-events-none">
               {video?.thumbnail_url ? (
                 <img 
                   src={video.thumbnail_url} 
@@ -746,9 +746,9 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                   className="w-full h-full object-cover opacity-50"
                 />
               ) : (
-                <div className="w-full h-full bg-zinc-800" />
+                <div className="w-full h-full bg-zinc-200" />
               )}
-              <div className="absolute inset-0 bg-black/20 animate-pulse" />
+              <div className="absolute inset-0 bg-white/20 animate-pulse" />
             </div>
           )}
           {videoSrc && (
@@ -824,7 +824,7 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
 
           {/* Buffering Loader - Thick rounded-pill style */}
           {isBuffering && (
-            <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/10 pointer-events-none">
+            <div className="absolute inset-0 z-40 flex items-center justify-center bg-zinc-200/80 pointer-events-none">
               <div className="relative w-16 h-16">
                 <svg className="animate-spin w-full h-full" viewBox="0 0 50 50">
                   <circle 
@@ -842,21 +842,21 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
           )}
           {/* Autoplay Next Overlay - Redesigned to match YouTube exactly */}
           {showNextOverlay && nextVideo && (
-            <div className={`absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/70 backdrop-blur-md pointer-events-auto animate-in fade-in duration-500 ${isAutoplayCancelled ? 'pb-10' : 'pb-20'}`}>
-              <div className="text-white flex flex-col items-center gap-4 max-w-md w-full px-8">
+            <div className={`absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/70 backdrop-blur-md pointer-events-auto animate-in fade-in duration-500 ${isAutoplayCancelled ? 'pb-10' : 'pb-20'}`}>
+              <div className="text-zinc-900 flex flex-col items-center gap-4 max-w-md w-full px-8">
                  {!isAutoplayCancelled && (
-                   <div className="text-zinc-300 text-sm font-medium">Up next in {nextCountdown}</div>
+                   <div className="text-zinc-700 text-sm font-medium">Up next in {nextCountdown}</div>
                  )}
                  
                  {/* Large Thumbnail with Duration */}
-                 <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-2xl border border-white/5 mt-2 bg-zinc-900">
+                 <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-2xl border border-zinc-200 mt-2 bg-zinc-100">
                     <img 
                       src={nextVideo.thumbnail_url || '/placeholder-thumb.jpg'} 
                       alt="Next video"
                       className="w-full h-full object-cover"
                     />
                     {nextVideo.duration && (
-                      <div className="absolute bottom-2 right-2 px-1.5 py-0.5 bg-black/80 rounded-sm text-[11px] font-bold">
+                      <div className="absolute bottom-2 right-2 px-1.5 py-0.5 bg-white/80 rounded-sm text-[11px] font-bold">
                         {nextVideo.duration}
                       </div>
                     )}
@@ -864,7 +864,7 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
 
                  <div className="text-center mt-3 space-y-1">
                     <h3 className="text-xl font-bold line-clamp-2 leading-tight tracking-tight">{nextVideo.title}</h3>
-                    <p className="text-zinc-400 text-sm font-medium">{nextVideo.channel_name}</p>
+                    <p className="text-zinc-500 text-sm font-medium">{nextVideo.channel_name}</p>
                  </div>
 
                  {/* pill-shaped action buttons */}
@@ -873,7 +873,7 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                       <>
                         <button 
                           onClick={() => setIsAutoplayCancelled(true)}
-                          className="flex-1 py-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold transition-all uppercase text-sm tracking-wide"
+                          className="flex-1 py-2.5 rounded-full bg-zinc-200/80 hover:bg-zinc-300/80 text-zinc-900 font-bold transition-all uppercase text-sm tracking-wide"
                         >
                           CANCEL
                         </button>
@@ -895,7 +895,7 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                         </button>
                         <button 
                           onClick={() => setShowNextOverlay(false)}
-                          className="w-full py-2 text-zinc-400 hover:text-white transition-colors text-xs font-bold uppercase tracking-widest"
+                          className="w-full py-2 text-zinc-500 hover:text-zinc-900 transition-colors text-xs font-bold uppercase tracking-widest"
                         >
                           Dismiss
                         </button>
@@ -912,7 +912,7 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                 // Clicking anywhere on the player overlay dismisses the UI
                 setShowMobileControls(false);
               }}
-              className={`absolute inset-0 z-40 bg-black/40 transition-opacity duration-300 ${ (showNextOverlay || showMobileControls) ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+              className={`absolute inset-0 z-40 bg-white/40 transition-opacity duration-300 ${ (showNextOverlay || showMobileControls) ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
             >
               {/* CENTER: Mobile Play/Pause Button - Centered but separate from layout flow */}
               {showMobileControls && !showNextOverlay && (
@@ -921,12 +921,12 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                     e.stopPropagation();
                     togglePlay(e);
                   }}
-                  className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-24 lg:-translate-y-8 w-16 h-16 bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center pointer-events-auto hover:bg-white/10 active:scale-90 transition-all shadow-2xl border border-white/10"
+                  className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-24 lg:-translate-y-8 w-16 h-16 bg-zinc-200/800 backdrop-blur-md rounded-full flex items-center justify-center pointer-events-auto hover:bg-zinc-200/80 active:scale-90 transition-all shadow-2xl border border-zinc-200"
                 >
                   {isPlaying ? (
-                    <Pause size={32} className="text-white fill-current" />
+                    <Pause size={32} className="text-zinc-900 fill-current" />
                   ) : (
-                    <Play size={32} className="text-white fill-current ml-1" />
+                    <Play size={32} className="text-zinc-900 fill-current ml-1" />
                   )}
                 </button>
               )}
@@ -989,7 +989,7 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                   {/* Visual Hover Preview Card (Thumbnail) - Only on Desktop */}
                   {hoverTime !== null && typeof window !== 'undefined' && window.innerWidth >= 1024 && (
                     <div 
-                      className="absolute bottom-8 w-32 aspect-video bg-black rounded-lg border-2 border-white/20 overflow-hidden shadow-2xl pointer-events-none opacity-0 group-hover/bar:opacity-100 transition-opacity z-50 flex flex-col"
+                      className="absolute bottom-8 w-32 aspect-video bg-white rounded-lg border-2 border-white/20 overflow-hidden shadow-2xl pointer-events-none opacity-0 group-hover/bar:opacity-100 transition-opacity z-50 flex flex-col"
                       style={{ left: `${hoverX}px`, transform: 'translateX(-50%)' }}
                     >
                       <video 
@@ -998,17 +998,17 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                         muted
                         className="w-full h-full object-cover"
                       />
-                      <div className="bg-black/60 text-white text-[10px] font-bold py-0.5 text-center">
+                      <div className="bg-white/60 text-zinc-900 text-[10px] font-bold py-0.5 text-center">
                         {formatTime(hoverTime)}
                       </div>
                     </div>
                   )}
 
                   {/* Track (Darker background) */}
-                  <div className="absolute inset-0 bg-white/10 h-[3px] rounded-full overflow-hidden transition-all group-hover/bar:h-[5px]">
+                  <div className="absolute inset-0 bg-zinc-200/80 h-[3px] rounded-full overflow-hidden transition-all group-hover/bar:h-[5px]">
                     {/* Buffer Line */}
                     <div 
-                      className="h-full bg-white/20 transition-all duration-300" 
+                      className="h-full bg-zinc-300/80 transition-all duration-300" 
                       style={{ width: `${(videoRef.current?.buffered.length ? videoRef.current.buffered.end(0) / resolvedDuration : 0) * 100}%` }} 
                     />
                   </div>
@@ -1055,13 +1055,13 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                 )}
 
                 {/* 2. Controls Bar (The Icons) - Redesigned for better mobile fit */}
-                <div className="flex items-center justify-between text-white pb-3 lg:pb-2 px-1 lg:px-2 select-none relative z-[60]">
+                <div className="flex items-center justify-between text-zinc-900 pb-3 lg:pb-2 px-1 lg:px-2 select-none relative z-[60]">
                   {/* Left Side: Play, Volume, Time */}
                   <div className="flex items-center gap-1 lg:gap-2">
                     {/* Play Button */}
                     <button 
                       onClick={(e) => { e.stopPropagation(); togglePlay(); }} 
-                      className="flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-white/10 lg:bg-white/15 backdrop-blur-md hover:bg-white/25 transition-all active:scale-95 shadow-sm"
+                      className="flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-zinc-200/80 lg:bg-white/15 backdrop-blur-md hover:bg-white/25 transition-all active:scale-95 shadow-sm"
                     >
                       {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" className="ml-1" />}
                     </button>
@@ -1070,7 +1070,7 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                     <div className="flex items-center gap-0 group/vol bg-white/15 backdrop-blur-md rounded-full px-1 py-1 pr-1 lg:pr-2 lg:hover:pr-3 transition-all">
                       <button 
                         onClick={(e) => { e.stopPropagation(); toggleMute(); }} 
-                        className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-white/10 transition-colors"
+                        className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-zinc-200/80 transition-colors"
                       >
                         {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
                       </button>
@@ -1085,7 +1085,7 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
 
                     {/* Time Pill - More compact on mobile */}
                     <div 
-                      className="bg-white/10 lg:bg-white/15 backdrop-blur-md rounded-full px-3 lg:px-4 py-1.5 lg:py-2 text-[11px] lg:text-[12px] font-bold tracking-tight shadow-sm cursor-pointer select-none hover:bg-white/25 active:scale-95 transition-all text-center min-w-[50px] lg:min-w-[60px]"
+                      className="bg-zinc-200/80 lg:bg-white/15 backdrop-blur-md rounded-full px-3 lg:px-4 py-1.5 lg:py-2 text-[11px] lg:text-[12px] font-bold tracking-tight shadow-sm cursor-pointer select-none hover:bg-white/25 active:scale-95 transition-all text-center min-w-[50px] lg:min-w-[60px]"
                       onClick={(e) => { e.stopPropagation(); setShowRemainingTime(!showRemainingTime); }}
                     >
                        {showRemainingTime ? (
@@ -1102,13 +1102,13 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
 
                   {/* Right Side: Autoplay, Settings, etc. */}
                   <div className="flex items-center gap-1 lg:gap-2">
-                    <div className="flex items-center gap-2 lg:gap-3 bg-white/10 lg:bg-white/15 backdrop-blur-md rounded-full px-3 lg:px-4 py-1.5 shadow-sm">
+                    <div className="flex items-center gap-2 lg:gap-3 bg-zinc-200/80 lg:bg-white/15 backdrop-blur-md rounded-full px-3 lg:px-4 py-1.5 shadow-sm">
                         {/* YouTube Autoplay Toggle Style - Pixel Exact */}
                         <div 
                           className={`relative w-8 lg:w-9 h-[16px] lg:h-[18px] rounded-full cursor-pointer transition-all duration-200 flex-shrink-0 ${isAutoplayOn ? 'bg-white' : 'bg-white/30'}`} 
                           onClick={(e) => { e.stopPropagation(); setIsAutoplayOn(!isAutoplayOn); }}
                         >
-                           <div className={`absolute top-[2px] w-[12px] lg:w-[14px] h-[12px] lg:h-[14px] rounded-full transition-all duration-200 flex items-center justify-center ${isAutoplayOn ? 'left-[18px] lg:left-[20px] bg-black' : 'left-[2px] bg-white shadow-sm'}`}>
+                           <div className={`absolute top-[2px] w-[12px] lg:w-[14px] h-[12px] lg:h-[14px] rounded-full transition-all duration-200 flex items-center justify-center ${isAutoplayOn ? 'left-[18px] lg:left-[20px] bg-white' : 'left-[2px] bg-white shadow-sm'}`}>
                               {isAutoplayOn ? (
                                 <svg className="w-[6px] lg:w-[8px] h-[6px] lg:h-[8px] translate-x-[0.5px]" viewBox="0 0 10 10">
                                    <path d="M3 2L8 5L3 8V2Z" fill="white" />
@@ -1126,13 +1126,13 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                           className={`relative hover:scale-110 transition-all duration-300 p-0.5 ${isSubtitlesOn ? 'opacity-100' : 'opacity-40 hover:opacity-100'}`}
                           title={isSubtitlesOn ? "Turn off subtitles" : "Turn on subtitles"}
                         >
-                          <Subtitles size={19} className="text-white" />
+                          <Subtitles size={19} className="text-zinc-900" />
                           {isSubtitlesOn && <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-4 h-[2px] bg-red-600 rounded-full shadow-glow-red" />}
                         </button>
                         <div className="relative">
                           <button 
                             onClick={(e) => { e.stopPropagation(); setIsSettingsOpen(!isSettingsOpen); }} 
-                            className={`hover:scale-110 transition-all duration-300 opacity-90 hover:opacity-100 p-0.5 ${isSettingsOpen ? 'rotate-90 text-blue-400' : 'rotate-0 text-white'}`}
+                            className={`hover:scale-110 transition-all duration-300 opacity-90 hover:opacity-100 p-0.5 ${isSettingsOpen ? 'rotate-90 text-blue-400' : 'rotate-0 text-zinc-900'}`}
                             title="Settings"
                           >
                             <Settings size={19} />
@@ -1146,17 +1146,17 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                               onClick={(e) => e.stopPropagation()}
                             >
                               {/* Main Menu Panel (Left-side of popup) */}
-                              <div className="absolute right-40 bottom-0 w-64 bg-[#0f0f0f]/95 backdrop-blur-xl rounded-xl border border-white/10 shadow-2xl py-2 overflow-hidden flex-shrink-0">
+                              <div className="absolute right-40 bottom-0 w-64 bg-white/95 backdrop-blur-xl rounded-xl border border-zinc-200 shadow-2xl py-2 overflow-hidden flex-shrink-0">
                                 {/* Subtitles */}
                                 <button 
-                                  className={`w-full flex items-center justify-between px-4 py-2.5 transition-colors text-white text-sm group ${activeSubMenu === 'subtitles' ? 'bg-white/10' : 'hover:bg-white/5'}`}
+                                  className={`w-full flex items-center justify-between px-4 py-2.5 transition-colors text-zinc-900 text-sm group ${activeSubMenu === 'subtitles' ? 'bg-zinc-200/80' : 'hover:bg-zinc-200/80'}`}
                                   onMouseEnter={() => setActiveSubMenu('subtitles')}
                                 >
                                   <div className="flex items-center gap-3">
-                                    <Subtitles size={18} className={`${activeSubMenu === 'subtitles' ? 'text-white' : 'text-zinc-400'} group-hover:text-white`} />
+                                    <Subtitles size={18} className={`${activeSubMenu === 'subtitles' ? 'text-zinc-900' : 'text-zinc-500'} group-hover:text-zinc-900`} />
                                     <span>Subtitles/CC</span>
                                   </div>
-                                  <div className="flex items-center gap-1 text-zinc-400">
+                                  <div className="flex items-center gap-1 text-zinc-500">
                                     <span>{isSubtitlesOn ? 'On' : 'Off'}</span>
                                     <ChevronRight size={14} className={activeSubMenu === 'subtitles' ? 'translate-x-1 transition-transform' : ''} />
                                   </div>
@@ -1164,16 +1164,16 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
 
                                 {/* Playback speed */}
                                 <button 
-                                  className={`w-full flex items-center justify-between px-4 py-2.5 transition-colors text-white text-sm group ${activeSubMenu === 'speed' ? 'bg-white/10' : 'hover:bg-white/5'}`}
+                                  className={`w-full flex items-center justify-between px-4 py-2.5 transition-colors text-zinc-900 text-sm group ${activeSubMenu === 'speed' ? 'bg-zinc-200/80' : 'hover:bg-zinc-200/80'}`}
                                   onMouseEnter={() => setActiveSubMenu('speed')}
                                 >
                                   <div className="flex items-center gap-3">
-                                    <div className={`w-[18px] h-[18px] border-2 rounded-full flex items-center justify-center text-[8px] font-bold ${activeSubMenu === 'speed' ? 'border-white text-white' : 'border-zinc-400 text-zinc-400'} group-hover:border-white group-hover:text-white`}>
+                                    <div className={`w-[18px] h-[18px] border-2 rounded-full flex items-center justify-center text-[8px] font-bold ${activeSubMenu === 'speed' ? 'border-white text-zinc-900' : 'border-zinc-400 text-zinc-500'} group-hover:border-white group-hover:text-zinc-900`}>
                                       {playbackSpeed}x
                                     </div>
                                     <span>Playback speed</span>
                                   </div>
-                                  <div className="flex items-center gap-1 text-zinc-400">
+                                  <div className="flex items-center gap-1 text-zinc-500">
                                     <span>{playbackSpeed === 1 ? 'Normal' : `${playbackSpeed}x`}</span>
                                     <ChevronRight size={14} className={activeSubMenu === 'speed' ? 'translate-x-1 transition-transform' : ''} />
                                   </div>
@@ -1181,7 +1181,7 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
 
                                 {/* Quality */}
                                 <button 
-                                  className={`w-full flex items-center justify-between px-4 py-2.5 transition-colors text-white text-sm group ${activeSubMenu === 'quality' ? 'bg-white/10' : 'hover:bg-white/5'}`}
+                                  className={`w-full flex items-center justify-between px-4 py-2.5 transition-colors text-zinc-900 text-sm group ${activeSubMenu === 'quality' ? 'bg-zinc-200/80' : 'hover:bg-zinc-200/80'}`}
                                   onMouseEnter={() => setActiveSubMenu('quality')}
                                 >
                                   <div className="flex items-center gap-3">
@@ -1192,7 +1192,7 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                                     </div>
                                     <span>Quality</span>
                                   </div>
-                                  <div className="flex items-center gap-1 text-zinc-400">
+                                  <div className="flex items-center gap-1 text-zinc-500">
                                     <span>{quality}</span>
                                     <ChevronRight size={14} className={activeSubMenu === 'quality' ? 'translate-x-1 transition-transform' : ''} />
                                   </div>
@@ -1201,12 +1201,12 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
 
                               {/* Sub Menu Panel (Right-side of popup) */}
                               {activeSubMenu && (
-                                <div className="absolute right-0 bottom-0 w-36 bg-[#1a1a1a]/95 backdrop-blur-xl rounded-xl border border-white/10 shadow-2xl py-2 animate-in fade-in slide-in-from-left-2 duration-150 max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
+                                <div className="absolute right-0 bottom-0 w-36 bg-[#1a1a1a]/95 backdrop-blur-xl rounded-xl border border-zinc-200 shadow-2xl py-2 animate-in fade-in slide-in-from-left-2 duration-150 max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
                                   {activeSubMenu === 'subtitles' && ['On', 'Off'].map(opt => (
                                     <button 
                                       key={opt}
                                       onClick={() => setIsSubtitlesOn(opt === 'On')}
-                                      className={`w-full text-left px-4 py-2 hover:bg-white/10 text-sm flex items-center justify-between ${ (opt === 'On' && isSubtitlesOn) || (opt === 'Off' && !isSubtitlesOn) ? 'text-blue-400 font-bold' : 'text-white' }`}
+                                      className={`w-full text-left px-4 py-2 hover:bg-zinc-200/80 text-sm flex items-center justify-between ${ (opt === 'On' && isSubtitlesOn) || (opt === 'Off' && !isSubtitlesOn) ? 'text-blue-400 font-bold' : 'text-zinc-900' }`}
                                     >
                                       {opt}
                                       {((opt === 'On' && isSubtitlesOn) || (opt === 'Off' && !isSubtitlesOn)) && <div className="w-1.5 h-1.5 bg-blue-400 rounded-full" />}
@@ -1219,7 +1219,7 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                                         if (videoRef.current) videoRef.current.playbackRate = speed;
                                         setPlaybackSpeed(speed);
                                       }}
-                                      className={`w-full text-left px-4 py-2 hover:bg-white/10 text-sm flex items-center justify-between ${playbackSpeed === speed ? 'text-blue-400 font-bold' : 'text-white'}`}
+                                      className={`w-full text-left px-4 py-2 hover:bg-zinc-200/80 text-sm flex items-center justify-between ${playbackSpeed === speed ? 'text-blue-400 font-bold' : 'text-zinc-900'}`}
                                     >
                                       {speed === 1 ? 'Normal' : `${speed}x`}
                                       {playbackSpeed === speed && <div className="w-1.5 h-1.5 bg-blue-400 rounded-full" />}
@@ -1229,7 +1229,7 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                                     <button 
                                       key={q}
                                       onClick={() => setQuality(q)}
-                                      className={`w-full text-left px-4 py-2 hover:bg-white/10 text-sm flex items-center justify-between ${quality === q ? 'text-blue-400 font-bold' : 'text-white'}`}
+                                      className={`w-full text-left px-4 py-2 hover:bg-zinc-200/80 text-sm flex items-center justify-between ${quality === q ? 'text-blue-400 font-bold' : 'text-zinc-900'}`}
                                     >
                                       {q}
                                       {quality === q && <div className="w-1.5 h-1.5 bg-blue-400 rounded-full" />}
@@ -1244,7 +1244,7 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                           {isTheatreMode ? (
                             <div className="relative w-[22px] h-[16px] border-2 border-white rounded-sm overflow-hidden flex">
                               <div className="flex-1 border-r border-white/30" />
-                              <div className="w-[6px] bg-white/20" />
+                              <div className="w-[6px] bg-zinc-300/80" />
                             </div>
                           ) : (
                             <Monitor size={19} />
@@ -1265,17 +1265,17 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
         <div className="px-4 lg:px-0">
           {video ? (
             <>
-              <h1 className="text-xl lg:text-2xl font-bold leading-tight mb-1 text-white tracking-tight">
+              <h1 className="text-xl lg:text-2xl font-bold leading-tight mb-1 text-zinc-900 tracking-tight">
                 {videoTitle}
               </h1>
-              <div className="flex items-center gap-3 text-[14px] font-medium text-zinc-400 mb-3">
+              <div className="flex items-center gap-3 text-[14px] font-medium text-zinc-500 mb-3">
                 <span>{videoViews}</span>
                 <span>•</span>
                 <span>{videoDate}</span>
               </div>
             </>
           ) : (
-            <div className="h-7 w-3/4 bg-zinc-800 rounded-lg animate-pulse mb-3" />
+            <div className="h-7 w-3/4 bg-zinc-200 rounded-lg animate-pulse mb-3" />
           )}
 
           <div className="flex flex-col gap-4">
@@ -1288,10 +1288,10 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                       <img
                         src={channelAvatar}
                         alt={channelName}
-                        className="w-10 h-10 rounded-full object-cover border border-white/5"
+                        className="w-10 h-10 rounded-full object-cover border border-zinc-200"
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-zinc-800 border border-white/5 animate-pulse" />
+                      <div className="w-10 h-10 rounded-full bg-zinc-200 border border-zinc-200 animate-pulse" />
                     )}
                   </Link>
                   <div className="flex flex-col min-w-0">
@@ -1300,15 +1300,15 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                         <Link href={`/channel/${video?.channel_id}`}>
                           <h3 className="font-bold text-[16px] leading-tight truncate flex items-center gap-1 hover:text-blue-400 transition-colors cursor-pointer">
                             {channelName}
-                            <svg className="w-3.5 h-3.5 text-zinc-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                            <svg className="w-3.5 h-3.5 text-zinc-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
                           </h3>
                         </Link>
-                        <p className="text-[12px] text-zinc-400 font-medium">{subscriberCount !== null ? `${subscriberCount.toLocaleString()} subscribers` : '...'}</p>
+                        <p className="text-[12px] text-zinc-500 font-medium">{subscriberCount !== null ? `${subscriberCount.toLocaleString()} subscribers` : '...'}</p>
                       </>
                     ) : (
                       <>
-                        <div className="h-4 w-24 bg-zinc-800 rounded animate-pulse mb-1" />
-                        <div className="h-3 w-16 bg-zinc-800 rounded animate-pulse" />
+                        <div className="h-4 w-24 bg-zinc-200 rounded animate-pulse mb-1" />
+                        <div className="h-3 w-16 bg-zinc-200 rounded animate-pulse" />
                       </>
                     )}
                   </div>
@@ -1325,11 +1325,11 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
 
               {/* Engagement Actions */}
               <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                <div className="flex items-center bg-white/10 rounded-full h-9 flex-shrink-0 border border-white/5">
+                <div className="flex items-center bg-zinc-200/80 rounded-full h-9 flex-shrink-0 border border-zinc-200">
                   <button
                     onClick={handleLike}
                     disabled={!video}
-                    className={`flex items-center gap-2 px-4 py-1.5 hover:bg-white/10 transition-colors rounded-l-full border-r border-white/10 ${isLiked ? 'text-white' : 'text-zinc-200'} ${!video ? 'opacity-50' : ''}`}
+                    className={`flex items-center gap-2 px-4 py-1.5 hover:bg-zinc-200/80 transition-colors rounded-l-full border-r border-zinc-200 ${isLiked ? 'text-zinc-900' : 'text-zinc-200'} ${!video ? 'opacity-50' : ''}`}
                   >
                     <svg className="w-5 h-5" fill={isLiked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" /></svg>
                     <span className="text-sm font-bold">{video ? (likes !== null ? likes.toLocaleString() : '--') : "..."}</span>
@@ -1337,13 +1337,13 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                   <button
                     onClick={handleDislike}
                     disabled={!video}
-                    className={`flex items-center px-4 py-1.5 hover:bg-white/10 transition-colors rounded-r-full ${isDisliked ? 'text-white' : 'text-zinc-200'} ${!video ? 'opacity-50' : ''}`}
+                    className={`flex items-center px-4 py-1.5 hover:bg-zinc-200/80 transition-colors rounded-r-full ${isDisliked ? 'text-zinc-900' : 'text-zinc-200'} ${!video ? 'opacity-50' : ''}`}
                   >
                     <svg className="w-5 h-5 rotate-180" fill={isDisliked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" /></svg>
                   </button>
                 </div>
 
-                <button disabled={!video} className={`flex items-center gap-2 h-9 px-4 bg-white/10 hover:bg-white/20 rounded-full transition-colors flex-shrink-0 text-white border border-white/5 ${!video ? 'opacity-50' : ''}`}>
+                <button disabled={!video} className={`flex items-center gap-2 h-9 px-4 bg-zinc-200/80 hover:bg-zinc-300/80 rounded-full transition-colors flex-shrink-0 text-zinc-900 border border-zinc-200 ${!video ? 'opacity-50' : ''}`}>
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" /></svg>
                   <span className="text-sm font-bold">Share</span>
                 </button>
@@ -1351,13 +1351,13 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                 <button
                   onClick={() => setIsSaveOpen(true)}
                   disabled={!video}
-                  className={`flex items-center gap-2 h-9 px-4 rounded-full transition-colors flex-shrink-0 border border-white/5 font-bold text-sm ${!video ? 'opacity-50' : isSavedAnywhere ? 'bg-white text-black' : 'bg-white/10 hover:bg-white/20 text-white'}`}
+                  className={`flex items-center gap-2 h-9 px-4 rounded-full transition-colors flex-shrink-0 border border-zinc-200 font-bold text-sm ${!video ? 'opacity-50' : isSavedAnywhere ? 'bg-white text-black' : 'bg-zinc-200/80 hover:bg-zinc-300/80 text-zinc-900'}`}
                 >
                   <svg className="w-5 h-5" fill={isSavedAnywhere ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                   <span>{isSavedAnywhere ? 'Saved' : 'Save'}</span>
                 </button>
                 
-                <button disabled={!video} className={`p-2 h-9 w-9 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full transition-colors text-white border border-white/5 flex-shrink-0 ${!video ? 'opacity-50' : ''}`}>
+                <button disabled={!video} className={`p-2 h-9 w-9 flex items-center justify-center bg-zinc-200/80 hover:bg-zinc-300/80 rounded-full transition-colors text-zinc-900 border border-zinc-200 flex-shrink-0 ${!video ? 'opacity-50' : ''}`}>
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" /></svg>
                 </button>
               </div>
@@ -1365,7 +1365,7 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
 
             {/* Description Box */}
             <div 
-              className="bg-white/5 hover:bg-white/10 rounded-xl p-3 transition-colors mb-6 min-h-[100px] cursor-default"
+              className="bg-zinc-200/80 hover:bg-zinc-200/80 rounded-xl p-3 transition-colors mb-6 min-h-[100px] cursor-default"
               onClick={() => {
                 if (needsExpansion) setIsDescriptionExpanded(!isDescriptionExpanded);
               }}
@@ -1384,7 +1384,7 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                         e.stopPropagation();
                         setIsDescriptionExpanded(!isDescriptionExpanded);
                       }}
-                      className="text-[14px] font-bold text-white mt-2 hover:bg-white/10 rounded px-1 -mx-1"
+                      className="text-[14px] font-bold text-zinc-900 mt-2 hover:bg-zinc-200/80 rounded px-1 -mx-1"
                     >
                       {isDescriptionExpanded ? 'show less' : '...more'}
                     </button>
@@ -1392,9 +1392,9 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                 </>
               ) : (
                 <div className="flex flex-col gap-2">
-                  <div className="h-4 w-32 bg-zinc-800 rounded animate-pulse" />
-                  <div className="h-4 w-full bg-zinc-800 rounded animate-pulse" />
-                  <div className="h-4 w-2/3 bg-zinc-800 rounded animate-pulse" />
+                  <div className="h-4 w-32 bg-zinc-200 rounded animate-pulse" />
+                  <div className="h-4 w-full bg-zinc-200 rounded animate-pulse" />
+                  <div className="h-4 w-2/3 bg-zinc-200 rounded animate-pulse" />
                 </div>
               )}
             </div>
@@ -1410,7 +1410,7 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                 profileAvatar={activeProfileAvatar}
               />
             ) : (
-              <div className="h-[200px] w-full bg-zinc-900/50 rounded-xl" />
+              <div className="h-[200px] w-full bg-zinc-100/50 rounded-xl" />
             )}
           </div>
         </div>
@@ -1426,13 +1426,13 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
         />
       </div>
       {isSaveOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-          <div className="bg-[#1f1f1f] w-full max-w-sm rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
-              <h3 className="text-white font-semibold text-lg">Save to...</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/60 px-4">
+          <div className="bg-[#1f1f1f] w-full max-w-sm rounded-2xl border border-zinc-200 shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-200">
+              <h3 className="text-zinc-900 font-semibold text-lg">Save to...</h3>
               <button
                 onClick={() => setIsSaveOpen(false)}
-                className="text-white/70 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors"
+                className="text-zinc-900/70 hover:text-zinc-900 p-1 rounded-full hover:bg-zinc-200/80 transition-colors"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1443,8 +1443,8 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
             {/* Content */}
             <div className="max-h-[60vh] overflow-y-auto">
               {/* Watch Later */}
-              <div className="flex items-center gap-3 px-5 py-3 hover:bg-white/5 transition-colors cursor-pointer group">
-                <div className="w-16 h-10 rounded-md overflow-hidden bg-zinc-800 flex-shrink-0">
+              <div className="flex items-center gap-3 px-5 py-3 hover:bg-zinc-200/80 transition-colors cursor-pointer group">
+                <div className="w-16 h-10 rounded-md overflow-hidden bg-zinc-200 flex-shrink-0">
                   <img
                     src={video?.thumbnail_url || '/logo.png'}
                     alt="thumb"
@@ -1452,13 +1452,13 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                   />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-white text-sm font-medium truncate">Watch later</div>
-                  <div className="text-xs text-white/50">Private</div>
+                  <div className="text-zinc-900 text-sm font-medium truncate">Watch later</div>
+                  <div className="text-xs text-zinc-900/50">Private</div>
                 </div>
                 <button
                   onClick={toggleWatchLater}
                   disabled={isSavingAction}
-                  className="p-2 rounded-full hover:bg-white/10 text-white transition-colors"
+                  className="p-2 rounded-full hover:bg-zinc-200/80 text-zinc-900 transition-colors"
                   title={watchLaterSaved ? 'Remove from Watch later' : 'Save to Watch later'}
                 >
                   <svg 
@@ -1478,37 +1478,37 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
               </div>
 
               {/* Divider */}
-              <div className="h-px bg-white/10 mx-5 my-2" />
+              <div className="h-px bg-zinc-200/80 mx-5 my-2" />
 
               {/* Playlists Header */}
-              <div className="px-5 py-2 text-xs text-white/40 font-medium uppercase tracking-wider">
+              <div className="px-5 py-2 text-xs text-zinc-900/40 font-medium uppercase tracking-wider">
                 Your Playlists
               </div>
 
               {/* Playlists */}
               {saveLoading ? (
-                <div className="px-5 py-3 text-sm text-white/60">Loading playlists...</div>
+                <div className="px-5 py-3 text-sm text-zinc-900/60">Loading playlists...</div>
               ) : playlists.length === 0 ? (
-                <div className="px-5 py-3 text-sm text-white/60">No playlists yet.</div>
+                <div className="px-5 py-3 text-sm text-zinc-900/60">No playlists yet.</div>
               ) : (
                 playlists.map((p) => (
                   <div
                     key={p.id}
-                    className="flex items-center gap-3 px-5 py-3 hover:bg-white/5 transition-colors cursor-pointer group"
+                    className="flex items-center gap-3 px-5 py-3 hover:bg-zinc-200/80 transition-colors cursor-pointer group"
                   >
-                    <div className="w-16 h-10 rounded-md bg-zinc-800 flex items-center justify-center text-white/40 text-xs font-bold flex-shrink-0 overflow-hidden">
+                    <div className="w-16 h-10 rounded-md bg-zinc-200 flex items-center justify-center text-zinc-900/40 text-xs font-bold flex-shrink-0 overflow-hidden">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 10h16M4 14h16M4 18h12" />
                       </svg>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-white text-sm font-medium truncate">{p.name}</div>
-                      <div className="text-xs text-white/50">{('isPrivate' in p && p.isPrivate) || !('isPrivate' in p) ? 'Private' : 'Public'}</div>
+                      <div className="text-zinc-900 text-sm font-medium truncate">{p.name}</div>
+                      <div className="text-xs text-zinc-900/50">{('isPrivate' in p && p.isPrivate) || !('isPrivate' in p) ? 'Private' : 'Public'}</div>
                     </div>
                     <button
                       onClick={() => togglePlaylist(p.id, p.hasVideo)}
                       disabled={isSavingAction}
-                      className="p-2 rounded-full hover:bg-white/10 text-white transition-colors"
+                      className="p-2 rounded-full hover:bg-zinc-200/80 text-zinc-900 transition-colors"
                       title={p.hasVideo ? 'Remove from playlist' : 'Save to playlist'}
                     >
                       <svg 
@@ -1535,11 +1535,11 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
             </div>
 
             {/* New Playlist Button */}
-            <div className="px-4 py-3 border-t border-white/10">
+            <div className="px-4 py-3 border-t border-zinc-200">
               {!isCreatingPlaylist ? (
                 <button
                   onClick={() => setIsCreatingPlaylist(true)}
-                  className="flex items-center gap-2 w-full px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-white text-sm font-medium transition-colors"
+                  className="flex items-center gap-2 w-full px-4 py-2.5 bg-zinc-200 hover:bg-zinc-300 rounded-xl text-zinc-900 text-sm font-medium transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -1555,13 +1555,13 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                       value={newPlaylistName}
                       onChange={(e) => setNewPlaylistName(e.target.value)}
                       placeholder="Enter playlist name"
-                      className="w-full bg-zinc-800 text-white text-sm px-3 py-2.5 rounded-lg border border-zinc-700 focus:border-blue-500 focus:outline-none"
+                      className="w-full bg-zinc-200 text-zinc-900 text-sm px-3 py-2.5 rounded-lg border border-zinc-300 focus:border-blue-500 focus:outline-none"
                       autoFocus
                     />
                     {newPlaylistName && (
                       <button
                         onClick={() => setNewPlaylistName('')}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-900"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1580,7 +1580,7 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                         onChange={() => setNewPlaylistVisibility('private')}
                         className="w-4 h-4 accent-blue-500"
                       />
-                      <span className="text-sm text-white">Private</span>
+                      <span className="text-sm text-zinc-900">Private</span>
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
@@ -1590,7 +1590,7 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                         onChange={() => setNewPlaylistVisibility('public')}
                         className="w-4 h-4 accent-blue-500"
                       />
-                      <span className="text-sm text-white">Public</span>
+                      <span className="text-sm text-zinc-900">Public</span>
                     </label>
                   </div>
 
@@ -1602,7 +1602,7 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
                         setNewPlaylistName('');
                         setNewPlaylistVisibility('private');
                       }}
-                      className="flex-1 px-4 py-2 text-sm font-medium text-zinc-400 hover:text-white transition-colors rounded-lg"
+                      className="flex-1 px-4 py-2 text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors rounded-lg"
                     >
                       Cancel
                     </button>
@@ -1624,7 +1624,7 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
       {toast && (
         <div className="fixed bottom-6 left-6 z-50">
           <div
-            className={`px-4 py-3 rounded-xl shadow-2xl border ${toast.kind === 'success' ? 'bg-white text-black border-white/40' : 'bg-red-600 text-white border-red-400'
+            className={`px-4 py-3 rounded-xl shadow-2xl border ${toast.kind === 'success' ? 'bg-white text-black border-white/40' : 'bg-red-600 text-zinc-900 border-red-400'
               }`}
           >
             {toast.message}

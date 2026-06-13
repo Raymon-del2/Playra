@@ -105,25 +105,25 @@ export default function SubscriptionsPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center">
-                <div className="w-10 h-10 border-4 border-zinc-600 border-t-white rounded-full animate-spin"></div>
+            <div className="min-h-screen bg-white flex items-center justify-center">
+                <div className="w-10 h-10 border-4 border-zinc-400 border-t-white rounded-full animate-spin"></div>
             </div>
         );
     }
 
     if (!activeProfile) {
         return (
-            <div className="min-h-screen bg-[#0f0f0f] text-white flex flex-col items-center justify-center gap-4">
-                <div className="w-24 h-24 bg-zinc-800 rounded-full flex items-center justify-center mb-4">
+            <div className="min-h-screen bg-white text-zinc-900 flex flex-col items-center justify-center gap-4">
+                <div className="w-24 h-24 bg-zinc-200 rounded-full flex items-center justify-center mb-4">
                     <svg className="w-12 h-12 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
                     </svg>
                 </div>
                 <h1 className="text-xl font-bold">Sign in to see your subscriptions</h1>
-                <p className="text-zinc-400 text-sm text-center max-w-md">
+                <p className="text-zinc-500 text-sm text-center max-w-md">
                     Subscribe to channels to get updates on their latest videos
                 </p>
-                <Link href="/select-profile" className="mt-4 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-bold transition-colors">
+                <Link href="/select-profile" className="mt-4 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-zinc-900 rounded-full font-bold transition-colors">
                     Sign In
                 </Link>
             </div>
@@ -131,7 +131,7 @@ export default function SubscriptionsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#0f0f0f] text-white pb-24 pt-14">
+        <div className="min-h-screen bg-white text-zinc-900 pb-24 pt-14">
             {/* Header */}
             <div className="px-4 pt-6 pb-4">
                 <h1 className="text-2xl font-bold">Subscriptions</h1>
@@ -139,25 +139,25 @@ export default function SubscriptionsPage() {
 
             {/* Your Subscriptions - Horizontal Scroll */}
             <div className="mb-8">
-                <h2 className="text-base font-semibold px-4 mb-3 text-zinc-300">Your channels</h2>
+                <h2 className="text-base font-semibold px-4 mb-3 text-zinc-700">Your channels</h2>
                 {subscriptions.length > 0 ? (
                     <div className="flex gap-4 overflow-x-auto px-4 pb-2 scrollbar-hide">
                         {subscriptions.map((sub) => (
                             <div key={sub.id} className="flex flex-col items-center min-w-[80px] group">
                                 <Link href={`/channel/${sub.id}`} className="flex flex-col items-center">
                                     <div className="relative">
-                                        <div className="w-16 h-16 rounded-full overflow-hidden ring-2 ring-transparent group-hover:ring-blue-500 transition-all bg-zinc-800">
+                                        <div className="w-16 h-16 rounded-full overflow-hidden ring-2 ring-transparent group-hover:ring-blue-500 transition-all bg-zinc-200">
                                             <img src={sub.avatar} alt={sub.name} className="w-full h-full object-cover" />
                                         </div>
                                         {sub.verified && (
                                             <div className="absolute -bottom-0.5 -right-0.5 bg-blue-500 rounded-full p-0.5">
-                                                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                <svg className="w-3 h-3 text-zinc-900" fill="currentColor" viewBox="0 0 20 20">
                                                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                                 </svg>
                                             </div>
                                         )}
                                     </div>
-                                    <p className="text-xs text-center text-zinc-400 group-hover:text-white mt-2 truncate w-20 leading-tight font-medium">
+                                    <p className="text-xs text-center text-zinc-500 group-hover:text-zinc-900 mt-2 truncate w-20 leading-tight font-medium">
                                         {sub.name}
                                     </p>
                                 </Link>
@@ -166,23 +166,23 @@ export default function SubscriptionsPage() {
                     </div>
                 ) : (
                     <div className="px-4 py-8 text-center">
-                        <div className="w-16 h-16 bg-zinc-800/50 rounded-full flex items-center justify-center mx-auto mb-3 text-zinc-600">
+                        <div className="w-16 h-16 bg-zinc-200/50 rounded-full flex items-center justify-center mx-auto mb-3 text-zinc-600">
                             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                             </svg>
                         </div>
-                        <p className="text-zinc-400 text-sm">No subscriptions yet</p>
+                        <p className="text-zinc-500 text-sm">No subscriptions yet</p>
                     </div>
                 )}
             </div>
 
             {/* Divider */}
-            <div className="h-px bg-white/5 mx-4 mb-6" />
+            <div className="h-px bg-zinc-200/80 mx-4 mb-6" />
 
             {/* Suggested Creators - Horizontal Scroll */}
             {(suggestions.length > 0 || selfChannel) && (
                 <div>
-                    <h2 className="text-base font-semibold px-4 mb-1 text-zinc-300">Discover creators</h2>
+                    <h2 className="text-base font-semibold px-4 mb-1 text-zinc-700">Discover creators</h2>
                     <p className="text-xs text-zinc-500 px-4 mb-4">Subscribe to see their videos in your feed</p>
 
                     <div className="flex gap-3 overflow-x-auto px-4 pb-4 scrollbar-hide">
@@ -191,7 +191,7 @@ export default function SubscriptionsPage() {
                             <div className="flex-shrink-0 w-44 bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-blue-500/30 rounded-2xl p-4 flex flex-col items-center relative overflow-hidden">
                                 <div className="absolute top-2 right-2 bg-blue-500 text-[9px] font-bold px-2 py-0.5 rounded-full">YOU</div>
                                 <Link href={`/channel/${selfChannel.id}`}>
-                                    <div className="w-14 h-14 rounded-full overflow-hidden bg-zinc-700 ring-2 ring-blue-400/50 mb-2">
+                                    <div className="w-14 h-14 rounded-full overflow-hidden bg-zinc-300 ring-2 ring-blue-400/50 mb-2">
                                         <img src={selfChannel.avatar} alt={selfChannel.name} className="w-full h-full object-cover" />
                                     </div>
                                 </Link>
@@ -200,7 +200,7 @@ export default function SubscriptionsPage() {
                                 </Link>
                                 <p className="text-[10px] text-blue-400 mb-3">Your Channel</p>
                                 <Link href="/studio/content" className="w-full">
-                                    <button className="w-full bg-blue-600 text-white py-2 rounded-full text-xs font-bold hover:bg-blue-700 transition-colors">
+                                    <button className="w-full bg-blue-600 text-zinc-900 py-2 rounded-full text-xs font-bold hover:bg-blue-700 transition-colors">
                                         Manage Channel
                                     </button>
                                 </Link>
@@ -209,9 +209,9 @@ export default function SubscriptionsPage() {
 
                         {/* Suggested Creators */}
                         {suggestions.map((creator) => (
-                            <div key={creator.id} className="flex-shrink-0 w-44 bg-zinc-900 border border-white/5 rounded-2xl p-4 flex flex-col items-center hover:bg-zinc-800/80 transition-colors">
+                            <div key={creator.id} className="flex-shrink-0 w-44 bg-zinc-100 border border-zinc-200 rounded-2xl p-4 flex flex-col items-center hover:bg-zinc-200/80 transition-colors">
                                 <Link href={`/channel/${creator.id}`}>
-                                    <div className="w-14 h-14 rounded-full overflow-hidden bg-zinc-700 mb-2">
+                                    <div className="w-14 h-14 rounded-full overflow-hidden bg-zinc-300 mb-2">
                                         <img src={creator.avatar} alt={creator.name} className="w-full h-full object-cover" />
                                     </div>
                                 </Link>
@@ -249,17 +249,17 @@ export default function SubscriptionsPage() {
             {/* Empty state when no suggestions and no subscriptions */}
             {suggestions.length === 0 && subscriptions.length === 0 && !selfChannel && (
                 <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-                    <div className="w-20 h-20 bg-zinc-800/50 rounded-full flex items-center justify-center mb-4 text-zinc-600">
+                    <div className="w-20 h-20 bg-zinc-200/50 rounded-full flex items-center justify-center mb-4 text-zinc-600">
                         <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                         </svg>
                     </div>
                     <h2 className="text-lg font-bold mb-2">No creators found</h2>
-                    <p className="text-zinc-400 text-sm max-w-sm">
+                    <p className="text-zinc-500 text-sm max-w-sm">
                         Upload your first video to become a creator, or explore the home page to find channels to subscribe to.
                     </p>
                     <div className="flex gap-3 mt-6">
-                        <Link href="/" className="px-5 py-2 bg-zinc-800 text-white rounded-full text-sm font-bold hover:bg-zinc-700 transition-colors">
+                        <Link href="/" className="px-5 py-2 bg-zinc-200 text-zinc-900 rounded-full text-sm font-bold hover:bg-zinc-300 transition-colors">
                             Explore
                         </Link>
                         <Link href="/studio/upload" className="px-5 py-2 bg-white text-black rounded-full text-sm font-bold hover:bg-zinc-200 transition-colors">

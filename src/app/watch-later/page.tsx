@@ -123,19 +123,19 @@ export default function WatchLaterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] pb-20">
+    <div className="min-h-screen bg-white pb-20">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-[#0f0f0f]/95 backdrop-blur-sm border-b border-white/10">
+      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-zinc-200">
         <div className="px-4 md:px-6 py-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-zinc-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <div>
-                <h1 className="text-xl font-bold text-white">Watch Later</h1>
+                <h1 className="text-xl font-bold text-zinc-900">Watch Later</h1>
                 <p className="text-sm text-zinc-500">{videos.length} videos</p>
               </div>
             </div>
@@ -152,14 +152,14 @@ export default function WatchLaterPage() {
                 placeholder="Search your watch later..."
                 value={searchQuery}
                 onChange={handleSearchChange}
-                className="w-full pl-10 pr-10 py-2.5 bg-zinc-800/50 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all"
+                className="w-full pl-10 pr-10 py-2.5 bg-zinc-200/50 border border-zinc-300 rounded-xl text-zinc-900 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all"
               />
               {isSearching && (
                 <button
                   onClick={clearSearch}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
                 >
-                  <svg className="w-5 h-5 text-zinc-500 hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-zinc-500 hover:text-zinc-900 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
@@ -185,12 +185,12 @@ export default function WatchLaterPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {[1, 2, 3, 4, 5, 6, 8].map((i) => (
               <div key={i} className="animate-pulse">
-                <div className="aspect-video bg-zinc-800 rounded-xl mb-3" />
+                <div className="aspect-video bg-zinc-200 rounded-xl mb-3" />
                 <div className="flex gap-3">
-                  <div className="w-9 h-9 rounded-full bg-zinc-800" />
+                  <div className="w-9 h-9 rounded-full bg-zinc-200" />
                   <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-zinc-800 rounded w-3/4" />
-                    <div className="h-3 bg-zinc-800 rounded w-1/2" />
+                    <div className="h-4 bg-zinc-200 rounded w-3/4" />
+                    <div className="h-3 bg-zinc-200 rounded w-1/2" />
                   </div>
                 </div>
               </div>
@@ -198,12 +198,12 @@ export default function WatchLaterPage() {
           </div>
         ) : videos.length === 0 ? (
           <div className="text-center py-20">
-            <div className="w-20 h-20 mx-auto bg-zinc-800/50 rounded-full flex items-center justify-center mb-4">
+            <div className="w-20 h-20 mx-auto bg-zinc-200/50 rounded-full flex items-center justify-center mb-4">
               <svg className="w-10 h-10 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h2 className="text-xl font-bold text-white mb-2">No watch later videos</h2>
+            <h2 className="text-xl font-bold text-zinc-900 mb-2">No watch later videos</h2>
             <p className="text-zinc-500 max-w-md mx-auto mb-6">
               Videos you save to watch later will appear here. Start exploring and save videos you want to watch!
             </p>
@@ -220,18 +220,18 @@ export default function WatchLaterPage() {
           </div>
         ) : filteredVideos.length === 0 && isSearching ? (
           <div className="text-center py-20">
-            <div className="w-20 h-20 mx-auto bg-zinc-800/50 rounded-full flex items-center justify-center mb-4">
+            <div className="w-20 h-20 mx-auto bg-zinc-200/50 rounded-full flex items-center justify-center mb-4">
               <svg className="w-10 h-10 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
-            <h2 className="text-xl font-bold text-white mb-2">No results found</h2>
+            <h2 className="text-xl font-bold text-zinc-900 mb-2">No results found</h2>
             <p className="text-zinc-500 max-w-md mx-auto mb-4">
               No videos match &quot;{searchQuery}&quot;. Try a different search term.
             </p>
             <button
               onClick={clearSearch}
-              className="px-4 py-2 bg-zinc-800 text-white font-medium rounded-lg hover:bg-zinc-700 transition-colors"
+              className="px-4 py-2 bg-zinc-200 text-zinc-900 font-medium rounded-lg hover:bg-zinc-300 transition-colors"
             >
               Clear Search
             </button>
@@ -240,7 +240,7 @@ export default function WatchLaterPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredVideos.map((video) => (
               <div key={video.id} className="group flex flex-col">
-                <div className={`relative ${video.is_short ? 'aspect-[9/16]' : 'aspect-video'} rounded-xl overflow-hidden bg-zinc-800 mb-3 shadow-lg border border-white/5`}>
+                <div className={`relative ${video.is_short ? 'aspect-[9/16]' : 'aspect-video'} rounded-xl overflow-hidden bg-zinc-200 mb-3 shadow-lg border border-zinc-200`}>
                   <Link href={video.is_short ? `/styles/${video.id}` : `/watch/${video.id}`}>
                     <img
                       src={video.thumbnail_url}
@@ -249,7 +249,7 @@ export default function WatchLaterPage() {
                     />
                   </Link>
                   {video.duration && video.duration !== '0:00' && video.duration !== '00:00' && video.duration !== '0' && (
-                    <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs font-bold px-1.5 py-0.5 rounded">
+                    <div className="absolute bottom-2 right-2 bg-white/80 text-zinc-900 text-xs font-bold px-1.5 py-0.5 rounded">
                       {video.duration}
                     </div>
                   )}
@@ -259,7 +259,7 @@ export default function WatchLaterPage() {
                     </div>
                   )}
                   {video.is_live && (
-                    <div className="absolute bottom-2 left-2 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase">
+                    <div className="absolute bottom-2 left-2 bg-red-600 text-zinc-900 text-[10px] font-bold px-2 py-0.5 rounded uppercase">
                       Live
                     </div>
                   )}
@@ -267,10 +267,10 @@ export default function WatchLaterPage() {
                   {/* Remove Button */}
                   <button
                     onClick={() => handleRemove(video.id)}
-                    className="absolute top-2 right-2 w-8 h-8 bg-black/60 hover:bg-red-500/80 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
+                    className="absolute top-2 right-2 w-8 h-8 bg-white/60 hover:bg-red-500/80 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
                     title="Remove from watch later"
                   >
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-zinc-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
@@ -278,7 +278,7 @@ export default function WatchLaterPage() {
 
                 <div className="flex gap-3">
                   <Link href={`/channel/${video.channel_id}`}>
-                    <div className="w-9 h-9 rounded-full overflow-hidden bg-zinc-800 flex-shrink-0">
+                    <div className="w-9 h-9 rounded-full overflow-hidden bg-zinc-200 flex-shrink-0">
                       {video.channel_avatar ? (
                         <img src={video.channel_avatar} alt="" className="w-full h-full object-cover" />
                       ) : (
@@ -290,12 +290,12 @@ export default function WatchLaterPage() {
                   </Link>
                   <div className="flex-1 min-w-0">
                     <Link href={video.is_short ? `/styles/${video.id}` : `/watch/${video.id}`}>
-                      <h3 className="text-sm font-semibold text-white line-clamp-2 group-hover:text-blue-400 transition-colors leading-snug">
+                      <h3 className="text-sm font-semibold text-zinc-900 line-clamp-2 group-hover:text-blue-400 transition-colors leading-snug">
                         {isSearching ? highlightText(video.title, searchQuery) : video.title}
                       </h3>
                     </Link>
                     <Link href={`/channel/${video.channel_id}`}>
-                      <p className="text-xs text-zinc-400 hover:text-white transition-colors mt-1">
+                      <p className="text-xs text-zinc-500 hover:text-zinc-900 transition-colors mt-1">
                         {isSearching ? highlightText(video.channel_name, searchQuery) : video.channel_name}
                       </p>
                     </Link>
@@ -309,7 +309,7 @@ export default function WatchLaterPage() {
                         <span className={`inline-block px-2 py-0.5 text-[10px] font-medium rounded-full ${
                           isSearching && video.category.toLowerCase().includes(searchQuery.toLowerCase())
                             ? 'bg-purple-500/30 text-purple-300 border border-purple-500/30'
-                            : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
+                            : 'bg-zinc-200 text-zinc-500 border border-zinc-300'
                         }`}>
                           {isSearching && video.category.toLowerCase().includes(searchQuery.toLowerCase())
                             ? highlightText(video.category, searchQuery)

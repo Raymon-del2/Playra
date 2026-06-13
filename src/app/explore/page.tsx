@@ -31,8 +31,8 @@ export default function ExplorePage() {
     : videos.filter(v => v.category?.toLowerCase() === selectedCategory.toLowerCase());
 
   return (
-    <div className="min-h-screen bg-black text-white pt-14 pb-20 lg:pb-8">
-      <div className="fixed top-14 left-0 right-0 z-30 bg-[#0f0f0f]/95 backdrop-blur-xl border-b border-white/5">
+    <div className="min-h-screen bg-white text-zinc-900 pt-14 pb-20 lg:pb-8">
+      <div className="fixed top-14 left-0 right-0 z-30 bg-white/95 backdrop-blur-xl border-b border-zinc-200">
         <div className="flex items-center gap-3 overflow-x-auto px-4 py-3 scrollbar-hide max-w-[1280px] mx-auto">
           {categories.map((cat) => (
             <button
@@ -41,7 +41,7 @@ export default function ExplorePage() {
               className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-colors ${
                 selectedCategory === cat 
                   ? 'bg-white text-black' 
-                  : 'bg-white/10 text-white hover:bg-white/20'
+                  : 'bg-zinc-200/80 text-zinc-900 hover:bg-zinc-300/80'
               }`}
             >
               {cat}
@@ -54,7 +54,7 @@ export default function ExplorePage() {
         {selectedCategory === 'Trending' && (
           <>
             <div className="mb-8">
-              <h2 className="sticky top-[98px] z-20 bg-black/80 backdrop-blur-sm py-3 text-xl font-bold mb-4 flex items-center gap-2">
+              <h2 className="sticky top-[98px] z-20 bg-white/80 backdrop-blur-sm py-3 text-xl font-bold mb-4 flex items-center gap-2">
                 <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M17.56 21c-.29 0-.58-.07-.82-.2l-7.44-4.02-4 6.52c-.38.62-1.19 1.04-1.96.7-3.58-1.57-6.02-4.93-6.45-8.47-.47-3.84 1.47-7.48 4.75-9.05C7.34 2.37 10.4 2 12.64 4.21c.43.42.67 1.02.67 1.65s-.24 1.23-.67 1.65c-.87.85-2.25.85-3.12 0-1.46-1.44-3.72-1.35-5.04.2-1.32 1.56-.9 4.04.94 5.55l7.44 4.02 4-6.52c.38-.62 1.19-1.04 1.96-.7l.12.06c.58.31.77.99.46 1.57l-.01.01z"/>
                 </svg>
@@ -64,15 +64,15 @@ export default function ExplorePage() {
                 {isLoading ? (
                   Array(8).fill(0).map((_, i) => (
                     <div key={i} className="animate-pulse">
-                      <div className="aspect-video bg-zinc-800 rounded-xl mb-2" />
-                      <div className="h-4 bg-zinc-800 rounded w-3/4 mb-2" />
-                      <div className="h-3 bg-zinc-800 rounded w-1/2" />
+                      <div className="aspect-video bg-zinc-200 rounded-xl mb-2" />
+                      <div className="h-4 bg-zinc-200 rounded w-3/4 mb-2" />
+                      <div className="h-3 bg-zinc-200 rounded w-1/2" />
                     </div>
                   ))
                 ) : (
                   filteredVideos.slice(0, 8).map((video) => (
                     <Link key={video.id} href={`/watch/${video.id}`} className="group">
-                      <div className="aspect-video bg-zinc-800 rounded-xl mb-2 overflow-hidden relative">
+                      <div className="aspect-video bg-zinc-200 rounded-xl mb-2 overflow-hidden relative">
                         {video.thumbnail_url ? (
                           <img src={video.thumbnail_url} alt={video.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                         ) : (
@@ -83,15 +83,15 @@ export default function ExplorePage() {
                           </div>
                         )}
                         {video.duration && (
-                          <span className="absolute bottom-1 right-1 bg-black/80 text-white text-xs px-1 rounded">
+                          <span className="absolute bottom-1 right-1 bg-white/80 text-zinc-900 text-xs px-1 rounded">
                             {video.duration}
                           </span>
                         )}
                       </div>
-                      <h3 className="text-sm font-bold text-white line-clamp-2 mb-1 group-hover:text-blue-400 transition-colors">
+                      <h3 className="text-sm font-bold text-zinc-900 line-clamp-2 mb-1 group-hover:text-blue-400 transition-colors">
                         {video.title}
                       </h3>
-                      <p className="text-xs text-zinc-400">{video.channel_name}</p>
+                      <p className="text-xs text-zinc-500">{video.channel_name}</p>
                     </Link>
                   ))
                 )}
@@ -107,28 +107,28 @@ export default function ExplorePage() {
               {isLoading ? (
                 Array(8).fill(0).map((_, i) => (
                   <div key={i} className="animate-pulse">
-                    <div className="aspect-video bg-zinc-800 rounded-xl mb-2" />
-                    <div className="h-4 bg-zinc-800 rounded w-3/4 mb-2" />
-                    <div className="h-3 bg-zinc-800 rounded w-1/2" />
+                    <div className="aspect-video bg-zinc-200 rounded-xl mb-2" />
+                    <div className="h-4 bg-zinc-200 rounded w-3/4 mb-2" />
+                    <div className="h-3 bg-zinc-200 rounded w-1/2" />
                   </div>
                 ))
               ) : filteredVideos.length > 0 ? (
                 filteredVideos.map((video) => (
                   <Link key={video.id} href={`/watch/${video.id}`} className="group">
-                    <div className="aspect-video bg-zinc-800 rounded-xl mb-2 overflow-hidden relative">
+                    <div className="aspect-video bg-zinc-200 rounded-xl mb-2 overflow-hidden relative">
                       {video.thumbnail_url && (
                         <img src={video.thumbnail_url} alt={video.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                       )}
                       {video.duration && (
-                        <span className="absolute bottom-1 right-1 bg-black/80 text-white text-xs px-1 rounded">
+                        <span className="absolute bottom-1 right-1 bg-white/80 text-zinc-900 text-xs px-1 rounded">
                           {video.duration}
                         </span>
                       )}
                     </div>
-                    <h3 className="text-sm font-bold text-white line-clamp-2 mb-1 group-hover:text-blue-400 transition-colors">
+                    <h3 className="text-sm font-bold text-zinc-900 line-clamp-2 mb-1 group-hover:text-blue-400 transition-colors">
                       {video.title}
                     </h3>
-                    <p className="text-xs text-zinc-400">{video.channel_name}</p>
+                    <p className="text-xs text-zinc-500">{video.channel_name}</p>
                   </Link>
                 ))
               ) : (

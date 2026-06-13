@@ -55,7 +55,6 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
 
   const mainItems = [
     { icon: 'home', label: 'Home', path: '/' },
-    { icon: 'explore', label: 'Explore', path: '/explore' },
     { icon: 'styles', label: 'Styles', path: '/styles' },
   ];
 
@@ -87,93 +86,100 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
   const getIcon = (icon: string, isActive: boolean) => {
     const icons: { [key: string]: JSX.Element } = {
       home: isActive ? (
-        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M4 10V21H9V15H15V21H20V10L12 3L4 10Z" /></svg>
+        <svg className="w-6 h-6 text-zinc-900" fill="currentColor" viewBox="0 0 24 24"><path d="M4 10V21H9V15H15V21H20V10L12 3L4 10Z" /></svg>
       ) : (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3L4 10V21H9V15H15V21H20V10L12 3L4 10Z" /></svg>
+        <svg className="w-6 h-6 text-zinc-900" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3L4 10V21H9V15H15V21H20V10L12 3L4 10Z" /></svg>
       ),
       explore: (
-        <Image 
-          src="/explore.svg" 
-          alt="Explore" 
-          width={24} 
-          height={24} 
-          className={`w-6 h-6 ${isActive ? '' : 'opacity-70'}`}
+        <Image
+          src="/explore.svg"
+          alt="Explore"
+          width={24}
+          height={24}
+          className="w-6 h-6"
+          style={{ filter: 'brightness(0) saturate(100%)' }}
         />
       ),
       styles: (
-        <Image 
-          src="/styles-icon.svg" 
-          alt="Styles" 
-          width={24} 
-          height={24} 
-          className={`w-6 h-6 ${isActive ? '' : 'opacity-70'}`}
+        <Image
+          src={isActive ? '/styles-icon-blue.svg' : '/styles-icon.svg'}
+          alt="Styles"
+          width={24}
+          height={24}
+          className="w-6 h-6"
+          style={isActive ? undefined : { filter: 'brightness(0) saturate(100%)' }}
         />
       ),
       subscriptions: (
-        <Image 
-          src="/subscriptions.svg" 
-          alt="Subscriptions" 
-          width={24} 
-          height={24} 
-          className={`w-6 h-6 ${isActive ? '' : 'opacity-70'}`}
+        <Image
+          src="/subscriptions.svg"
+          alt="Subscriptions"
+          width={24}
+          height={24}
+          className="w-6 h-6"
+          style={{ filter: 'brightness(0) saturate(100%)' }}
         />
       ),
       yourChannel: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        <svg className="w-6 h-6 text-zinc-900" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
       ),
       history: (
-        <Image 
-          src="/history_24dp_EFEFEF_FILL0_wght300_GRAD200_opsz24.svg" 
-          alt="History" 
-          width={24} 
-          height={24} 
-          className={`w-6 h-6 ${isActive ? '' : 'opacity-70'}`}
+        <Image
+          src="/history_24dp_EFEFEF_FILL0_wght300_GRAD200_opsz24.svg"
+          alt="History"
+          width={24}
+          height={24}
+          className="w-6 h-6"
+          style={{ filter: 'brightness(0) saturate(100%)' }}
         />
       ),
       playlists: (
-        <Image 
-          src="/library_add_24dp_EFEFEF_FILL0_wght300_GRAD200_opsz24.svg" 
-          alt="Playlists" 
-          width={24} 
-          height={24} 
-          className={`w-6 h-6 ${isActive ? '' : 'opacity-70'}`}
+        <Image
+          src="/library_add_24dp_EFEFEF_FILL0_wght300_GRAD200_opsz24.svg"
+          alt="Playlists"
+          width={24}
+          height={24}
+          className="w-6 h-6"
+          style={{ filter: 'brightness(0) saturate(100%)' }}
         />
       ),
       watchLater: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        <svg className="w-6 h-6 text-zinc-900" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
       ),
       liked: (
-        <Image 
-          src="/interests_24dp_EFEFEF_FILL0_wght300_GRAD200_opsz24.svg" 
-          alt="Liked" 
-          width={24} 
-          height={24} 
-          className={`w-6 h-6 ${isActive ? '' : 'opacity-70'}`}
+        <Image
+          src="/interests_24dp_EFEFEF_FILL0_wght300_GRAD200_opsz24.svg"
+          alt="Liked"
+          width={24}
+          height={24}
+          className="w-6 h-6"
+          style={{ filter: 'brightness(0) saturate(100%)' }}
         />
       ),
       trending: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+        <svg className="w-6 h-6 text-zinc-900" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
       ),
       music: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" /></svg>
+        <svg className="w-6 h-6 text-zinc-900" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" /></svg>
       ),
       community: (
-        <Image 
-          src="/family_group_24dp_EFEFEF_FILL0_wght300_GRAD200_opsz24.svg" 
-          alt="Community" 
-          width={24} 
-          height={24} 
-          className={`w-6 h-6 ${isActive ? '' : 'opacity-70'}`}
+        <Image
+          src="/family_group_24dp_EFEFEF_FILL0_wght300_GRAD200_opsz24.svg"
+          alt="Community"
+          width={24}
+          height={24}
+          className="w-6 h-6"
+          style={{ filter: 'brightness(0) saturate(100%)' }}
         />
       ),
       download: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+        <svg className="w-6 h-6 text-zinc-900" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
       ),
       help: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        <svg className="w-6 h-6 text-zinc-900" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
       ),
       feedback: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" /></svg>
+        <svg className="w-6 h-6 text-zinc-900" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" /></svg>
       ),
     };
     return icons[icon] || icons.home;
@@ -191,9 +197,9 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
             : 'items-center space-x-5 px-3 py-2.5 rounded-xl'
             } ${isActive
               ? isCollapsed 
-                ? 'text-white'
-                : 'bg-white/10 text-white'
-              : 'text-gray-400 hover:text-white'
+                ? 'text-zinc-900'
+                : 'bg-gray-300/50 text-zinc-900 hover:bg-gray-600/50'
+              : 'text-zinc-700 hover:bg-gray-300/30 hover:text-zinc-900'
             }`}
         >
           <div suppressHydrationWarning className={`flex items-center justify-center w-6 h-6`}>
@@ -213,7 +219,7 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
   return (
     <aside
       suppressHydrationWarning
-      className={`fixed left-0 top-14 h-[calc(100vh-56px)] bg-[#18181b]/80 backdrop-blur-sm overflow-y-auto hidden lg:block z-[101] ${isCollapsed ? 'w-[72px]' : 'w-64 border-r border-white/5'
+      className={`fixed left-0 top-14 h-[calc(100vh-56px)] bg-white/80 backdrop-blur-sm overflow-y-auto hidden lg:block z-[101] sidebar-scrollbar ${isCollapsed ? 'w-[72px]' : 'w-64 border-r border-zinc-200'
         }`}
     >
       <div suppressHydrationWarning className={`py-2 w-full ${isCollapsed ? 'px-0' : 'px-3'}`}>
@@ -225,7 +231,7 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
         {isCollapsed ? (
           // Collapsed: Show "You" section with just essential items
           <>
-            <div className="h-px bg-white/10 my-2 mx-3" />
+            <div className="h-px bg-zinc-200/80 my-2 mx-3" />
             <ul suppressHydrationWarning className="space-y-1">
               {youItems.slice(0, 2).map(renderItem)} {/* Just Your channel and History */}
             </ul>
@@ -235,11 +241,11 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
           <>
             {isUserAuthenticated && (
               <>
-                <div suppressHydrationWarning className="h-px bg-white/10 my-3 mx-3" />
+                <div suppressHydrationWarning className="h-px bg-zinc-200/80 my-3 mx-3" />
 
-                <div suppressHydrationWarning className="flex items-center space-x-2 px-3 py-2 mb-1 group cursor-pointer hover:bg-white/5 rounded-xl transition-colors">
-                  <span className="text-[16px] font-bold text-white">You</span>
-                  <svg className="w-4 h-4 text-gray-400 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div suppressHydrationWarning className="flex items-center space-x-2 px-3 py-2 mb-1 group cursor-pointer hover:bg-zinc-200/80 rounded-xl transition-colors">
+                  <span className="text-[16px] font-bold text-zinc-900">You</span>
+                  <svg className="w-4 h-4 text-zinc-700 group-hover:text-zinc-900 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                   </svg>
                 </div>
@@ -248,7 +254,7 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
                   {youItems.map(renderItem)}
                 </ul>
 
-                <div suppressHydrationWarning className="h-px bg-white/10 my-3 mx-3" />
+                <div suppressHydrationWarning className="h-px bg-zinc-200/80 my-3 mx-3" />
                 
                 <ul suppressHydrationWarning className="space-y-0.5">
                   {subscriptionItems.map((item) => {
@@ -259,7 +265,7 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
                           suppressHydrationWarning
                           href={item.protected && !isUserAuthenticated ? '/signin' : item.path}
                           className={`flex-1 transition-all duration-200 outline-none flex items-center px-3 py-2.5 rounded-xl ${
-                            isActive ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'
+                            isActive ? 'bg-zinc-200/80 text-zinc-900' : 'text-zinc-700 hover:text-zinc-900 hover:bg-zinc-200/80'
                           }`}
                         >
                           <div suppressHydrationWarning className="flex items-center justify-center transition-colors w-6 h-6 flex-shrink-0">
@@ -271,10 +277,10 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
                         </Link>
                         <button
                           onClick={(e) => { e.preventDefault(); setSubscriptionsExpanded(!subscriptionsExpanded); }}
-                          className="p-2 hover:bg-white/10 rounded mr-1"
+                          className="p-2 hover:bg-zinc-100 rounded mr-1"
                         >
                           <svg 
-                            className={`w-4 h-4 text-gray-400 transition-transform ${subscriptionsExpanded ? 'rotate-180' : ''}`} 
+                            className={`w-4 h-4 text-zinc-700 transition-transform ${subscriptionsExpanded ? 'rotate-180' : ''}`} 
                             fill="none" 
                             stroke="currentColor" 
                             viewBox="0 0 24 24"
@@ -288,15 +294,15 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
                 </ul>
 
                 {subscriptionsExpanded && (
-                  <div className="ml-4 pl-4 border-l border-white/10 space-y-0.5">
+                  <div className="ml-4 pl-4 border-l border-zinc-200 space-y-0.5">
                     {userSubscriptions.length > 0 ? (
                       userSubscriptions.map((sub) => (
                         <Link
                           key={sub.id}
                           href={`/channel/${sub.id}`}
-                          className="flex items-center gap-3 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
+                          className="flex items-center gap-3 px-3 py-2 text-zinc-700 hover:text-zinc-900 hover:bg-zinc-200/80 rounded-xl transition-colors"
                         >
-                          <div className="w-6 h-6 rounded-full bg-zinc-700 overflow-hidden flex-shrink-0">
+                          <div className="w-6 h-6 rounded-full bg-zinc-200 overflow-hidden flex-shrink-0">
                             {sub.avatar ? (
                               <img src={sub.avatar} alt={sub.name} className="w-full h-full object-cover" />
                             ) : (
@@ -318,17 +324,17 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
 
             {!isUserAuthenticated && (
               <>
-                <div suppressHydrationWarning className="h-px bg-white/10 my-3 mx-3" />
-                <div className="px-6 py-4 bg-white/5 rounded-2xl mx-3 mb-4 border border-white/5">
-                  <p className="text-[13px] text-gray-300 mb-4 leading-relaxed font-medium">
+                <div suppressHydrationWarning className="h-px bg-zinc-200/80 my-3 mx-3" />
+                <div className="px-3 py-2 mx-3 mb-4">
+                  <p className="text-[13px] text-zinc-700 mb-3 leading-relaxed font-medium">
                     Sign in to like videos, comment, and subscribe.
                   </p>
                   <Link
                     href="/signin"
-                    className="flex items-center justify-center gap-2 px-4 py-2 rounded-full border border-blue-500/50 text-blue-400 hover:bg-blue-400/10 transition-all font-bold text-sm"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-full border border-zinc-300 text-blue-600 hover:bg-zinc-200/80 transition-all font-semibold text-sm w-fit"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                     </svg>
                     Sign in
                   </Link>
@@ -336,16 +342,16 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
               </>
             )}
 
-            <div suppressHydrationWarning className="h-px bg-white/10 my-3 mx-3" />
+            <div suppressHydrationWarning className="h-px bg-zinc-200/80 my-3 mx-3" />
 
             <div suppressHydrationWarning className="px-3 py-2">
-              <h3 className="text-[16px] font-bold text-white mb-1">Explore</h3>
+              <h3 className="text-[16px] font-bold text-zinc-900 mb-1">Explore</h3>
             </div>
             <ul suppressHydrationWarning className="space-y-0.5">
               {exploreItems.map(renderItem)}
             </ul>
 
-            <div suppressHydrationWarning className="h-px bg-white/10 my-3 mx-3" />
+            <div suppressHydrationWarning className="h-px bg-zinc-200/80 my-3 mx-3" />
 
             <ul suppressHydrationWarning className="space-y-0.5 mb-6">
               {bottomItems.map(renderItem)}
@@ -353,42 +359,42 @@ export default function Sidebar({ isCollapsed, isSignedIn = false, activeProfile
 
             <div suppressHydrationWarning className="px-6 py-4 text-[12px] font-semibold text-gray-500 space-y-3">
               <div suppressHydrationWarning className="flex flex-wrap gap-x-2 gap-y-1">
-                <Link href="/about" className="hover:text-white transition-colors">
+                <Link href="/about" className="hover:text-zinc-900 transition-colors">
                   About
                 </Link>
-                <Link href="/press" className="hover:text-white transition-colors">
+                <Link href="/press" className="hover:text-zinc-900 transition-colors">
                   Press
                 </Link>
-                <Link href="/copyright" className="hover:text-white transition-colors">
+                <Link href="/copyright" className="hover:text-zinc-900 transition-colors">
                   Copyright
                 </Link>
-                <Link href="/contact" className="hover:text-white transition-colors">
+                <Link href="/contact" className="hover:text-zinc-900 transition-colors">
                   Contact us
                 </Link>
-                <Link href="/creators" className="hover:text-white transition-colors">
+                <Link href="/creators" className="hover:text-zinc-900 transition-colors">
                   Creators
                 </Link>
-                <Link href="/advertisement" className="hover:text-white transition-colors">
+                <Link href="/advertisement" className="hover:text-zinc-900 transition-colors">
                   Advertise
                 </Link>
-                <Link href="/developers" className="hover:text-white transition-colors">
+                <Link href="/developers" className="hover:text-zinc-900 transition-colors">
                   Developers
                 </Link>
               </div>
               <div suppressHydrationWarning className="flex flex-wrap gap-x-2 gap-y-1">
-                <Link href="/terms" className="hover:text-white transition-colors">
+                <Link href="/terms" className="hover:text-zinc-900 transition-colors">
                   Terms
                 </Link>
-                <Link href="/privacy" className="hover:text-white transition-colors">
+                <Link href="/privacy" className="hover:text-zinc-900 transition-colors">
                   Privacy
                 </Link>
-                <Link href="/policy-safety" className="hover:text-white transition-colors">
+                <Link href="/policy-safety" className="hover:text-zinc-900 transition-colors">
                   Policy & Safety
                 </Link>
-                <Link href="/how-it-works" className="hover:text-white transition-colors">
+                <Link href="/how-it-works" className="hover:text-zinc-900 transition-colors">
                   How Playra works
                 </Link>
-                <Link href="/test-new-features" className="hover:text-white transition-colors">
+                <Link href="/test-new-features" className="hover:text-zinc-900 transition-colors">
                   Test new features
                 </Link>
               </div>

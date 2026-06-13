@@ -14,7 +14,7 @@ export default function LoadingScreen() {
   if (!mounted || stage === 'exit') return null;
 
   return (
-    <div suppressHydrationWarning className="fixed inset-0 z-[9999] flex items-center justify-center bg-black">
+    <div suppressHydrationWarning className="fixed inset-0 z-[9999] flex items-center justify-center bg-white">
       <img 
         suppressHydrationWarning 
         src="/play-logo.png" 

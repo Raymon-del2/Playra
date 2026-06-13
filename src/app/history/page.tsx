@@ -154,7 +154,7 @@ export default function HistoryPage() {
     }, [filteredHistory]);
 
     return (
-        <div className="min-h-screen bg-black text-white flex">
+        <div className="min-h-screen bg-white text-zinc-900 flex">
             {/* Main Content */}
             <div className="flex-1 max-w-[1284px] p-6 lg:p-10">
                 <h1 className="text-[36px] font-black mb-6">Watch history</h1>
@@ -165,7 +165,7 @@ export default function HistoryPage() {
                         <button
                             key={chip}
                             onClick={() => setActiveChip(chip as typeof activeChip)}
-                            className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${chip === activeChip ? 'bg-white text-black' : 'bg-zinc-800 hover:bg-zinc-700 text-white'
+                            className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${chip === activeChip ? 'bg-white text-black' : 'bg-zinc-200 hover:bg-zinc-300 text-zinc-900'
                                 }`}
                         >
                             {chip}
@@ -175,29 +175,29 @@ export default function HistoryPage() {
 
                 {/* History Sections */}
                 {Object.keys(groupedHistory).length === 0 && !isLoading ? (
-                    <div className="text-zinc-400 text-sm font-semibold">No history found. Watch something to see it here.</div>
+                    <div className="text-zinc-500 text-sm font-semibold">No history found. Watch something to see it here.</div>
                 ) : (
                     <div className="space-y-12">
                         {Object.keys(groupedHistory).map((label) => (
                             <div key={label} className="space-y-6">
-                                <h2 className="text-[20px] font-black border-b border-white/5 pb-2">{label}</h2>
+                                <h2 className="text-[20px] font-black border-b border-zinc-200 pb-2">{label}</h2>
 
                                 {/* Special handling for Shorts if grouped by date section */}
                                 {groupedHistory[label].some((i: any) => i.type === 'short') && (
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-2 font-black uppercase text-lg">
                                             <img src="/styles-icon.svg?v=blue" alt="Styles" className="w-6 h-6 object-contain" />
-                                            <span className="text-white">Styles</span>
+                                            <span className="text-zinc-900">Styles</span>
                                         </div>
                                         <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
                                             {groupedHistory[label]
                                                 .filter((item: any) => item.type === 'short')
                                                 .map((item: any) => (
                                                     <Link key={item.id} href={`/watch/${item.id}`} className="group space-y-2">
-                                                        <div className="aspect-[9/16] rounded-xl overflow-hidden bg-zinc-900 border border-white/5 relative group-hover:border-white/20 transition-all">
+                                                        <div className="aspect-[9/16] rounded-xl overflow-hidden bg-zinc-100 border border-zinc-200 relative group-hover:border-white/20 transition-all">
                                                             <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                                             {progressMap[item.id]?.duration ? (
-                                                                <div className="absolute bottom-0 left-0 w-full h-1 bg-white/10">
+                                                                <div className="absolute bottom-0 left-0 w-full h-1 bg-zinc-200/80">
                                                                     <div
                                                                         className="h-full bg-blue-500"
                                                                         style={{
@@ -209,7 +209,7 @@ export default function HistoryPage() {
                                                         </div>
                                                         <div className="px-1">
                                                             <h3 className="text-sm font-bold line-clamp-2 leading-tight group-hover:text-blue-400 transition-colors uppercase tracking-tight">{item.title}</h3>
-                                                            <p className="text-[12px] text-zinc-400 font-bold mt-1 uppercase tracking-tighter">{item.views}</p>
+                                                            <p className="text-[12px] text-zinc-500 font-bold mt-1 uppercase tracking-tighter">{item.views}</p>
                                                         </div>
                                                     </Link>
                                                 ))}
@@ -234,22 +234,22 @@ export default function HistoryPage() {
                                                     : item.duration || '0:00';
                                             return (
                                                 <Link key={item.id} href={`/watch/${item.id}`} className="flex gap-4 group">
-                                                    <div className="w-48 aspect-video rounded-xl overflow-hidden bg-zinc-900 flex-shrink-0 relative border border-white/5">
+                                                    <div className="w-48 aspect-video rounded-xl overflow-hidden bg-zinc-100 flex-shrink-0 relative border border-zinc-200">
                                                         <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                                                         {durationText ? (
-                                                            <div className="absolute bottom-2 right-2 bg-black/80 px-1.5 py-0.5 rounded text-[10px] font-black">
+                                                            <div className="absolute bottom-2 right-2 bg-white/80 px-1.5 py-0.5 rounded text-[10px] font-black">
                                                                 {durationText}
                                                             </div>
                                                         ) : null}
                                                         {durationSeconds ? (
-                                                            <div className="absolute bottom-0 left-0 w-full h-1 bg-white/10">
+                                                            <div className="absolute bottom-0 left-0 w-full h-1 bg-zinc-200/80">
                                                                 <div className="h-full bg-blue-500" style={{ width: `${pct}%` }} />
                                                             </div>
                                                         ) : null}
                                                     </div>
                                                     <div className="flex-1 space-y-1">
                                                         <h3 className="font-black text-sm line-clamp-2 leading-tight group-hover:text-blue-400 transition-colors uppercase tracking-tight">{item.title}</h3>
-                                                        <p className="text-[12px] text-zinc-400 font-bold uppercase tracking-tight">{item.channel}</p>
+                                                        <p className="text-[12px] text-zinc-500 font-bold uppercase tracking-tight">{item.channel}</p>
                                                         <p className="text-[12px] text-zinc-500 font-bold uppercase tracking-tighter">{item.views} • {item.timestamp}</p>
                                                     </div>
                                                 </Link>
@@ -263,14 +263,14 @@ export default function HistoryPage() {
             </div>
 
             {/* Sidebar Controls */}
-            <div className="hidden lg:block w-[400px] border-l border-white/5 p-10 space-y-10">
+            <div className="hidden lg:block w-[400px] border-l border-zinc-200 p-10 space-y-10">
                 <div className="relative group">
                     <input
                         type="text"
                         placeholder="Search watch history"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full bg-zinc-900 border border-white/5 rounded-full px-12 py-3 text-sm font-bold focus:border-white/20 transition-all outline-none"
+                        className="w-full bg-zinc-100 border border-zinc-200 rounded-full px-12 py-3 text-sm font-bold focus:border-white/20 transition-all outline-none"
                     />
                     <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -300,15 +300,15 @@ export default function HistoryPage() {
                 <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6">
                     {/* Backdrop */}
                     <div
-                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                        className="absolute inset-0 bg-white/60 backdrop-blur-sm"
                         onClick={() => setShowClearModal(false)}
                     />
 
                     {/* Modal Content */}
                     <div className="relative w-full max-w-[450px] bg-[#212121] rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
-                        <h2 className="text-[20px] font-black text-white mb-4">Clear watch history?</h2>
-                        <div className="text-[14px] text-zinc-400 mb-6 space-y-4 font-medium leading-relaxed">
-                            <p className="text-zinc-300 font-bold">{activeProfileName}</p>
+                        <h2 className="text-[20px] font-black text-zinc-900 mb-4">Clear watch history?</h2>
+                        <div className="text-[14px] text-zinc-500 mb-6 space-y-4 font-medium leading-relaxed">
+                            <p className="text-zinc-700 font-bold">{activeProfileName}</p>
                             <p>Your Playra watch history will be cleared from all Playra apps on all devices.</p>
                             <p>
                                 Your video recommendations will be reset, but may still be influenced by activity on other Google products. To learn more, visit <span className="text-blue-400 cursor-pointer hover:underline">My Activity</span>.
@@ -318,7 +318,7 @@ export default function HistoryPage() {
                         <div className="flex justify-end gap-3 mt-8">
                             <button
                                 onClick={() => setShowClearModal(false)}
-                                className="px-5 py-2 hover:bg-white/10 rounded-full text-white font-bold text-sm transition-colors"
+                                className="px-5 py-2 hover:bg-zinc-200/80 rounded-full text-zinc-900 font-bold text-sm transition-colors"
                             >
                                 Cancel
                             </button>
@@ -348,15 +348,15 @@ export default function HistoryPage() {
                 <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6">
                     {/* Backdrop */}
                     <div
-                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                        className="absolute inset-0 bg-white/60 backdrop-blur-sm"
                         onClick={() => setShowPauseModal(false)}
                     />
 
                     {/* Modal Content */}
                     <div className="relative w-full max-w-[450px] bg-[#212121] rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
-                        <h2 className="text-[20px] font-black text-white mb-4">Pause watch history?</h2>
-                        <div className="text-[14px] text-zinc-400 mb-6 space-y-4 font-medium leading-relaxed">
-                            <p className="text-zinc-300 font-bold">{activeProfileName}</p>
+                        <h2 className="text-[20px] font-black text-zinc-900 mb-4">Pause watch history?</h2>
+                        <div className="text-[14px] text-zinc-500 mb-6 space-y-4 font-medium leading-relaxed">
+                            <p className="text-zinc-700 font-bold">{activeProfileName}</p>
                             <p>Pausing Playra watch history can make it harder to find videos you watched, and you may see fewer recommendations for new videos in Playra and other Google products.</p>
                             <p>
                                 Remember, pausing this setting doesn't delete any previous activity, but you can view, edit and delete your private <span className="text-blue-400 cursor-pointer hover:underline">Playra watch history</span> data anytime. When you pause and clear your watch history, Playra features that rely on history to personalize your experience are disabled.
@@ -366,7 +366,7 @@ export default function HistoryPage() {
                         <div className="flex justify-end gap-3 mt-8">
                             <button
                                 onClick={() => setShowPauseModal(false)}
-                                className="px-5 py-2 hover:bg-white/10 rounded-full text-white font-bold text-sm transition-colors"
+                                className="px-5 py-2 hover:bg-zinc-200/80 rounded-full text-zinc-900 font-bold text-sm transition-colors"
                             >
                                 Cancel
                             </button>
@@ -398,10 +398,10 @@ function ControlButton({ icon, label, onClick }: { icon: React.ReactNode, label:
     return (
         <button
             onClick={onClick}
-            className="flex items-center gap-4 w-full px-4 py-3 rounded-xl hover:bg-white/5 transition-all group text-left"
+            className="flex items-center gap-4 w-full px-4 py-3 rounded-xl hover:bg-zinc-200/80 transition-all group text-left"
         >
-            <span className="text-zinc-500 group-hover:text-white transition-colors">{icon}</span>
-            <span className="text-sm font-bold text-zinc-200 group-hover:text-white transition-colors">{label}</span>
+            <span className="text-zinc-500 group-hover:text-zinc-900 transition-colors">{icon}</span>
+            <span className="text-sm font-bold text-zinc-200 group-hover:text-zinc-900 transition-colors">{label}</span>
         </button>
     );
 }

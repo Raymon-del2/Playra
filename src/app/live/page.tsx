@@ -99,14 +99,14 @@ export default function LivePage() {
 
   const StreamCard = ({ stream }: { stream: LiveStream }) => (
     <Link href={`/live/${stream.room_id}`} className="block group">
-      <div className="bg-zinc-900 rounded-xl overflow-hidden hover:bg-zinc-800 transition-colors">
+      <div className="bg-zinc-100 rounded-xl overflow-hidden hover:bg-zinc-200 transition-colors">
         {/* Thumbnail */}
-        <div className="relative aspect-video bg-zinc-800">
+        <div className="relative aspect-video bg-zinc-200">
           {stream.thumbnail_url ? (
             <img src={stream.thumbnail_url} alt={stream.title} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <div className="w-16 h-16 rounded-full bg-zinc-700 flex items-center justify-center">
+              <div className="w-16 h-16 rounded-full bg-zinc-300 flex items-center justify-center">
                 {stream.creator?.avatar ? (
                   <img src={stream.creator.avatar} alt="" className="w-full h-full object-cover rounded-full" />
                 ) : (
@@ -126,7 +126,7 @@ export default function LivePage() {
           
           {/* Viewer count */}
           {stream.status === 'live' && stream.peak_viewers > 0 && (
-            <div className="absolute bottom-2 right-2 bg-black/70 px-2 py-1 rounded text-xs">
+            <div className="absolute bottom-2 right-2 bg-white/70 px-2 py-1 rounded text-xs">
               👀 {stream.peak_viewers}
             </div>
           )}
@@ -134,10 +134,10 @@ export default function LivePage() {
 
         {/* Info */}
         <div className="p-3">
-          <h3 className="font-bold text-white truncate">{stream.title}</h3>
-          <p className="text-zinc-400 text-sm truncate">{stream.creator?.name}</p>
+          <h3 className="font-bold text-zinc-900 truncate">{stream.title}</h3>
+          <p className="text-zinc-500 text-sm truncate">{stream.creator?.name}</p>
           {stream.category && (
-            <span className="inline-block mt-2 px-2 py-0.5 bg-zinc-800 rounded text-xs text-zinc-400">
+            <span className="inline-block mt-2 px-2 py-0.5 bg-zinc-200 rounded text-xs text-zinc-500">
               {stream.category}
             </span>
           )}
@@ -147,9 +147,9 @@ export default function LivePage() {
   );
 
   const ScheduledCard = ({ stream }: { stream: LiveStream }) => (
-    <div className="bg-zinc-900 rounded-xl p-4 flex items-center gap-4">
+    <div className="bg-zinc-100 rounded-xl p-4 flex items-center gap-4">
       {/* Avatar */}
-      <div className="w-14 h-14 rounded-full bg-zinc-700 flex-shrink-0 overflow-hidden">
+      <div className="w-14 h-14 rounded-full bg-zinc-300 flex-shrink-0 overflow-hidden">
         {stream.creator?.avatar ? (
           <img src={stream.creator.avatar} alt="" className="w-full h-full object-cover" />
         ) : (
@@ -165,25 +165,25 @@ export default function LivePage() {
           <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
           {formatScheduledTime(stream.scheduled_at!)}
         </div>
-        <h3 className="font-bold text-white truncate">{stream.title}</h3>
-        <p className="text-zinc-400 text-sm truncate">{stream.creator?.name}</p>
+        <h3 className="font-bold text-zinc-900 truncate">{stream.title}</h3>
+        <p className="text-zinc-500 text-sm truncate">{stream.creator?.name}</p>
       </div>
 
       {/* Notify button */}
-      <button className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-full text-sm font-medium transition-colors">
+      <button className="px-4 py-2 bg-zinc-200 hover:bg-zinc-300 rounded-full text-sm font-medium transition-colors">
         🔔 Notify Me
       </button>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] text-white pb-20">
+    <div className="min-h-screen bg-white text-zinc-900 pb-20">
       <div className="max-w-7xl mx-auto p-4 lg:p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold">Live Streams</h1>
-            <p className="text-zinc-400">Watch creators stream live</p>
+            <p className="text-zinc-500">Watch creators stream live</p>
           </div>
           
           {activeProfile && (
@@ -198,11 +198,11 @@ export default function LivePage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-4 mb-6 border-b border-zinc-800">
+        <div className="flex gap-4 mb-6 border-b border-zinc-200">
           <button
             onClick={() => setActiveTab('live')}
             className={`pb-3 px-1 font-medium transition-colors relative ${
-              activeTab === 'live' ? 'text-white' : 'text-zinc-400'
+              activeTab === 'live' ? 'text-zinc-900' : 'text-zinc-500'
             }`}
           >
             🔴 Live Now
@@ -216,12 +216,12 @@ export default function LivePage() {
           <button
             onClick={() => setActiveTab('upcoming')}
             className={`pb-3 px-1 font-medium transition-colors relative ${
-              activeTab === 'upcoming' ? 'text-white' : 'text-zinc-400'
+              activeTab === 'upcoming' ? 'text-zinc-900' : 'text-zinc-500'
             }`}
           >
             ⏰ Upcoming
             {scheduledStreams.length > 0 && (
-              <span className="ml-2 px-2 py-0.5 bg-zinc-700 rounded-full text-xs">{scheduledStreams.length}</span>
+              <span className="ml-2 px-2 py-0.5 bg-zinc-300 rounded-full text-xs">{scheduledStreams.length}</span>
             )}
             {activeTab === 'upcoming' && (
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-600" />
@@ -243,11 +243,11 @@ export default function LivePage() {
             </div>
           ) : (
             <div className="text-center py-20">
-              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-zinc-800 flex items-center justify-center">
+              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-zinc-200 flex items-center justify-center">
                 <span className="text-4xl">📺</span>
               </div>
               <h2 className="text-xl font-bold mb-2">No live streams right now</h2>
-              <p className="text-zinc-400 mb-6">Check back later or go live yourself!</p>
+              <p className="text-zinc-500 mb-6">Check back later or go live yourself!</p>
               {activeProfile && (
                 <Link
                   href="/live/go"
@@ -267,11 +267,11 @@ export default function LivePage() {
             </div>
           ) : (
             <div className="text-center py-20">
-              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-zinc-800 flex items-center justify-center">
+              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-zinc-200 flex items-center justify-center">
                 <span className="text-4xl">📅</span>
               </div>
               <h2 className="text-xl font-bold mb-2">No upcoming streams</h2>
-              <p className="text-zinc-400">Schedule a stream to notify your followers</p>
+              <p className="text-zinc-500">Schedule a stream to notify your followers</p>
             </div>
           )
         )}

@@ -79,7 +79,7 @@ export default function UploadPage() {
             <header className="flex items-center gap-4 px-4 py-4 border-b border-[#1A1A1A]">
                 <button 
                     onClick={() => router.back()}
-                    className="text-[#888888] hover:text-white transition-colors"
+                    className="text-[#888888] hover:text-zinc-900 transition-colors"
                 >
                     <ArrowLeft size={24} />
                 </button>
@@ -103,7 +103,7 @@ export default function UploadPage() {
                 {isUploading ? (
                     <div className="text-center">
                         <Loader2 size={48} className="animate-spin text-blue-500 mx-auto mb-4" />
-                        <p className="text-white font-semibold mb-2">Uploading directly to server...</p>
+                        <p className="text-zinc-900 font-semibold mb-2">Uploading directly to server...</p>
                         <div className="w-64 h-2 bg-[#1A1A1A] rounded-full overflow-hidden">
                             <div 
                                 className="h-full bg-blue-500 transition-all"
@@ -117,7 +117,7 @@ export default function UploadPage() {
                         <p className="text-red-400 mb-4">{error}</p>
                         <button
                             onClick={() => { setError(null); fileInputRef.current?.click(); }}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-medium"
+                            className="px-4 py-2 bg-blue-600 text-zinc-900 rounded-full text-sm font-medium"
                         >
                             Try Again
                         </button>
@@ -127,19 +127,19 @@ export default function UploadPage() {
                         onClick={() => fileInputRef.current?.click()}
                         className={`w-full max-w-sm aspect-[3/4] border-2 border-dashed rounded-3xl flex flex-col items-center justify-center gap-4 transition-all ${
                             isDragging 
-                                ? 'border-white bg-white/5' 
+                                ? 'border-white bg-zinc-200/80' 
                                 : 'border-[#333333] hover:border-[#555555]'
                         }`}
                     >
                         <div className={`w-20 h-20 rounded-2xl flex items-center justify-center transition-colors ${
-                            isDragging ? 'bg-white/10' : 'bg-[#1A1A1A]'
+                            isDragging ? 'bg-zinc-200/80' : 'bg-[#1A1A1A]'
                         }`}>
                             <ImageIcon size={32} className={`transition-colors ${
-                                isDragging ? 'text-white' : 'text-[#888888]'
+                                isDragging ? 'text-zinc-900' : 'text-[#888888]'
                             }`} />
                         </div>
                         <div className="text-center">
-                            <p className="text-white font-semibold mb-1">
+                            <p className="text-zinc-900 font-semibold mb-1">
                                 {isDragging ? 'Drop video here' : 'Tap to select video'}
                             </p>
                             <p className="text-[#666666] text-sm">From your gallery</p>

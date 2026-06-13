@@ -158,7 +158,7 @@ export default function SubscribeButton({
                     inline-flex items-center gap-2 font-bold rounded-full transition-all duration-200
                     ${sizeClasses[size]}
                     ${subscribed
-                        ? 'bg-zinc-800 text-white hover:bg-zinc-700 border border-white/10'
+                        ? 'bg-zinc-200 text-zinc-900 hover:bg-zinc-300 border border-zinc-200'
                         : 'bg-white text-black hover:bg-gray-200'
                     }
                     ${isAnimating ? 'scale-95' : 'scale-100'}
@@ -196,29 +196,29 @@ export default function SubscribeButton({
 
             {/* Dropdown Menu */}
             {showMenu && subscribed && (
-                <div className="absolute top-full right-0 mt-2 w-64 bg-zinc-900 border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden">
-                    <div className="p-3 border-b border-white/5">
-                        <p className="text-sm text-zinc-400">
-                            Subscribed to <span className="text-white font-bold">{channelName || 'this channel'}</span>
+                <div className="absolute top-full right-0 mt-2 w-64 bg-zinc-100 border border-zinc-200 rounded-xl shadow-2xl z-50 overflow-hidden">
+                    <div className="p-3 border-b border-zinc-200">
+                        <p className="text-sm text-zinc-500">
+                            Subscribed to <span className="text-zinc-900 font-bold">{channelName || 'this channel'}</span>
                         </p>
                     </div>
 
                     <div className="py-1">
                         <button
                             onClick={handleToggleNotifications}
-                            className="w-full px-4 py-3 flex items-center gap-3 hover:bg-white/5 transition-colors"
+                            className="w-full px-4 py-3 flex items-center gap-3 hover:bg-zinc-200/80 transition-colors"
                         >
                             {notifications ? (
-                                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-5 h-5 text-zinc-900" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z" />
                                 </svg>
                             ) : (
-                                <svg className="w-5 h-5 text-zinc-400" fill="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-5 h-5 text-zinc-500" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm0-15.5c2.49 0 4 2.02 4 4.5v.1l2 2V11c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68c-.24.06-.47.15-.69.23l1.64 1.64c.18-.02.36-.05.55-.05zM5.41 3.35L4 4.76l2.81 2.81C6.29 8.57 6 9.74 6 11v5l-2 2v1h14.24l1.74 1.74 1.41-1.41L5.41 3.35zM16 17H8v-6c0-.68.12-1.32.34-1.9L16 16.76V17z" />
                                 </svg>
                             )}
                             <div className="flex-1 text-left">
-                                <p className="text-sm font-bold text-white">
+                                <p className="text-sm font-bold text-zinc-900">
                                     {notifications ? 'All' : 'None'}
                                 </p>
                                 <p className="text-xs text-zinc-500">
@@ -234,7 +234,7 @@ export default function SubscribeButton({
 
                         <button
                             onClick={handleUnsubscribe}
-                            className="w-full px-4 py-3 flex items-center gap-3 hover:bg-white/5 transition-colors text-red-400"
+                            className="w-full px-4 py-3 flex items-center gap-3 hover:bg-zinc-200/80 transition-colors text-red-400"
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

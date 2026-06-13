@@ -203,15 +203,15 @@ export default function LivePage({ params }: { params: { roomId: string } }) {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-white flex items-center justify-center p-4">
         <div className="text-center">
-          <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-zinc-800 flex items-center justify-center">
+          <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-zinc-200 flex items-center justify-center">
             <svg className="w-10 h-10 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">Stream Not Available</h1>
-          <p className="text-zinc-400 mb-6">{error}</p>
+          <h1 className="text-2xl font-bold text-zinc-900 mb-2">Stream Not Available</h1>
+          <p className="text-zinc-500 mb-6">{error}</p>
           <button
             onClick={() => router.push('/live')}
             className="px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded-full font-medium transition-colors"
@@ -225,19 +225,19 @@ export default function LivePage({ params }: { params: { roomId: string } }) {
 
   if (!streamData) {
     return (
-      <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] text-white">
+    <div className="min-h-screen bg-white text-zinc-900">
       <div className="flex flex-col lg:flex-row">
         {/* Main Video Area */}
         <div className="flex-1">
           {/* Video Player */}
-          <div className="relative aspect-video bg-black">
+          <div className="relative aspect-video bg-white">
             {remoteStream ? (
               <video
                 ref={videoRef}
@@ -248,10 +248,10 @@ export default function LivePage({ params }: { params: { roomId: string } }) {
             ) : (
               <div className="w-full h-full flex items-center justify-center">
                 <div className="text-center">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-zinc-800 flex items-center justify-center">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-zinc-200 flex items-center justify-center">
                     <div className="w-3 h-3 bg-red-600 rounded-full animate-pulse" />
                   </div>
-                  <p className="text-zinc-400">Connecting to stream...</p>
+                  <p className="text-zinc-500">Connecting to stream...</p>
                 </div>
               </div>
             )}
@@ -270,7 +270,7 @@ export default function LivePage({ params }: { params: { roomId: string } }) {
               >
                 <div className="flex flex-col items-center">
                   <span className="text-6xl">{GIFT_CONFIG[anim.type].emoji}</span>
-                  <span className="text-white text-sm font-bold mt-2 bg-black/50 px-3 py-1 rounded-full">
+                  <span className="text-zinc-900 text-sm font-bold mt-2 bg-zinc-200/800 px-3 py-1 rounded-full">
                     {anim.sender} sent a {anim.type}!
                   </span>
                 </div>
@@ -279,11 +279,11 @@ export default function LivePage({ params }: { params: { roomId: string } }) {
           </div>
 
           {/* Stream Info Bar */}
-          <div className="p-4 border-b border-white/10">
+          <div className="p-4 border-b border-zinc-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 {/* Creator avatar */}
-                <div className="w-12 h-12 rounded-full overflow-hidden bg-zinc-800">
+                <div className="w-12 h-12 rounded-full overflow-hidden bg-zinc-200">
                   {streamData.creator?.avatar ? (
                     <img src={streamData.creator.avatar} alt="" className="w-full h-full object-cover" />
                   ) : (
@@ -296,7 +296,7 @@ export default function LivePage({ params }: { params: { roomId: string } }) {
                 {/* Stream info */}
                 <div>
                   <h1 className="text-lg font-bold">{streamData.title}</h1>
-                  <p className="text-zinc-400 text-sm">{streamData.creator?.name}</p>
+                  <p className="text-zinc-500 text-sm">{streamData.creator?.name}</p>
                 </div>
               </div>
 
@@ -305,7 +305,7 @@ export default function LivePage({ params }: { params: { roomId: string } }) {
                 <button
                   onClick={handleLike}
                   className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors ${
-                    isLiked ? 'bg-red-600 text-white' : 'bg-zinc-800 hover:bg-zinc-700'
+                    isLiked ? 'bg-red-600 text-zinc-900' : 'bg-zinc-200 hover:bg-zinc-300'
                   }`}
                 >
                   <svg className="w-5 h-5" fill={isLiked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
@@ -316,7 +316,7 @@ export default function LivePage({ params }: { params: { roomId: string } }) {
 
                 <button
                   onClick={() => setShowGiftPanel(!showGiftPanel)}
-                  className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-full transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-zinc-200 hover:bg-zinc-300 rounded-full transition-colors"
                 >
                   <span>🎁</span>
                   <span>Send Gift</span>
@@ -326,7 +326,7 @@ export default function LivePage({ params }: { params: { roomId: string } }) {
                   onClick={() => {
                     navigator.clipboard.writeText(window.location.href);
                   }}
-                  className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded-full transition-colors"
+                  className="p-2 bg-zinc-200 hover:bg-zinc-300 rounded-full transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
@@ -336,7 +336,7 @@ export default function LivePage({ params }: { params: { roomId: string } }) {
             </div>
 
             {/* Viewer count */}
-            <div className="flex items-center gap-4 mt-3 text-sm text-zinc-400">
+            <div className="flex items-center gap-4 mt-3 text-sm text-zinc-500">
               <span className="flex items-center gap-1">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -345,7 +345,7 @@ export default function LivePage({ params }: { params: { roomId: string } }) {
                 {viewerCount} watching
               </span>
               {streamData.category && (
-                <span className="px-2 py-0.5 bg-zinc-800 rounded text-xs">
+                <span className="px-2 py-0.5 bg-zinc-200 rounded text-xs">
                   {streamData.category}
                 </span>
               )}
@@ -354,7 +354,7 @@ export default function LivePage({ params }: { params: { roomId: string } }) {
         </div>
 
         {/* Sidebar - Chat & Gifts */}
-        <div className="w-full lg:w-96 border-l border-white/10 flex flex-col" style={{ height: 'calc(100vh - 56px)', marginTop: '56px' }}>
+        <div className="w-full lg:w-96 border-l border-zinc-200 flex flex-col" style={{ height: 'calc(100vh - 56px)', marginTop: '56px' }}>
           {/* Gift Panel */}
           {showGiftPanel && streamData.allow_donations && (
             <GiftPanel

@@ -56,19 +56,19 @@ export default function FeedPost({ post, currentUserId, onDelete }: FeedPostProp
   };
 
   return (
-    <div className="flex flex-col border-b border-zinc-800 bg-[#0a0a0a]">
+    <div className="flex flex-col border-b border-zinc-200 bg-white">
       {/* Header */}
       <div className="flex items-center justify-between p-4">
         <Link href={`/channel/${post.channel_id}`} className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full overflow-hidden bg-zinc-800">
+          <div className="w-10 h-10 rounded-full overflow-hidden bg-zinc-200">
             {post.channel_avatar ? (
               <img src={post.channel_avatar} alt="" className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full bg-zinc-700" />
+              <div className="w-full h-full bg-zinc-300" />
             )}
           </div>
           <div>
-            <div className="text-white font-semibold text-sm">{post.channel_name}</div>
+            <div className="text-zinc-900 font-semibold text-sm">{post.channel_name}</div>
             <div className="text-zinc-500 text-xs">{formatTime(post.created_at)}</div>
           </div>
         </Link>
@@ -77,29 +77,29 @@ export default function FeedPost({ post, currentUserId, onDelete }: FeedPostProp
         <div className="relative">
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="p-2 hover:bg-zinc-800 rounded-full transition-colors"
+            className="p-2 hover:bg-zinc-200 rounded-full transition-colors"
           >
-            <svg className="w-5 h-5 text-zinc-400" fill="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-zinc-500" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
             </svg>
           </button>
 
           {showMenu && (
-            <div className="absolute right-0 top-full mt-1 w-48 bg-zinc-900 border border-zinc-800 rounded-lg shadow-lg z-10">
+            <div className="absolute right-0 top-full mt-1 w-48 bg-zinc-100 border border-zinc-200 rounded-lg shadow-lg z-10">
               {isOwner && (
                 <button
                   onClick={() => {
                     onDelete?.(post.id);
                     setShowMenu(false);
                   }}
-                  className="w-full text-left px-4 py-2 text-red-400 hover:bg-zinc-800 first:rounded-t-lg last:rounded-b-lg transition-colors"
+                  className="w-full text-left px-4 py-2 text-red-400 hover:bg-zinc-200 first:rounded-t-lg last:rounded-b-lg transition-colors"
                 >
                   Delete Post
                 </button>
               )}
               <button
                 onClick={() => setShowMenu(false)}
-                className="w-full text-left px-4 py-2 text-zinc-300 hover:bg-zinc-800 first:rounded-t-lg last:rounded-b-lg transition-colors"
+                className="w-full text-left px-4 py-2 text-zinc-700 hover:bg-zinc-200 first:rounded-t-lg last:rounded-b-lg transition-colors"
               >
                 Report
               </button>
@@ -121,7 +121,7 @@ export default function FeedPost({ post, currentUserId, onDelete }: FeedPostProp
 
 function TextBody({ text }: { text: string }) {
   return (
-    <p className="text-zinc-100 text-base leading-relaxed whitespace-pre-wrap">{text}</p>
+    <p className="text-zinc-800 text-base leading-relaxed whitespace-pre-wrap">{text}</p>
   );
 }
 
@@ -137,12 +137,12 @@ function ImageGrid({ text, images }: { text?: string; images: string[] }) {
 
   return (
     <div className="space-y-3">
-      {text && <p className="text-zinc-100 text-base leading-relaxed">{text}</p>}
-      <div className={`grid gap-1 rounded-xl overflow-hidden border border-zinc-800 ${getGridClass()}`}>
+      {text && <p className="text-zinc-800 text-base leading-relaxed">{text}</p>}
+      <div className={`grid gap-1 rounded-xl overflow-hidden border border-zinc-200 ${getGridClass()}`}>
         {images.map((url, i) => (
           <div
             key={url}
-            className={`relative bg-zinc-900 ${count === 3 && i === 0 ? 'row-span-2' : 'aspect-square'}`}
+            className={`relative bg-zinc-100 ${count === 3 && i === 0 ? 'row-span-2' : 'aspect-square'}`}
           >
             <img
               src={url}
@@ -163,7 +163,7 @@ function PollCard({ question, options, votes }: { question: string; options: str
 
   return (
     <div className="space-y-3">
-      <h3 className="text-lg font-medium text-zinc-100">{question}</h3>
+      <h3 className="text-lg font-medium text-zinc-800">{question}</h3>
       <div className="space-y-2">
         {options.map((option, i) => {
           const percentage = totalVotes === 0 ? 0 : Math.round(((votes?.[i] || 0) / totalVotes) * 100);
@@ -173,16 +173,16 @@ function PollCard({ question, options, votes }: { question: string; options: str
               key={i}
               onClick={() => !hasVoted && setHasVoted(true)}
               disabled={hasVoted}
-              className="relative w-full text-left p-3 rounded-lg border border-zinc-800 bg-zinc-900/30 overflow-hidden group disabled:cursor-default"
+              className="relative w-full text-left p-3 rounded-lg border border-zinc-200 bg-zinc-100/30 overflow-hidden group disabled:cursor-default"
             >
               {hasVoted && (
                 <div
-                  className="absolute inset-0 bg-zinc-800/50 transition-all duration-500"
+                  className="absolute inset-0 bg-zinc-200/50 transition-all duration-500"
                   style={{ width: `${percentage}%` }}
                 />
               )}
               <div className="relative z-10 flex justify-between items-center">
-                <span className="text-zinc-300">{option}</span>
+                <span className="text-zinc-700">{option}</span>
                 {hasVoted && <span className="text-zinc-500 text-sm">{percentage}%</span>}
               </div>
             </button>
@@ -206,7 +206,7 @@ function QuizCard({ question, options, correctIndex }: { question: string; optio
 
   return (
     <div className="space-y-3">
-      <h3 className="text-lg font-medium text-zinc-100">{question}</h3>
+      <h3 className="text-lg font-medium text-zinc-800">{question}</h3>
       <div className="space-y-2">
         {options.map((option, i) => {
           const isSelected = selected === i;
@@ -222,7 +222,7 @@ function QuizCard({ question, options, correctIndex }: { question: string; optio
                   ? isCorrect
                     ? 'border-green-500 bg-green-500/10'
                     : 'border-red-500 bg-red-500/10'
-                  : 'border-zinc-800 bg-zinc-900/30 hover:bg-zinc-800'
+                  : 'border-zinc-200 bg-zinc-100/30 hover:bg-zinc-200'
               }`}
             >
               <div className="flex items-center gap-3">
@@ -232,11 +232,11 @@ function QuizCard({ question, options, correctIndex }: { question: string; optio
                       ? isCorrect
                         ? 'border-green-500 bg-green-500'
                         : 'border-red-500 bg-red-500'
-                      : 'border-zinc-600'
+                      : 'border-zinc-400'
                   }`}
                 >
                   {showCorrectness && (
-                    <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="w-3 h-3 text-zinc-900" fill="currentColor" viewBox="0 0 20 20">
                       <path
                         fillRule="evenodd"
                         d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -245,7 +245,7 @@ function QuizCard({ question, options, correctIndex }: { question: string; optio
                     </svg>
                   )}
                 </div>
-                <span className="text-zinc-300">{option}</span>
+                <span className="text-zinc-700">{option}</span>
               </div>
             </button>
           );
@@ -271,7 +271,7 @@ function PostActions({ postId }: { postId: string }) {
           setLiked(!liked);
           setLikeCount(liked ? likeCount - 1 : likeCount + 1);
         }}
-        className={`flex items-center gap-2 transition-colors ${liked ? 'text-red-500' : 'text-zinc-400 hover:text-zinc-200'}`}
+        className={`flex items-center gap-2 transition-colors ${liked ? 'text-red-500' : 'text-zinc-500 hover:text-zinc-200'}`}
       >
         <svg className="w-5 h-5" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -284,7 +284,7 @@ function PostActions({ postId }: { postId: string }) {
         <span className="text-sm">{likeCount}</span>
       </button>
 
-      <button className="flex items-center gap-2 text-zinc-400 hover:text-zinc-200 transition-colors">
+      <button className="flex items-center gap-2 text-zinc-500 hover:text-zinc-200 transition-colors">
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"
@@ -296,7 +296,7 @@ function PostActions({ postId }: { postId: string }) {
         <span className="text-sm">Comment</span>
       </button>
 
-      <button className="flex items-center gap-2 text-zinc-400 hover:text-zinc-200 transition-colors">
+      <button className="flex items-center gap-2 text-zinc-500 hover:text-zinc-200 transition-colors">
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"

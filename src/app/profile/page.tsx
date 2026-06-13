@@ -65,13 +65,13 @@ export default function ProfilePage() {
       <div className="max-w-6xl mx-auto px-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 -mt-12 mb-8">
           <div className="w-24 h-24 bg-purple-600 rounded-full flex items-center justify-center border-4 border-gray-900">
-            <span className="text-4xl font-bold text-white">U</span>
+            <span className="text-4xl font-bold text-zinc-900">U</span>
           </div>
           
           <div className="flex-1">
             <h1 className="text-2xl font-bold mb-1">Your Channel</h1>
-            <p className="text-gray-400">@yourchannel</p>
-            <div className="flex items-center gap-6 mt-2 text-sm text-gray-400">
+            <p className="text-gray-500">@yourchannel</p>
+            <div className="flex items-center gap-6 mt-2 text-sm text-gray-500">
               <span>1.2M subscribers</span>
               <span>48 videos</span>
               <span>15.2M total views</span>
@@ -79,12 +79,12 @@ export default function ProfilePage() {
           </div>
 
           <div className="flex gap-3">
-            <button className="px-6 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors">
+            <button className="px-6 py-2 bg-gray-300 text-zinc-900 rounded-lg hover:bg-gray-600 transition-colors">
               Customize Channel
             </button>
             <Link
               href="/upload"
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+              className="px-6 py-2 bg-blue-600 text-zinc-900 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -95,7 +95,7 @@ export default function ProfilePage() {
         </div>
 
         <div className="mb-8">
-          <p className="text-gray-300">
+          <p className="text-gray-700">
             Welcome to my channel! I create tutorials about web development, programming, and software engineering. 
             Subscribe to stay updated with the latest content.
           </p>
@@ -107,8 +107,8 @@ export default function ProfilePage() {
               onClick={() => setActiveTab('videos')}
               className={`pb-4 px-2 font-medium transition-colors ${
                 activeTab === 'videos'
-                  ? 'text-white border-b-2 border-white'
-                  : 'text-gray-400 hover:text-white'
+                  ? 'text-zinc-900 border-b-2 border-white'
+                  : 'text-gray-500 hover:text-zinc-900'
               }`}
             >
               Videos
@@ -117,8 +117,8 @@ export default function ProfilePage() {
               onClick={() => setActiveTab('playlists')}
               className={`pb-4 px-2 font-medium transition-colors ${
                 activeTab === 'playlists'
-                  ? 'text-white border-b-2 border-white'
-                  : 'text-gray-400 hover:text-white'
+                  ? 'text-zinc-900 border-b-2 border-white'
+                  : 'text-gray-500 hover:text-zinc-900'
               }`}
             >
               Playlists
@@ -127,8 +127,8 @@ export default function ProfilePage() {
               onClick={() => setActiveTab('about')}
               className={`pb-4 px-2 font-medium transition-colors ${
                 activeTab === 'about'
-                  ? 'text-white border-b-2 border-white'
-                  : 'text-gray-400 hover:text-white'
+                  ? 'text-zinc-900 border-b-2 border-white'
+                  : 'text-gray-500 hover:text-zinc-900'
               }`}
             >
               About
@@ -146,16 +146,16 @@ export default function ProfilePage() {
                     alt={video.title}
                     className="w-full aspect-video object-cover rounded-lg group-hover:rounded-none transition-all duration-200"
                   />
-                  <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded">
+                  <div className="absolute bottom-2 right-2 bg-white/80 text-zinc-900 text-xs px-2 py-1 rounded">
                     {video.duration}
                   </div>
                 </div>
                 
                 <div className="mt-3">
-                  <h3 className="font-medium text-white line-clamp-2 group-hover:text-blue-400 transition-colors">
+                  <h3 className="font-medium text-zinc-900 line-clamp-2 group-hover:text-blue-400 transition-colors">
                     {video.title}
                   </h3>
-                  <p className="text-sm text-gray-400 mt-1">
+                  <p className="text-sm text-gray-500 mt-1">
                     {video.views} views • {video.timestamp}
                   </p>
                 </div>
@@ -170,8 +170,8 @@ export default function ProfilePage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
             <h3 className="text-xl font-semibold mb-2">No playlists yet</h3>
-            <p className="text-gray-400 mb-4">Create playlists to organize your videos</p>
-            <button className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            <p className="text-gray-500 mb-4">Create playlists to organize your videos</p>
+            <button className="px-6 py-2 bg-blue-600 text-zinc-900 rounded-lg hover:bg-blue-700 transition-colors">
               Create Playlist
             </button>
           </div>
@@ -179,46 +179,46 @@ export default function ProfilePage() {
 
         {activeTab === 'about' && (
           <div className="max-w-2xl">
-            <div className="bg-gray-800 rounded-lg p-6 mb-6">
+            <div className="bg-gray-200 rounded-lg p-6 mb-6">
               <h2 className="text-lg font-semibold mb-4">Description</h2>
-              <p className="text-gray-300">
+              <p className="text-gray-700">
                 Welcome to my channel! I create tutorials about web development, programming, and software engineering. 
                 Subscribe to stay updated with the latest content.
               </p>
             </div>
 
-            <div className="bg-gray-800 rounded-lg p-6 mb-6">
+            <div className="bg-gray-200 rounded-lg p-6 mb-6">
               <h2 className="text-lg font-semibold mb-4">Details</h2>
               <div className="space-y-3 text-sm">
                 <div className="flex">
-                  <span className="text-gray-400 w-32">Location</span>
-                  <span className="text-white">San Francisco, CA</span>
+                  <span className="text-gray-500 w-32">Location</span>
+                  <span className="text-zinc-900">San Francisco, CA</span>
                 </div>
                 <div className="flex">
-                  <span className="text-gray-400 w-32">Joined</span>
-                  <span className="text-white">Jan 15, 2024</span>
+                  <span className="text-gray-500 w-32">Joined</span>
+                  <span className="text-zinc-900">Jan 15, 2024</span>
                 </div>
                 <div className="flex">
-                  <span className="text-gray-400 w-32">Links</span>
+                  <span className="text-gray-500 w-32">Links</span>
                   <a href="#" className="text-blue-400 hover:underline">github.com/yourchannel</a>
                 </div>
               </div>
             </div>
 
-            <div className="bg-gray-800 rounded-lg p-6">
+            <div className="bg-gray-200 rounded-lg p-6">
               <h2 className="text-lg font-semibold mb-4">Stats</h2>
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
                   <div className="text-2xl font-bold">1.2M</div>
-                  <div className="text-sm text-gray-400">Subscribers</div>
+                  <div className="text-sm text-gray-500">Subscribers</div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold">48</div>
-                  <div className="text-sm text-gray-400">Videos</div>
+                  <div className="text-sm text-gray-500">Videos</div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold">15.2M</div>
-                  <div className="text-sm text-gray-400">Views</div>
+                  <div className="text-sm text-gray-500">Views</div>
                 </div>
               </div>
             </div>

@@ -83,8 +83,8 @@ const CommentItem = ({ comment }: { comment: Comment }) => {
         <div className="relative">
             <div className="flex gap-3 mb-4 relative z-10">
                 <div className="flex-shrink-0">
-                    <div className={`w-8 h-8 rounded-full overflow-hidden bg-zinc-700 ${comment.isCreator ? 'border-2 border-yellow-500' : ''}`}>
-                        <div className="w-full h-full flex items-center justify-center text-xs font-bold text-white bg-gradient-to-br from-blue-500 to-purple-500">
+                    <div className={`w-8 h-8 rounded-full overflow-hidden bg-zinc-300 ${comment.isCreator ? 'border-2 border-yellow-500' : ''}`}>
+                        <div className="w-full h-full flex items-center justify-center text-xs font-bold text-zinc-900 bg-gradient-to-br from-blue-500 to-purple-500">
                             {comment.user[0]}
                         </div>
                     </div>
@@ -92,24 +92,24 @@ const CommentItem = ({ comment }: { comment: Comment }) => {
 
                 <div className="flex-1">
                     <div className="flex items-center gap-2 mb-0.5">
-                        <span className={`text-xs font-bold ${comment.isCreator ? 'bg-yellow-500/10 text-yellow-500 px-1.5 rounded' : 'text-zinc-400'}`}>
+                        <span className={`text-xs font-bold ${comment.isCreator ? 'bg-yellow-500/10 text-yellow-500 px-1.5 rounded' : 'text-zinc-500'}`}>
                             {comment.user}
                         </span>
                         <span className="text-[10px] text-zinc-600">{comment.timestamp}</span>
                     </div>
 
-                    <p className="text-[13px] sm:text-sm text-white leading-relaxed mb-2 break-words overflow-hidden">{comment.text}</p>
+                    <p className="text-[13px] sm:text-sm text-zinc-900 leading-relaxed mb-2 break-words overflow-hidden">{comment.text}</p>
                     {comment.image && (
-                        <div className="mb-2 rounded-lg overflow-hidden max-w-[200px] border border-white/10">
+                        <div className="mb-2 rounded-lg overflow-hidden max-w-[200px] border border-zinc-200">
                             <img src={comment.image} alt="Comment attachment" className="w-full h-auto" />
                         </div>
                     )}
 
                     <div className="flex items-center gap-4 text-xs font-bold text-zinc-500">
-                        <button className="flex items-center gap-1 hover:text-white transition-colors">
+                        <button className="flex items-center gap-1 hover:text-zinc-900 transition-colors">
                             Like ({comment.likes})
                         </button>
-                        <button className="hover:text-white transition-colors">Reply</button>
+                        <button className="hover:text-zinc-900 transition-colors">Reply</button>
                     </div>
 
                     {hasReplies && (
@@ -126,7 +126,7 @@ const CommentItem = ({ comment }: { comment: Comment }) => {
                                 comment.replies.map((reply) => (
                                     <div key={reply.id} className="relative pl-5 sm:pl-9">
                                         {/* L-Shape Curve - Minimalist on mobile */}
-                                        <div className="absolute left-1.5 sm:left-3 top-[-8px] w-2.5 sm:w-5 h-7 border-l-[1.5px] border-b-[1.5px] border-zinc-700/50 rounded-bl-lg"
+                                        <div className="absolute left-1.5 sm:left-3 top-[-8px] w-2.5 sm:w-5 h-7 border-l-[1.5px] border-b-[1.5px] border-zinc-300/50 rounded-bl-lg"
                                         />
                                         <CommentItem comment={reply} />
                                     </div>
@@ -170,13 +170,13 @@ export default function CommentsSheet({ isOpen, onClose }: CommentsSheetProps) {
 
     return (
         <>
-            <div className="fixed inset-0 z-[150] bg-black/60 backdrop-blur-sm transition-opacity duration-300" onClick={onClose} />
-            <div className="fixed bottom-0 left-1/2 -translate-x-1/2 z-[160] w-full max-w-2xl bg-[#0f0f0f] rounded-t-[2.5rem] border-t border-white/10 h-[85vh] sm:h-[70vh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)] animate-slide-in-up">
+            <div className="fixed inset-0 z-[150] bg-white/60 backdrop-blur-sm transition-opacity duration-300" onClick={onClose} />
+            <div className="fixed bottom-0 left-1/2 -translate-x-1/2 z-[160] w-full max-w-2xl bg-white rounded-t-[2.5rem] border-t border-zinc-200 h-[85vh] sm:h-[70vh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)] animate-slide-in-up">
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-white/10">
-                    <h3 className="text-white font-bold text-lg">Comments <span className="text-zinc-500 text-sm ml-2">{100 + comments.length}</span></h3>
-                    <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                <div className="flex items-center justify-between p-4 border-b border-zinc-200">
+                    <h3 className="text-zinc-900 font-bold text-lg">Comments <span className="text-zinc-500 text-sm ml-2">{100 + comments.length}</span></h3>
+                    <button onClick={onClose} className="p-2 hover:bg-zinc-200/80 rounded-full">
+                        <svg className="w-6 h-6 text-zinc-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
 
@@ -190,11 +190,11 @@ export default function CommentsSheet({ isOpen, onClose }: CommentsSheetProps) {
                             <div className="flex items-center gap-2">
                                 <span className="text-blue-400 font-bold text-xs">Pinned by Creator</span>
                             </div>
-                            <p className="text-sm text-white mt-1">
+                            <p className="text-sm text-zinc-900 mt-1">
                                 Check out my other styles for the tutorial on this effect! Also link in bio for the preset.
                             </p>
                         </div>
-                        <button className="text-zinc-500 hover:text-white">
+                        <button className="text-zinc-500 hover:text-zinc-900">
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
                         </button>
                     </div>
@@ -208,34 +208,34 @@ export default function CommentsSheet({ isOpen, onClose }: CommentsSheetProps) {
                 </div>
 
                 {/* Footer Input */}
-                <div className="p-4 border-t border-white/10 bg-[#0f0f0f]">
+                <div className="p-4 border-t border-zinc-200 bg-white">
                     {selectedImage && (
                         <div className="mb-2 relative w-fit">
                             <img src={URL.createObjectURL(selectedImage)} className="h-16 rounded-lg border border-white/20" />
                             <button
                                 onClick={() => setSelectedImage(null)}
-                                className="absolute -top-2 -right-2 bg-zinc-800 rounded-full p-1 text-white border border-white/20"
+                                className="absolute -top-2 -right-2 bg-zinc-200 rounded-full p-1 text-zinc-900 border border-white/20"
                             >
                                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                             </button>
                         </div>
                     )}
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-zinc-700 overflow-hidden flex-shrink-0 border border-white/10">
-                            <div className="w-full h-full flex items-center justify-center text-[10px] text-zinc-400">ME</div>
+                        <div className="w-8 h-8 rounded-full bg-zinc-300 overflow-hidden flex-shrink-0 border border-zinc-200">
+                            <div className="w-full h-full flex items-center justify-center text-[10px] text-zinc-500">ME</div>
                         </div>
-                        <div className="flex-1 bg-zinc-800 rounded-2xl px-3 py-1.5 flex items-center gap-2 border border-white/5">
+                        <div className="flex-1 bg-zinc-200 rounded-2xl px-3 py-1.5 flex items-center gap-2 border border-zinc-200">
                             <input
                                 type="text"
                                 value={newComment}
                                 onChange={(e) => setNewComment(e.target.value)}
                                 placeholder="Add a comment..."
-                                className="bg-transparent border-none outline-none text-white text-sm flex-1 placeholder-zinc-500"
+                                className="bg-transparent border-none outline-none text-zinc-900 text-sm flex-1 placeholder-zinc-500"
                                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                             />
                             <button
                                 onClick={() => fileInputRef.current?.click()}
-                                className="text-zinc-400 hover:text-white transition-colors"
+                                className="text-zinc-500 hover:text-zinc-900 transition-colors"
                             >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                             </button>
@@ -250,7 +250,7 @@ export default function CommentsSheet({ isOpen, onClose }: CommentsSheetProps) {
                         <button
                             onClick={handleSend}
                             disabled={!newComment.trim() && !selectedImage}
-                            className={`p-2 rounded-full ${newComment.trim() || selectedImage ? 'bg-blue-600 text-white' : 'bg-zinc-800 text-zinc-500'}`}
+                            className={`p-2 rounded-full ${newComment.trim() || selectedImage ? 'bg-blue-600 text-zinc-900' : 'bg-zinc-200 text-zinc-500'}`}
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" /></svg>
                         </button>

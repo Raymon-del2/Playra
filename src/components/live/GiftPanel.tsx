@@ -57,7 +57,7 @@ export function GiftPanel({ streamId, creatorId, activeProfile }: GiftPanelProps
   };
 
   return (
-    <div className="p-4 border-b border-white/10 bg-zinc-900">
+    <div className="p-4 border-b border-zinc-200 bg-zinc-100">
       <h3 className="font-bold mb-3">Send a Gift 🎁</h3>
       
       {/* Gift buttons */}
@@ -74,11 +74,11 @@ export function GiftPanel({ streamId, creatorId, activeProfile }: GiftPanelProps
               className={`flex flex-col items-center p-3 rounded-lg border transition-all ${
                 isSending 
                   ? 'border-blue-500 bg-blue-500/20' 
-                  : 'border-zinc-700 hover:border-zinc-600 hover:bg-zinc-800'
+                  : 'border-zinc-300 hover:border-zinc-400 hover:bg-zinc-200'
               } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               <span className="text-2xl mb-1">{gift.emoji}</span>
-              <span className="text-xs text-zinc-400">{gift.coins} coins</span>
+              <span className="text-xs text-zinc-500">{gift.coins} coins</span>
               <span className="text-xs text-zinc-500">{gift.ksh} KSH</span>
             </button>
           );
@@ -87,7 +87,7 @@ export function GiftPanel({ streamId, creatorId, activeProfile }: GiftPanelProps
 
       {/* Coin balance */}
       <div className="flex items-center justify-between text-sm">
-        <span className="text-zinc-400">Your balance:</span>
+        <span className="text-zinc-500">Your balance:</span>
         <span className="font-bold text-yellow-400">∞ coins</span>
       </div>
 

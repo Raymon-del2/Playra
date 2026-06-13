@@ -105,17 +105,17 @@ export default function ManageHistoryPage() {
     };
 
     return (
-        <div className="min-h-screen bg-black text-white">
+        <div className="min-h-screen bg-white text-zinc-900">
             <div className="max-w-6xl mx-auto px-4 py-8">
                 <div className="flex items-center justify-between gap-4 mb-6">
                     <div>
                         <h1 className="text-3xl font-black">Manage watch history</h1>
-                        <p className="text-zinc-400 text-sm mt-1">{profileName}</p>
+                        <p className="text-zinc-500 text-sm mt-1">{profileName}</p>
                     </div>
                     <div className="flex gap-2">
                         <button
                             onClick={togglePause}
-                            className="px-4 py-2 rounded-full border border-white/10 hover:border-white/30 text-sm font-bold"
+                            className="px-4 py-2 rounded-full border border-zinc-200 hover:border-white/30 text-sm font-bold"
                         >
                             {paused ? 'Unpause history' : 'Pause history'}
                         </button>
@@ -127,7 +127,7 @@ export default function ManageHistoryPage() {
                         </button>
                         <button
                             onClick={() => router.push('/history')}
-                            className="px-4 py-2 rounded-full border border-white/10 hover:border-white/30 text-sm font-bold"
+                            className="px-4 py-2 rounded-full border border-zinc-200 hover:border-white/30 text-sm font-bold"
                         >
                             Back to history
                         </button>
@@ -140,25 +140,25 @@ export default function ManageHistoryPage() {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search your watch history"
-                        className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 text-sm font-semibold focus:border-white/25 outline-none"
+                        className="w-full bg-zinc-100 border border-zinc-200 rounded-xl px-4 py-3 text-sm font-semibold focus:border-white/25 outline-none"
                     />
                 </div>
 
                 {isLoading ? (
-                    <p className="text-zinc-400">Loading...</p>
+                    <p className="text-zinc-500">Loading...</p>
                 ) : filtered.length === 0 ? (
-                    <div className="text-center text-zinc-400 py-12">No history found.</div>
+                    <div className="text-center text-zinc-500 py-12">No history found.</div>
                 ) : (
                     <div className="space-y-4">
                         {filtered.map((item) => (
                             <div
                                 key={item.id}
-                                className="flex gap-4 items-center bg-zinc-900/60 border border-white/5 rounded-xl p-3"
+                                className="flex gap-4 items-center bg-zinc-100/60 border border-zinc-200 rounded-xl p-3"
                             >
                                 <Link href={`/watch/${item.id}`} className="w-40 flex-shrink-0">
-                                    <div className="aspect-video rounded-lg overflow-hidden bg-zinc-800 relative">
+                                    <div className="aspect-video rounded-lg overflow-hidden bg-zinc-200 relative">
                                         <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover" />
-                                        <span className="absolute bottom-1 right-1 text-[10px] font-black bg-black/70 px-1 rounded">
+                                        <span className="absolute bottom-1 right-1 text-[10px] font-black bg-white/70 px-1 rounded">
                                             {item.duration || '0:00'}
                                         </span>
                                     </div>
@@ -167,7 +167,7 @@ export default function ManageHistoryPage() {
                                     <Link href={`/watch/${item.id}`} className="font-bold line-clamp-2 hover:text-blue-400">
                                         {item.title}
                                     </Link>
-                                    <p className="text-xs text-zinc-400 line-clamp-1">{item.channel || 'Unknown channel'}</p>
+                                    <p className="text-xs text-zinc-500 line-clamp-1">{item.channel || 'Unknown channel'}</p>
                                     <p className="text-xs text-zinc-500">
                                         {formatDistanceToNow(new Date(item.watched_at), { addSuffix: true })} •{' '}
                                         {(item.views ?? 0).toLocaleString()} views

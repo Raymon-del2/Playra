@@ -104,20 +104,20 @@ export default function TVPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white text-2xl">Loading...</div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-zinc-900 text-2xl">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-white text-zinc-900">
       {/* Header */}
-      <div className="flex items-center justify-between px-8 py-6 border-b border-white/10">
+      <div className="flex items-center justify-between px-8 py-6 border-b border-zinc-200">
         <Link href="/tv" className="text-3xl font-bold text-red-500">PLAYRA TV</Link>
         <div className="flex items-center gap-4">
-          <span className="text-zinc-400 text-sm">Use arrow keys to navigate</span>
-          <Link href="/" className="px-4 py-2 bg-zinc-800 rounded-lg hover:bg-zinc-700 transition-colors">
+          <span className="text-zinc-500 text-sm">Use arrow keys to navigate</span>
+          <Link href="/" className="px-4 py-2 bg-zinc-200 rounded-lg hover:bg-zinc-300 transition-colors">
             Switch to Web
           </Link>
         </div>
@@ -129,7 +129,7 @@ export default function TVPage() {
       </div>
 
       {/* Categories */}
-      <div className={`px-8 py-4 flex gap-4 ${focusedSection === 'categories' ? 'bg-white/5' : ''}`}>
+      <div className={`px-8 py-4 flex gap-4 ${focusedSection === 'categories' ? 'bg-zinc-200/80' : ''}`}>
         {categories.map((cat, idx) => (
           <button
             key={cat}
@@ -138,8 +138,8 @@ export default function TVPage() {
               selectedCategory === cat
                 ? 'bg-white text-black'
                 : focusedSection === 'categories' && selectedIndex === idx
-                  ? 'bg-zinc-700 text-white ring-2 ring-white'
-                  : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+                  ? 'bg-zinc-300 text-zinc-900 ring-2 ring-white'
+                  : 'bg-zinc-200 text-zinc-700 hover:bg-zinc-300'
             }`}
           >
             {cat}
@@ -161,21 +161,21 @@ export default function TVPage() {
                 }`}
                 onMouseEnter={() => { if (focusedSection !== 'categories') { setSelectedIndex(idx); setFocusedSection('videos'); } }}
               >
-                <div className="relative aspect-video bg-zinc-800 rounded-lg overflow-hidden">
+                <div className="relative aspect-video bg-zinc-200 rounded-lg overflow-hidden">
                   <img
                     src={video.thumbnail_url || '/default-thumbnail.jpg'}
                     alt={video.title}
                     className="w-full h-full object-cover"
                   />
                   {video.duration && (
-                    <div className="absolute bottom-2 right-2 bg-black/80 text-white text-sm px-2 py-0.5 rounded">
+                    <div className="absolute bottom-2 right-2 bg-white/80 text-zinc-900 text-sm px-2 py-0.5 rounded">
                       {video.duration}
                     </div>
                   )}
                 </div>
                 <div className="mt-2">
-                  <h3 className="font-semibold text-white line-clamp-2">{video.title}</h3>
-                  <p className="text-zinc-400 text-sm mt-1">{video.channel_name}</p>
+                  <h3 className="font-semibold text-zinc-900 line-clamp-2">{video.title}</h3>
+                  <p className="text-zinc-500 text-sm mt-1">{video.channel_name}</p>
                   <p className="text-zinc-500 text-sm">{video.views?.toLocaleString()} views</p>
                 </div>
               </Link>
@@ -200,7 +200,7 @@ export default function TVPage() {
                 }`}
                 onMouseEnter={() => { setSelectedIndex(idx); setFocusedSection('channels'); }}
               >
-                <div className="w-24 h-24 rounded-full bg-zinc-800 overflow-hidden mx-auto">
+                <div className="w-24 h-24 rounded-full bg-zinc-200 overflow-hidden mx-auto">
                   {channel.avatar ? (
                     <img src={channel.avatar} alt={channel.name} className="w-full h-full object-cover" />
                   ) : (
@@ -209,7 +209,7 @@ export default function TVPage() {
                     </div>
                   )}
                 </div>
-                <p className="mt-2 text-white font-medium text-sm truncate w-24">{channel.name}</p>
+                <p className="mt-2 text-zinc-900 font-medium text-sm truncate w-24">{channel.name}</p>
                 <p className="text-zinc-500 text-xs">{channel.subscribers?.toLocaleString()} subs</p>
               </Link>
             ))}

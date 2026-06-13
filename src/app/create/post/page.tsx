@@ -288,22 +288,22 @@ export default function CreatePostPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-black flex items-center justify-center">
+            <div className="min-h-screen bg-white flex items-center justify-center">
                 <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-white"></div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-black flex flex-col">
+        <div className="min-h-screen bg-white flex flex-col">
             {/* Header */}
-            <header className="sticky top-0 z-50 bg-black/90 backdrop-blur-xl border-b border-white/5">
+            <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-zinc-200">
                 <div className="flex items-center justify-between h-14 px-4">
                     <button
                         onClick={() => router.back()}
-                        className="p-2 -ml-2 hover:bg-white/10 rounded-full transition-colors"
+                        className="p-2 -ml-2 hover:bg-zinc-200/80 rounded-full transition-colors"
                     >
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <svg className="w-6 h-6 text-zinc-900" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
@@ -313,7 +313,7 @@ export default function CreatePostPage() {
                         <select
                             value={visibility}
                             onChange={(e) => setVisibility(e.target.value as 'public' | 'members')}
-                            className="bg-zinc-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg border border-white/10 outline-none"
+                            className="bg-zinc-200 text-zinc-900 text-xs font-bold px-3 py-1.5 rounded-lg border border-zinc-200 outline-none"
                         >
                             <option value="public">Public</option>
                             <option value="members">Members</option>
@@ -323,8 +323,8 @@ export default function CreatePostPage() {
                             onClick={handleSubmit}
                             disabled={!isPostValid() || isSubmitting || isUploading}
                             className={`px-5 py-2 rounded-full font-bold text-sm transition-all ${isPostValid() && !isSubmitting && !isUploading
-                                    ? 'bg-blue-600 text-white hover:bg-blue-500 active:scale-95'
-                                    : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
+                                    ? 'bg-blue-600 text-zinc-900 hover:bg-blue-500 active:scale-95'
+                                    : 'bg-zinc-200 text-zinc-500 cursor-not-allowed'
                                 }`}
                         >
                             {isUploading ? 'Uploading...' : isSubmitting ? 'Posting...' : 'Post'}
@@ -334,12 +334,12 @@ export default function CreatePostPage() {
             </header>
 
             {/* Profile indicator */}
-            <div className="px-4 py-3 flex items-center gap-3 border-b border-white/5">
-                <div className="w-10 h-10 rounded-full overflow-hidden bg-zinc-800">
+            <div className="px-4 py-3 flex items-center gap-3 border-b border-zinc-200">
+                <div className="w-10 h-10 rounded-full overflow-hidden bg-zinc-200">
                     {profile?.avatar && <img src={profile.avatar} alt="" className="w-full h-full object-cover" />}
                 </div>
                 <div>
-                    <div className="text-white font-bold text-sm">{profile?.name}</div>
+                    <div className="text-zinc-900 font-bold text-sm">{profile?.name}</div>
                     <div className="text-zinc-500 text-xs">Posting to your community</div>
                 </div>
             </div>
@@ -352,7 +352,7 @@ export default function CreatePostPage() {
                     value={text}
                     onChange={(e) => setText(e.target.value)}
                     placeholder="What's on your mind?"
-                    className="w-full bg-transparent text-white text-lg font-medium placeholder:text-zinc-600 outline-none resize-none min-h-[120px]"
+                    className="w-full bg-transparent text-zinc-900 text-lg font-medium placeholder:text-zinc-600 outline-none resize-none min-h-[120px]"
                     autoFocus
                 />
 
@@ -366,7 +366,7 @@ export default function CreatePostPage() {
                                 {pollOptions.map((option, index) => (
                                     <div key={option.id} className="flex items-center gap-2">
                                         {/* Text input with image preview on left */}
-                                        <div className="flex-1 bg-zinc-900 border border-white/10 rounded-2xl px-4 py-3 flex items-center gap-3">
+                                        <div className="flex-1 bg-zinc-100 border border-zinc-200 rounded-2xl px-4 py-3 flex items-center gap-3">
                                             {option.imageUrl && (
                                                 <img src={option.imageUrl} className="w-8 h-8 object-cover rounded-lg flex-shrink-0" alt="" />
                                             )}
@@ -375,7 +375,7 @@ export default function CreatePostPage() {
                                                 value={option.text}
                                                 onChange={(e) => setPollOptions(pollOptions.map(o => o.id === option.id ? { ...o, text: e.target.value } : o))}
                                                 placeholder={`Option ${index + 1}`}
-                                                className="flex-1 bg-transparent text-white outline-none text-sm"
+                                                className="flex-1 bg-transparent text-zinc-900 outline-none text-sm"
                                             />
                                         </div>
 
@@ -383,7 +383,7 @@ export default function CreatePostPage() {
                                         <button
                                             type="button"
                                             onClick={() => document.getElementById(`poll-file-${option.id}`)?.click()}
-                                            className="p-2 text-zinc-500 hover:text-white transition-colors flex-shrink-0"
+                                            className="p-2 text-zinc-500 hover:text-zinc-900 transition-colors flex-shrink-0"
                                             title="Add image"
                                         >
                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -426,7 +426,7 @@ export default function CreatePostPage() {
                                 <button
                                     type="button"
                                     onClick={handleAddPollOption}
-                                    className="mt-3 w-full py-3 border-2 border-dashed border-zinc-700 rounded-2xl text-zinc-500 font-bold text-sm hover:border-zinc-500 hover:text-zinc-400 transition-colors"
+                                    className="mt-3 w-full py-3 border-2 border-dashed border-zinc-300 rounded-2xl text-zinc-500 font-bold text-sm hover:border-zinc-500 hover:text-zinc-500 transition-colors"
                                 >
                                     + Add option
                                 </button>
@@ -439,13 +439,13 @@ export default function CreatePostPage() {
                     <div className="mt-6 space-y-4">
                         <div>
                             <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Quiz Question</span>
-                            <div className="bg-zinc-900 border border-white/10 rounded-2xl px-4 py-3">
+                            <div className="bg-zinc-100 border border-zinc-200 rounded-2xl px-4 py-3">
                                 <input
                                     type="text"
                                     value={quizQuestion}
                                     onChange={(e) => setQuizQuestion(e.target.value)}
                                     placeholder="Enter your question..."
-                                    className="w-full bg-transparent text-white outline-none"
+                                    className="w-full bg-transparent text-zinc-900 outline-none"
                                 />
                             </div>
                         </div>
@@ -454,12 +454,12 @@ export default function CreatePostPage() {
                             {quizAnswers.map((answer, index) => (
                                 <div
                                     key={answer.id}
-                                    className={`flex items-center gap-3 bg-zinc-900 border rounded-2xl px-4 py-3 cursor-pointer transition-colors ${answer.isCorrect ? 'border-green-500 bg-green-500/10' : 'border-white/10'}`}
+                                    className={`flex items-center gap-3 bg-zinc-100 border rounded-2xl px-4 py-3 cursor-pointer transition-colors ${answer.isCorrect ? 'border-green-500 bg-green-500/10' : 'border-zinc-200'}`}
                                     onClick={() => handleSetCorrectAnswer(answer.id)}
                                 >
-                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${answer.isCorrect ? 'border-green-500 bg-green-500' : 'border-zinc-600'}`}>
+                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${answer.isCorrect ? 'border-green-500 bg-green-500' : 'border-zinc-400'}`}>
                                         {answer.isCorrect && (
-                                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                            <svg className="w-3 h-3 text-zinc-900" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                             </svg>
                                         )}
@@ -473,14 +473,14 @@ export default function CreatePostPage() {
                                         }}
                                         onClick={(e) => e.stopPropagation()}
                                         placeholder={`Answer ${index + 1}`}
-                                        className="flex-1 bg-transparent text-white outline-none text-sm"
+                                        className="flex-1 bg-transparent text-zinc-900 outline-none text-sm"
                                     />
                                 </div>
                             ))}
                             {quizAnswers.length < 4 && (
                                 <button
                                     onClick={handleAddQuizAnswer}
-                                    className="w-full py-3 border-2 border-dashed border-zinc-700 rounded-2xl text-zinc-500 font-bold text-sm hover:border-zinc-500 hover:text-zinc-400 transition-colors"
+                                    className="w-full py-3 border-2 border-dashed border-zinc-300 rounded-2xl text-zinc-500 font-bold text-sm hover:border-zinc-500 hover:text-zinc-500 transition-colors"
                                 >
                                     + Add answer
                                 </button>
@@ -494,13 +494,13 @@ export default function CreatePostPage() {
                         {imagePreviews.length > 0 ? (
                             <div className="grid grid-cols-2 gap-2">
                                 {imagePreviews.map((img, index) => (
-                                    <div key={index} className="relative aspect-square rounded-2xl overflow-hidden bg-zinc-900">
+                                    <div key={index} className="relative aspect-square rounded-2xl overflow-hidden bg-zinc-100">
                                         <img src={img} alt="" className="w-full h-full object-cover" />
                                         <button
                                             onClick={() => handleRemoveImage(index)}
-                                            className="absolute top-2 right-2 p-1.5 bg-black/60 rounded-full hover:bg-black/80 transition-colors"
+                                            className="absolute top-2 right-2 p-1.5 bg-white/60 rounded-full hover:bg-white/80 transition-colors"
                                         >
-                                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                            <svg className="w-4 h-4 text-zinc-900" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                                             </svg>
                                         </button>
@@ -509,7 +509,7 @@ export default function CreatePostPage() {
                                 {imagePreviews.length < 10 && (
                                     <button
                                         onClick={() => fileInputRef.current?.click()}
-                                        className="aspect-square rounded-2xl border-2 border-dashed border-zinc-700 flex items-center justify-center text-zinc-500 hover:border-zinc-500 hover:text-zinc-400 transition-colors"
+                                        className="aspect-square rounded-2xl border-2 border-dashed border-zinc-300 flex items-center justify-center text-zinc-500 hover:border-zinc-500 hover:text-zinc-500 transition-colors"
                                     >
                                         <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -520,7 +520,7 @@ export default function CreatePostPage() {
                         ) : (
                             <button
                                 onClick={() => fileInputRef.current?.click()}
-                                className="w-full py-12 border-2 border-dashed border-zinc-700 rounded-2xl flex flex-col items-center gap-3 text-zinc-500 hover:border-zinc-500 hover:text-zinc-400 transition-colors"
+                                className="w-full py-12 border-2 border-dashed border-zinc-300 rounded-2xl flex flex-col items-center gap-3 text-zinc-500 hover:border-zinc-500 hover:text-zinc-500 transition-colors"
                             >
                                 <svg className="w-12 h-12" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
@@ -533,11 +533,11 @@ export default function CreatePostPage() {
             </div>
 
             {/* Attachment toolbar */}
-            <div className="fixed bottom-0 left-0 right-0 bg-zinc-900 border-t border-white/10 px-4 py-3 safe-area-pb">
+            <div className="fixed bottom-0 left-0 right-0 bg-zinc-100 border-t border-zinc-200 px-4 py-3 safe-area-pb">
                 <div className="flex items-center justify-around">
                     <button
                         onClick={() => handleModeChange('quiz')}
-                        className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${mode === 'quiz' ? 'text-purple-400' : 'text-zinc-500 hover:text-zinc-300'}`}
+                        className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${mode === 'quiz' ? 'text-purple-400' : 'text-zinc-500 hover:text-zinc-700'}`}
                     >
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -547,7 +547,7 @@ export default function CreatePostPage() {
 
                     <button
                         onClick={() => handleModeChange('poll')}
-                        className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${mode === 'poll' ? 'text-yellow-400' : 'text-zinc-500 hover:text-zinc-300'}`}
+                        className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${mode === 'poll' ? 'text-yellow-400' : 'text-zinc-500 hover:text-zinc-700'}`}
                     >
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
@@ -557,7 +557,7 @@ export default function CreatePostPage() {
 
                     <button
                         onClick={() => handleModeChange('image')}
-                        className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${mode === 'image' ? 'text-green-400' : 'text-zinc-500 hover:text-zinc-300'}`}
+                        className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${mode === 'image' ? 'text-green-400' : 'text-zinc-500 hover:text-zinc-700'}`}
                     >
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
@@ -567,7 +567,7 @@ export default function CreatePostPage() {
 
                     <button
                         onClick={() => handleModeChange('text')}
-                        className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${mode === 'text' ? 'text-blue-400' : 'text-zinc-500 hover:text-zinc-300'}`}
+                        className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${mode === 'text' ? 'text-blue-400' : 'text-zinc-500 hover:text-zinc-700'}`}
                     >
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />

@@ -43,7 +43,7 @@ export default function ContactPage() {
     };
 
     return (
-        <div className="min-h-screen bg-black text-white p-6 sm:p-20">
+        <div className="min-h-screen bg-white text-zinc-900 p-6 sm:p-20">
             <div className="max-w-3xl mx-auto">
                 <div className="mb-12">
                     <img src="/Playra.png" alt="Playra" className="h-8 w-auto brightness-200 mb-8" />
@@ -51,19 +51,19 @@ export default function ContactPage() {
                     <p className="text-zinc-500 font-bold uppercase tracking-widest text-sm">We&apos;d love to hear from you</p>
                 </div>
 
-                <div className="space-y-12 text-zinc-400 font-medium leading-relaxed">
+                <div className="space-y-12 text-zinc-500 font-medium leading-relaxed">
                     <section className="space-y-4">
-                        <h2 className="text-2xl font-black text-white italic">Get in Touch</h2>
+                        <h2 className="text-2xl font-black text-zinc-900 italic">Get in Touch</h2>
                         <p>Have a question, suggestion, or need assistance? Fill out the form below and our team will get back to you as soon as possible.</p>
                     </section>
 
                     {status === 'success' ? (
                         <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-6">
                             <h3 className="text-xl font-bold text-green-400 mb-2">Message Sent!</h3>
-                            <p className="text-zinc-400">Thank you for reaching out. We&apos;ve received your message and will respond within 24-48 hours.</p>
+                            <p className="text-zinc-500">Thank you for reaching out. We&apos;ve received your message and will respond within 24-48 hours.</p>
                             <button
                                 onClick={() => setStatus('idle')}
-                                className="mt-4 text-white font-semibold hover:text-green-400 transition-colors"
+                                className="mt-4 text-zinc-900 font-semibold hover:text-green-400 transition-colors"
                             >
                                 Send another message →
                             </button>
@@ -72,7 +72,7 @@ export default function ContactPage() {
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label htmlFor="name" className="text-sm font-semibold text-white">Name</label>
+                                    <label htmlFor="name" className="text-sm font-semibold text-zinc-900">Name</label>
                                     <input
                                         type="text"
                                         id="name"
@@ -81,12 +81,12 @@ export default function ContactPage() {
                                         onChange={handleChange}
                                         required
                                         minLength={2}
-                                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500 transition-colors"
+                                        className="w-full px-4 py-3 bg-zinc-200/80 border border-zinc-200 rounded-xl text-zinc-900 placeholder-zinc-500 focus:outline-none focus:border-blue-500 transition-colors"
                                         placeholder="Your name"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label htmlFor="email" className="text-sm font-semibold text-white">Email</label>
+                                    <label htmlFor="email" className="text-sm font-semibold text-zinc-900">Email</label>
                                     <input
                                         type="email"
                                         id="email"
@@ -94,21 +94,21 @@ export default function ContactPage() {
                                         value={formData.email}
                                         onChange={handleChange}
                                         required
-                                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500 transition-colors"
+                                        className="w-full px-4 py-3 bg-zinc-200/80 border border-zinc-200 rounded-xl text-zinc-900 placeholder-zinc-500 focus:outline-none focus:border-blue-500 transition-colors"
                                         placeholder="your@email.com"
                                     />
                                 </div>
                             </div>
 
                             <div className="space-y-2">
-                                <label htmlFor="subject" className="text-sm font-semibold text-white">Subject</label>
+                                <label htmlFor="subject" className="text-sm font-semibold text-zinc-900">Subject</label>
                                 <select
                                     id="subject"
                                     name="subject"
                                     value={formData.subject}
                                     onChange={handleChange}
                                     required
-                                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-blue-500 transition-colors appearance-none cursor-pointer"
+                                    className="w-full px-4 py-3 bg-zinc-200/80 border border-zinc-200 rounded-xl text-zinc-900 focus:outline-none focus:border-blue-500 transition-colors appearance-none cursor-pointer"
                                 >
                                     <option value="" className="bg-[#1f1f1f]">Select a subject</option>
                                     <option value="general" className="bg-[#1f1f1f]">General Inquiry</option>
@@ -121,7 +121,7 @@ export default function ContactPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <label htmlFor="message" className="text-sm font-semibold text-white">Message</label>
+                                <label htmlFor="message" className="text-sm font-semibold text-zinc-900">Message</label>
                                 <textarea
                                     id="message"
                                     name="message"
@@ -130,7 +130,7 @@ export default function ContactPage() {
                                     required
                                     minLength={10}
                                     rows={6}
-                                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500 transition-colors resize-none"
+                                    className="w-full px-4 py-3 bg-zinc-200/80 border border-zinc-200 rounded-xl text-zinc-900 placeholder-zinc-500 focus:outline-none focus:border-blue-500 transition-colors resize-none"
                                     placeholder="Tell us how we can help you..."
                                 />
                                 <p className="text-xs text-zinc-500">Minimum 10 characters</p>
@@ -152,8 +152,8 @@ export default function ContactPage() {
                         </form>
                     )}
 
-                    <section className="pt-10 border-t border-white/5">
-                        <Link href="/" className="inline-flex items-center gap-2 text-white font-black hover:text-blue-400 transition-colors uppercase tracking-widest text-sm">
+                    <section className="pt-10 border-t border-zinc-200">
+                        <Link href="/" className="inline-flex items-center gap-2 text-zinc-900 font-black hover:text-blue-400 transition-colors uppercase tracking-widest text-sm">
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
                             Back to Home
                         </Link>

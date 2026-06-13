@@ -201,15 +201,15 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh] bg-black text-white">
-        <div className="w-12 h-12 border-4 border-white/10 border-t-white rounded-full animate-spin"></div>
+      <div className="flex items-center justify-center min-h-[60vh] bg-zinc-50 text-zinc-900">
+        <div className="w-12 h-12 border-4 border-zinc-200 border-t-white rounded-full animate-spin"></div>
       </div>
     );
   }
 
   if (!channel) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 bg-black text-white">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 bg-zinc-50 text-zinc-900">
         <h1 className="text-2xl font-bold">Channel not found</h1>
         <button
           className="px-6 py-2 bg-white text-black rounded-full font-bold"
@@ -222,10 +222,10 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-zinc-50 text-zinc-900">
       {/* Repair Notice */}
-      <div className="bg-zinc-800/50 border-b border-white/5 px-4 py-2 text-center">
-        <p className="text-zinc-400 text-sm">
+      <div className="bg-zinc-200/50 border-b border-zinc-200 px-4 py-2 text-center">
+        <p className="text-zinc-500 text-sm">
           This page needs many repairs and we will fix it as we can
         </p>
       </div>
@@ -233,10 +233,10 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
       {/* Banner */}
       <div className="relative w-full">
         <div
-          className="h-48 sm:h-60 md:h-72 w-full bg-gradient-to-r from-blue-900/60 via-purple-800/50 to-black rounded-b-3xl border-b border-white/5"
+          className="h-48 sm:h-60 md:h-72 w-full bg-gradient-to-r from-blue-900/60 via-purple-800/50 to-black rounded-b-3xl border-b border-zinc-200"
           style={bannerUrl ? { backgroundImage: `url(${bannerUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
         >
-          <div className="absolute inset-0 bg-black/30" />
+          <div className="absolute inset-0 bg-zinc-50/30" />
         </div>
         {isOwner && (
           <button
@@ -251,7 +251,7 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
       {/* Header */}
       <div className="max-w-[1284px] mx-auto px-4 md:px-6 pt-6 sm:pt-8">
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-10">
-          <div className="w-[120px] h-[120px] sm:w-[160px] sm:h-[160px] rounded-full overflow-hidden bg-zinc-800 flex-shrink-0 border border-white/10 shadow-2xl -mt-16 sm:-mt-20 relative z-10">
+          <div className="w-[120px] h-[120px] sm:w-[160px] sm:h-[160px] rounded-full overflow-hidden bg-zinc-200 flex-shrink-0 border border-zinc-200 shadow-2xl -mt-16 sm:-mt-20 relative z-10">
             {channel.avatar ? (
               <img src={channel.avatar} alt={channel.name} className="w-full h-full object-cover" />
             ) : (
@@ -266,19 +266,19 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
               {channel.name}
               <img src="/verified-badge.ico" alt="Verified" className="w-5 h-5 sm:w-6 sm:h-6" />
             </h1>
-            <div className="flex flex-wrap justify-center sm:justify-start items-center gap-x-2 text-[14px] text-zinc-400 font-medium mb-3">
-              <span className="text-white font-bold">{handle}</span>
+            <div className="flex flex-wrap justify-center sm:justify-start items-center gap-x-2 text-[14px] text-zinc-500 font-medium mb-3">
+              <span className="text-zinc-900 font-bold">{handle}</span>
               <span>•</span>
               <span>{subscriberCount === 1 ? '1 subscriber' : `${subscriberCount} subscribers`}</span>
               <span>•</span>
               <span>{videos.length} videos</span>
             </div>
-            <div className="text-[14px] text-zinc-400 mb-6 max-w-2xl group cursor-default">
+            <div className="text-[14px] text-zinc-500 mb-6 max-w-2xl group cursor-default">
               {channel.description || 'No channel description yet.'}
             </div>
             <div className="flex flex-wrap justify-center sm:justify-start gap-2">
               <Link href="/studio/content">
-                <button className="h-9 px-4 bg-zinc-800 hover:bg-zinc-700 rounded-full text-sm font-bold transition-colors">
+                <button className="h-9 px-4 bg-zinc-200 hover:bg-zinc-300 rounded-full text-sm font-bold transition-colors">
                   Manage videos
                 </button>
               </Link>
@@ -295,11 +295,11 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
         </div>
 
         {/* Tabs */}
-        <div className="mt-8 border-b border-white/10">
+        <div className="mt-8 border-b border-zinc-200">
           {/* Search Bar */}
           <div className="mb-4">
-            <div className="flex items-center gap-2 bg-zinc-900 border border-white/10 rounded-full px-4 py-2 max-w-md">
-              <svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <div className="flex items-center gap-2 bg-zinc-100 border border-zinc-200 rounded-full px-4 py-2 max-w-md">
+              <svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               <input
@@ -307,10 +307,10 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
                 value={channelSearch}
                 onChange={(e) => setChannelSearch(e.target.value)}
                 placeholder="Search channel"
-                className="flex-1 bg-transparent text-white text-sm placeholder-zinc-500 outline-none"
+                className="flex-1 bg-transparent text-zinc-900 text-sm placeholder-zinc-500 outline-none"
               />
               {channelSearch && (
-                <button onClick={() => setChannelSearch('')} className="text-zinc-400 hover:text-white">
+                <button onClick={() => setChannelSearch('')} className="text-zinc-500 hover:text-zinc-900">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
@@ -323,7 +323,7 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab as any)}
-                className={`pb-3 text-sm sm:text-[15px] font-bold whitespace-nowrap transition-colors relative ${activeTab === tab ? 'text-white' : 'text-zinc-400 hover:text-white'
+                className={`pb-3 text-sm sm:text-[15px] font-bold whitespace-nowrap transition-colors relative ${activeTab === tab ? 'text-zinc-900' : 'text-zinc-500 hover:text-zinc-900'
                   }`}
               >
                 {tab}
@@ -342,10 +342,10 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-8">
                 {filteredVideos.map((video) => (
                   <Link key={video.id} href={video.is_short ? `/styles/${video.id}` : `/watch/${video.id}`} className="flex flex-col gap-2 group">
-                    <div className={`relative bg-zinc-800 rounded-xl overflow-hidden ${video.is_short ? 'aspect-[9/16]' : 'aspect-video'} shadow-lg border border-white/5`}>
+                    <div className={`relative bg-zinc-200 rounded-xl overflow-hidden ${video.is_short ? 'aspect-[9/16]' : 'aspect-video'} shadow-lg border border-zinc-200`}>
                       <img src={video.thumbnail_url} alt={video.title} className="w-full h-full object-cover" />
                       {video.duration && !video.is_short && (
-                        <div className="absolute bottom-1 right-1 bg-black/80 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                        <div className="absolute bottom-1 right-1 bg-zinc-50/80 text-zinc-900 text-[10px] font-bold px-1.5 py-0.5 rounded">
                           {video.duration}
                         </div>
                       )}
@@ -356,10 +356,10 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
                       )}
                     </div>
                     <div className="flex flex-col gap-1">
-                      <h3 className="text-white font-bold text-[14px] leading-tight line-clamp-2 group-hover:text-blue-400 transition-colors">
+                      <h3 className="text-zinc-900 font-bold text-[14px] leading-tight line-clamp-2 group-hover:text-blue-400 transition-colors">
                         {video.title}
                       </h3>
-                      <div className="text-zinc-400 text-[12px] font-medium flex items-center gap-1">
+                      <div className="text-zinc-500 text-[12px] font-medium flex items-center gap-1">
                         <span>{video.views} views</span>
                         <span>•</span>
                         <span>{formatDistanceToNow(new Date(video.created_at), { addSuffix: true })}</span>
@@ -370,13 +370,13 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
               </div>
             ) : (
               <div className="flex flex-col items-center text-center py-20">
-                <div className="w-32 h-32 bg-zinc-900 rounded-full flex items-center justify-center mb-6 border border-white/5 shadow-2xl">
+                <div className="w-32 h-32 bg-zinc-100 rounded-full flex items-center justify-center mb-6 border border-zinc-200 shadow-2xl">
                   <svg className="w-12 h-12 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 00-2 2z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">Upload a video to get started</h3>
-                <p className="text-zinc-400 mb-8 max-w-sm leading-relaxed text-sm">
+                <h3 className="text-xl font-bold text-zinc-900 mb-2">Upload a video to get started</h3>
+                <p className="text-zinc-500 mb-8 max-w-sm leading-relaxed text-sm">
                   Start sharing your story and connecting with viewers. Videos you upload will show up here.
                 </p>
                 <Link href="/studio/content">
@@ -391,7 +391,7 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
           {activeTab === 'Playlists' && (
             loadingPlaylists ? (
               <div className="flex items-center justify-center py-20">
-                <div className="w-8 h-8 border-4 border-white/10 border-t-white rounded-full animate-spin"></div>
+                <div className="w-8 h-8 border-4 border-zinc-200 border-t-white rounded-full animate-spin"></div>
               </div>
             ) : filteredPlaylists.length > 0 ? (
               <div className="space-y-8">
@@ -400,12 +400,12 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
                     {/* Playlist Header */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center">
-                          <svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="w-8 h-8 rounded-lg bg-zinc-200 flex items-center justify-center">
+                          <svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h12" />
                           </svg>
                         </div>
-                        <h3 className="text-lg font-bold text-white">{playlist.name}</h3>
+                        <h3 className="text-lg font-bold text-zinc-900">{playlist.name}</h3>
                         <span className="text-sm text-zinc-500">{playlist.videoCount} videos</span>
                       </div>
                       <Link
@@ -425,27 +425,27 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
                             href={`/watch/${video.id}`}
                             className="group flex-shrink-0 w-64"
                           >
-                            <div className="relative aspect-video rounded-xl overflow-hidden bg-zinc-800 mb-2">
+                            <div className="relative aspect-video rounded-xl overflow-hidden bg-zinc-200 mb-2">
                               <img
                                 src={video.thumbnail_url}
                                 alt={video.title}
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                               />
                               {video.duration && video.duration !== '0:00' && video.duration !== '00:00' && (
-                                <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs font-bold px-1.5 py-0.5 rounded">
+                                <div className="absolute bottom-2 right-2 bg-zinc-50/80 text-zinc-900 text-xs font-bold px-1.5 py-0.5 rounded">
                                   {video.duration}
                                 </div>
                               )}
                               {video.is_live && (
-                                <div className="absolute bottom-2 left-2 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase">
+                                <div className="absolute bottom-2 left-2 bg-red-600 text-zinc-900 text-[10px] font-bold px-2 py-0.5 rounded uppercase">
                                   Live
                                 </div>
                               )}
                             </div>
-                            <h4 className="text-sm font-semibold text-white line-clamp-2 group-hover:text-blue-400 transition-colors">
+                            <h4 className="text-sm font-semibold text-zinc-900 line-clamp-2 group-hover:text-blue-400 transition-colors">
                               {video.title}
                             </h4>
-                            <p className="text-xs text-zinc-400 mt-1">
+                            <p className="text-xs text-zinc-500 mt-1">
                               {video.views} views • {formatDistanceToNow(new Date(video.created_at), { addSuffix: true })}
                             </p>
                           </Link>
@@ -459,13 +459,13 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
               </div>
             ) : (
               <div className="flex flex-col items-center text-center py-20">
-                <div className="w-24 h-24 bg-zinc-900 rounded-full flex items-center justify-center mb-4 border border-white/5">
+                <div className="w-24 h-24 bg-zinc-100 rounded-full flex items-center justify-center mb-4 border border-zinc-200">
                   <svg className="w-10 h-10 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 10h16M4 14h16M4 18h12" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">No playlists yet</h3>
-                <p className="text-zinc-400 max-w-sm">
+                <h3 className="text-xl font-bold text-zinc-900 mb-2">No playlists yet</h3>
+                <p className="text-zinc-500 max-w-sm">
                   Create playlists while watching videos to organize your content.
                 </p>
               </div>
@@ -475,7 +475,7 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
           {activeTab === 'Posts' && (
             loadingPosts ? (
               <div className="flex items-center justify-center py-32">
-                <div className="w-10 h-10 border-4 border-white/10 border-t-white rounded-full animate-spin"></div>
+                <div className="w-10 h-10 border-4 border-zinc-200 border-t-white rounded-full animate-spin"></div>
               </div>
             ) : posts.length > 0 ? (
               <div className="max-w-2xl mx-auto space-y-4">
@@ -487,9 +487,9 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
                   const postType = content._post_type || 'text';
                   
                   return (
-                    <div key={post.id} className="bg-zinc-900/50 border border-white/5 rounded-2xl p-4 hover:bg-zinc-900 transition-colors">
+                    <div key={post.id} className="bg-zinc-100/50 border border-zinc-200 rounded-2xl p-4 hover:bg-zinc-100 transition-colors">
                       <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-full overflow-hidden bg-zinc-800">
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-zinc-200">
                           {post.channel_avatar ? (
                             <img src={post.channel_avatar} alt={post.channel_name} className="w-full h-full object-cover" />
                           ) : (
@@ -499,7 +499,7 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
                           )}
                         </div>
                         <div>
-                          <div className="font-bold text-white text-sm">{post.channel_name}</div>
+                          <div className="font-bold text-zinc-900 text-sm">{post.channel_name}</div>
                           <div className="text-zinc-500 text-xs">
                             {post.created_at ? formatDistanceToNow(new Date(post.created_at), { addSuffix: true }) : ''}
                           </div>
@@ -507,15 +507,15 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
                       </div>
                       
                       {postType === 'text' && content.text && (
-                        <p className="text-white whitespace-pre-wrap mb-3">{content.text}</p>
+                        <p className="text-zinc-900 whitespace-pre-wrap mb-3">{content.text}</p>
                       )}
                       
                       {postType === 'poll' && content.question && (
                         <div className="mb-3">
-                          <p className="font-bold text-white mb-2">{content.question}</p>
+                          <p className="font-bold text-zinc-900 mb-2">{content.question}</p>
                           <div className="space-y-2">
                             {content.options?.map((opt: any, idx: number) => (
-                              <div key={idx} className="bg-zinc-800 rounded-lg px-4 py-2 text-sm text-zinc-300">
+                              <div key={idx} className="bg-zinc-200 rounded-lg px-4 py-2 text-sm text-zinc-700">
                                 {opt.text || opt}
                               </div>
                             ))}
@@ -525,10 +525,10 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
                       
                       {postType === 'quiz' && content.question && (
                         <div className="mb-3">
-                          <p className="font-bold text-white mb-2">{content.question}</p>
+                          <p className="font-bold text-zinc-900 mb-2">{content.question}</p>
                           <div className="space-y-2">
                             {content.options?.map((opt: string, idx: number) => (
-                              <div key={idx} className={`rounded-lg px-4 py-2 text-sm ${idx === content.correct_index ? 'bg-green-900/30 text-green-400 border border-green-500/30' : 'bg-zinc-800 text-zinc-300'}`}>
+                              <div key={idx} className={`rounded-lg px-4 py-2 text-sm ${idx === content.correct_index ? 'bg-green-900/30 text-green-400 border border-green-500/30' : 'bg-zinc-200 text-zinc-700'}`}>
                                 {opt}
                               </div>
                             ))}
@@ -538,7 +538,7 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
                       
                       {postType === 'image' && content.images && (
                         <div className="mb-3">
-                          {content.text && <p className="text-white whitespace-pre-wrap mb-2">{content.text}</p>}
+                          {content.text && <p className="text-zinc-900 whitespace-pre-wrap mb-2">{content.text}</p>}
                           <div className="grid grid-cols-2 gap-2">
                             {content.images.map((img: string, idx: number) => (
                               <img key={idx} src={img} alt="" className="w-full rounded-lg object-cover aspect-square" />
@@ -547,20 +547,20 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
                         </div>
                       )}
                       
-                      <div className="flex items-center gap-4 pt-2 border-t border-white/5">
-                        <button className="flex items-center gap-1.5 text-zinc-400 hover:text-white text-sm">
+                      <div className="flex items-center gap-4 pt-2 border-t border-zinc-200">
+                        <button className="flex items-center gap-1.5 text-zinc-500 hover:text-zinc-900 text-sm">
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
                           </svg>
                           <span>Like</span>
                         </button>
-                        <button className="flex items-center gap-1.5 text-zinc-400 hover:text-white text-sm">
+                        <button className="flex items-center gap-1.5 text-zinc-500 hover:text-zinc-900 text-sm">
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                           </svg>
                           <span>Comment</span>
                         </button>
-                        <button className="flex items-center gap-1.5 text-zinc-400 hover:text-white text-sm">
+                        <button className="flex items-center gap-1.5 text-zinc-500 hover:text-zinc-900 text-sm">
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                           </svg>
@@ -573,7 +573,7 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-32 text-zinc-500">
-                <div className="w-24 h-24 bg-zinc-900 rounded-full flex items-center justify-center mb-4 border border-white/5">
+                <div className="w-24 h-24 bg-zinc-100 rounded-full flex items-center justify-center mb-4 border border-zinc-200">
                   <svg className="w-10 h-10 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
                   </svg>
@@ -588,14 +588,14 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
 
       {/* Customize Banner Modal */}
       {showCustomize && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-zinc-950 border border-white/10 rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
-              <h3 className="text-lg font-bold text-white">Customize channel banner</h3>
-              <button onClick={() => setShowCustomize(false)} className="text-zinc-400 hover:text-white">✕</button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-50/70 backdrop-blur-sm p-4">
+          <div className="bg-zinc-50 border border-zinc-200 rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-200">
+              <h3 className="text-lg font-bold text-zinc-900">Customize channel banner</h3>
+              <button onClick={() => setShowCustomize(false)} className="text-zinc-500 hover:text-zinc-900">✕</button>
             </div>
             <div className="p-5 space-y-4">
-              <div className="rounded-2xl overflow-hidden border border-white/5 bg-zinc-900 aspect-[16/5] flex items-center justify-center">
+              <div className="rounded-2xl overflow-hidden border border-zinc-200 bg-zinc-100 aspect-[16/5] flex items-center justify-center">
                 {bannerPreview || channel?.banner ? (
                   <img src={bannerPreview || channel?.banner || ''} className="w-full h-full object-cover" alt="Banner preview" />
                 ) : (
@@ -612,10 +612,10 @@ export default function ChannelView({ params }: { params: Promise<{ id: string }
                 />
               </label>
             </div>
-            <div className="px-5 py-4 border-t border-white/5 flex justify-end gap-2">
+            <div className="px-5 py-4 border-t border-zinc-200 flex justify-end gap-2">
               <button
                 onClick={() => setShowCustomize(false)}
-                className="px-4 py-2 rounded-full text-sm font-bold bg-white/10 text-white hover:bg-white/20 transition-colors"
+                className="px-4 py-2 rounded-full text-sm font-bold bg-zinc-200/80 text-zinc-900 hover:bg-zinc-300/80 transition-colors"
               >
                 Cancel
               </button>

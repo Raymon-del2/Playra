@@ -66,7 +66,7 @@ export default function TrendingPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-900 pb-20">
+        <div className="min-h-screen bg-gray-100 pb-20">
             {/* Hero Header */}
             <div className="relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-red-600/20 via-orange-500/10 to-transparent" />
@@ -77,15 +77,15 @@ export default function TrendingPage() {
                 <div className="relative px-6 py-12 md:py-16">
                     <div className="flex items-center gap-4 mb-6">
                         <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-lg shadow-red-500/25">
-                            <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-7 h-7 text-zinc-900" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M17.09 4.56c-.7-1.03-1.5-1.99-2.4-2.85-.35-.34-.94-.02-.84.46.19.94.39 2.18.39 3.29 0 2.06-1.35 3.73-3.41 3.73-1.54 0-2.8-.93-3.35-2.26-.1-.2-.14-.32-.2-.54-.11-.42-.66-.55-.9-.18-.18.27-.35.56-.51.84A13.35 13.35 0 004 14.85c0 5.06 4.03 9.15 9 9.15s9-4.09 9-9.15c0-4.33-1.81-7.35-4.91-10.29z" />
                             </svg>
                         </div>
                         <div>
-                            <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight">
+                            <h1 className="text-3xl md:text-4xl font-black text-zinc-900 tracking-tight">
                                 Trending
                             </h1>
-                            <p className="text-zinc-400 text-sm mt-1">
+                            <p className="text-zinc-500 text-sm mt-1">
                                 See what's popular on Playra right now
                             </p>
                         </div>
@@ -101,7 +101,7 @@ export default function TrendingPage() {
                                     flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-sm whitespace-nowrap transition-all
                                     ${activeCategory === cat.id
                                         ? 'bg-white text-black'
-                                        : 'bg-white/10 text-white hover:bg-white/20'
+                                        : 'bg-zinc-200/80 text-zinc-900 hover:bg-zinc-300/80'
                                     }
                                 `}
                             >
@@ -125,7 +125,7 @@ export default function TrendingPage() {
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/50 to-transparent" />
                             <div className="absolute bottom-4 left-4 right-4">
-                                <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-full text-sm font-medium text-white border border-white/20">
+                                <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-zinc-200/80 backdrop-blur-sm rounded-full text-sm font-medium text-zinc-900 border border-white/20">
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                                     </svg>
@@ -133,8 +133,8 @@ export default function TrendingPage() {
                                 </span>
                             </div>
                         </div>
-                        <h2 className="text-2xl font-bold text-white mb-3">Music is Coming Soon</h2>
-                        <p className="text-zinc-400 max-w-md mx-auto mb-6">
+                        <h2 className="text-2xl font-bold text-zinc-900 mb-3">Music is Coming Soon</h2>
+                        <p className="text-zinc-500 max-w-md mx-auto mb-6">
                             Get ready for a dedicated music experience on Playra. Discover trending songs, artists, and music videos all in one place.
                         </p>
                         <button 
@@ -149,23 +149,23 @@ export default function TrendingPage() {
                         {[1, 2, 3, 4, 5].map((i) => (
                             <div key={i} className="flex gap-4 animate-pulse">
                                 <div className="w-10 text-center text-2xl font-bold text-zinc-700">{i}</div>
-                                <div className="w-64 aspect-video bg-zinc-800 rounded-xl flex-shrink-0" />
+                                <div className="w-64 aspect-video bg-zinc-200 rounded-xl flex-shrink-0" />
                                 <div className="flex-1 space-y-3 py-2">
-                                    <div className="h-5 bg-zinc-800 rounded w-3/4" />
-                                    <div className="h-4 bg-zinc-800 rounded w-1/2" />
-                                    <div className="h-3 bg-zinc-800 rounded w-1/3" />
+                                    <div className="h-5 bg-zinc-200 rounded w-3/4" />
+                                    <div className="h-4 bg-zinc-200 rounded w-1/2" />
+                                    <div className="h-3 bg-zinc-200 rounded w-1/3" />
                                 </div>
                             </div>
                         ))}
                     </div>
                 ) : videos.length === 0 ? (
                     <div className="text-center py-20">
-                        <div className="w-20 h-20 mx-auto bg-zinc-800 rounded-full flex items-center justify-center mb-4">
+                        <div className="w-20 h-20 mx-auto bg-zinc-200 rounded-full flex items-center justify-center mb-4">
                             <svg className="w-10 h-10 text-zinc-500" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M17.09 4.56c-.7-1.03-1.5-1.99-2.4-2.85-.35-.34-.94-.02-.84.46.19.94.39 2.18.39 3.29 0 2.06-1.35 3.73-3.41 3.73-1.54 0-2.8-.93-3.35-2.26-.1-.2-.14-.32-.2-.54-.11-.42-.66-.55-.9-.18-.18.27-.35.56-.51.84A13.35 13.35 0 004 14.85c0 5.06 4.03 9.15 9 9.15s9-4.09 9-9.15c0-4.33-1.81-7.35-4.91-10.29z" />
                             </svg>
                         </div>
-                        <h2 className="text-xl font-bold text-white mb-2">No trending videos yet</h2>
+                        <h2 className="text-xl font-bold text-zinc-900 mb-2">No trending videos yet</h2>
                         <p className="text-zinc-500">Check back later for popular content</p>
                     </div>
                 ) : (
@@ -174,7 +174,7 @@ export default function TrendingPage() {
                             <Link
                                 key={video.id}
                                 href={`/watch/${video.id}`}
-                                className="flex gap-4 group p-3 rounded-2xl hover:bg-white/5 transition-all -mx-3"
+                                className="flex gap-4 group p-3 rounded-2xl hover:bg-zinc-200/80 transition-all -mx-3"
                             >
                                 {/* Rank */}
                                 <div className="w-10 flex-shrink-0 flex items-center justify-center">
@@ -191,7 +191,7 @@ export default function TrendingPage() {
 
                                 {/* Thumbnail */}
                                 <div className="relative w-48 md:w-64 flex-shrink-0">
-                                    <div className="aspect-video rounded-xl overflow-hidden bg-zinc-800 shadow-lg">
+                                    <div className="aspect-video rounded-xl overflow-hidden bg-zinc-200 shadow-lg">
                                         <img
                                             src={video.thumbnail_url}
                                             alt={video.title}
@@ -199,12 +199,12 @@ export default function TrendingPage() {
                                         />
                                     </div>
                                     {video.duration && (
-                                        <div className="absolute bottom-2 right-2 bg-black/80 text-white text-[11px] font-bold px-1.5 py-0.5 rounded">
+                                        <div className="absolute bottom-2 right-2 bg-white/80 text-zinc-900 text-[11px] font-bold px-1.5 py-0.5 rounded">
                                             {video.duration}
                                         </div>
                                     )}
                                     {video.is_live && (
-                                        <div className="absolute bottom-2 left-2 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase">
+                                        <div className="absolute bottom-2 left-2 bg-red-600 text-zinc-900 text-[10px] font-bold px-2 py-0.5 rounded uppercase">
                                             Live
                                         </div>
                                     )}
@@ -212,11 +212,11 @@ export default function TrendingPage() {
 
                                 {/* Info */}
                                 <div className="flex-1 min-w-0 py-1">
-                                    <h3 className="text-base md:text-lg font-bold text-white line-clamp-2 group-hover:text-blue-400 transition-colors leading-snug">
+                                    <h3 className="text-base md:text-lg font-bold text-zinc-900 line-clamp-2 group-hover:text-blue-400 transition-colors leading-snug">
                                         {video.title}
                                     </h3>
                                     <div className="flex items-center gap-2 mt-2">
-                                        <div className="w-6 h-6 rounded-full overflow-hidden bg-zinc-800 flex-shrink-0">
+                                        <div className="w-6 h-6 rounded-full overflow-hidden bg-zinc-200 flex-shrink-0">
                                             {video.channel_avatar ? (
                                                 <img src={video.channel_avatar} alt="" className="w-full h-full object-cover" />
                                             ) : (
@@ -225,7 +225,7 @@ export default function TrendingPage() {
                                                 </div>
                                             )}
                                         </div>
-                                        <span className="text-sm text-zinc-400 hover:text-white transition-colors">
+                                        <span className="text-sm text-zinc-500 hover:text-zinc-900 transition-colors">
                                             {video.channel_name}
                                         </span>
                                     </div>

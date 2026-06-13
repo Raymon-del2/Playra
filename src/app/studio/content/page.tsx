@@ -340,27 +340,27 @@ export default function ChannelContent() {
     };
 
     return (
-        <div className="min-h-screen bg-[#0f0f0f] text-white w-full max-w-full overflow-x-hidden pb-24 lg:pb-0">
+        <div className="min-h-screen bg-white text-zinc-900 w-full max-w-full overflow-x-hidden pb-24 lg:pb-0">
             {/* Header / Search Area */}
-            <div className="h-14 border-b border-white/10 flex items-center justify-between px-4 sm:px-6 bg-[#0f0f0f] sticky top-0 z-20 gap-2">
+            <div className="h-14 border-b border-zinc-200 flex items-center justify-between px-4 sm:px-6 bg-white sticky top-0 z-20 gap-2">
                 <div className="relative flex-1 max-w-[200px] sm:max-w-[400px]">
                     <input
                         type="text"
                         placeholder="Search..."
-                        className="w-full h-9 bg-[#121212] border border-white/10 rounded-full px-9 text-sm focus:border-white/30 outline-none transition-colors"
+                        className="w-full h-9 bg-[#121212] border border-zinc-200 rounded-full px-9 text-sm focus:border-white/30 outline-none transition-colors"
                     />
                     <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                 </div>
                 <div className="flex items-center gap-1 sm:gap-4 flex-shrink-0">
-                    <button className="p-2 hover:bg-white/10 rounded-full transition-colors hidden sm:block">
-                        <svg className="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button className="p-2 hover:bg-zinc-200/80 rounded-full transition-colors hidden sm:block">
+                        <svg className="w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
                         </svg>
                     </button>
-                    <button className="p-2 hover:bg-white/10 rounded-full transition-colors relative hidden sm:block">
-                        <svg className="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button className="p-2 hover:bg-zinc-200/80 rounded-full transition-colors relative hidden sm:block">
+                        <svg className="w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
                         </svg>
                     </button>
@@ -371,7 +371,7 @@ export default function ChannelContent() {
                             }
                         }}
                         disabled={activeTab === 'Live'}
-                        className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded text-sm font-medium transition-colors border border-white/10 whitespace-nowrap ${activeTab === 'Live' ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed' : 'bg-white/10 hover:bg-white/15 text-white'
+                        className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded text-sm font-medium transition-colors border border-zinc-200 whitespace-nowrap ${activeTab === 'Live' ? 'bg-zinc-200 text-zinc-500 cursor-not-allowed' : 'bg-zinc-200/80 hover:bg-white/15 text-zinc-900'
                             }`}
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -387,7 +387,7 @@ export default function ChannelContent() {
                                         : 'Create'}
                         </span>
                     </button>
-                    <div className="w-8 h-8 rounded-full overflow-hidden bg-zinc-700 flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full overflow-hidden bg-zinc-300 flex-shrink-0">
                         {activeProfile?.avatar ? (
                             <img src={activeProfile.avatar} alt="" className="w-full h-full object-cover" />
                         ) : (
@@ -398,16 +398,16 @@ export default function ChannelContent() {
 
                         {/* Delete confirmation modal */}
                         {deleteTarget && (
-                            <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm">
-                                <div className="bg-[#111] rounded-2xl border border-white/10 shadow-2xl w-full max-w-md p-6 space-y-4">
-                                    <h3 className="text-xl font-bold text-white">Delete this video?</h3>
-                                    <p className="text-sm text-zinc-400">
+                            <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-white/60 backdrop-blur-sm">
+                                <div className="bg-[#111] rounded-2xl border border-zinc-200 shadow-2xl w-full max-w-md p-6 space-y-4">
+                                    <h3 className="text-xl font-bold text-zinc-900">Delete this video?</h3>
+                                    <p className="text-sm text-zinc-500">
                                         This will permanently remove "{deleteTarget.title}". You cannot undo this action.
                                     </p>
                                     <div className="flex items-center justify-end gap-3">
                                         <button
                                             onClick={() => setDeleteTarget(null)}
-                                            className="px-4 py-2 rounded-full text-sm font-semibold bg-white/10 text-white hover:bg-white/20 transition-colors"
+                                            className="px-4 py-2 rounded-full text-sm font-semibold bg-zinc-200/80 text-zinc-900 hover:bg-zinc-300/80 transition-colors"
                                         >
                                             Cancel
                                         </button>
@@ -431,7 +431,7 @@ export default function ChannelContent() {
                                                     setDeleteTarget(null);
                                                 }
                                             }}
-                                            className="px-4 py-2 rounded-full text-sm font-semibold bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-60"
+                                            className="px-4 py-2 rounded-full text-sm font-semibold bg-red-500 text-zinc-900 hover:bg-red-600 transition-colors disabled:opacity-60"
                                         >
                                             {isDeleting ? 'Deleting...' : 'Delete'}
                                         </button>
@@ -442,16 +442,16 @@ export default function ChannelContent() {
 
                         {/* Edit video title modal */}
                         {editTarget && (
-                            <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm">
-                                <div className="bg-[#111] rounded-2xl border border-white/10 shadow-2xl w-full max-w-md p-6 space-y-4">
-                                    <h3 className="text-xl font-bold text-white">Edit video title</h3>
+                            <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-white/60 backdrop-blur-sm">
+                                <div className="bg-[#111] rounded-2xl border border-zinc-200 shadow-2xl w-full max-w-md p-6 space-y-4">
+                                    <h3 className="text-xl font-bold text-zinc-900">Edit video title</h3>
                                     <div className="space-y-2">
-                                        <label className="text-sm text-zinc-400">New title</label>
+                                        <label className="text-sm text-zinc-500">New title</label>
                                         <input
                                             type="text"
                                             value={editTitle}
                                             onChange={(e) => setEditTitle(e.target.value)}
-                                            className="w-full bg-zinc-800 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-blue-500 outline-none"
+                                            className="w-full bg-zinc-200 border border-zinc-200 rounded-lg px-4 py-2 text-zinc-900 focus:border-blue-500 outline-none"
                                             placeholder="Enter new title"
                                         />
                                     </div>
@@ -461,14 +461,14 @@ export default function ChannelContent() {
                                                 setEditTarget(null);
                                                 setEditTitle('');
                                             }}
-                                            className="px-4 py-2 rounded-full text-sm font-semibold bg-white/10 text-white hover:bg-white/20 transition-colors"
+                                            className="px-4 py-2 rounded-full text-sm font-semibold bg-zinc-200/80 text-zinc-900 hover:bg-zinc-300/80 transition-colors"
                                         >
                                             Cancel
                                         </button>
                                         <button
                                             disabled={isSavingEdit || !editTitle.trim()}
                                             onClick={handleEdit}
-                                            className="px-4 py-2 rounded-full text-sm font-semibold bg-blue-500 text-white hover:bg-blue-600 transition-colors disabled:opacity-60"
+                                            className="px-4 py-2 rounded-full text-sm font-semibold bg-blue-500 text-zinc-900 hover:bg-blue-600 transition-colors disabled:opacity-60"
                                         >
                                             {isSavingEdit ? 'Saving...' : 'Save'}
                                         </button>
@@ -484,12 +484,12 @@ export default function ChannelContent() {
                 <h1 className="text-xl sm:text-2xl font-bold mb-6">Channel content</h1>
 
                 {/* Tabs */}
-                <div className="flex flex-wrap items-center gap-4 sm:gap-8 border-b border-white/10 mb-4">
+                <div className="flex flex-wrap items-center gap-4 sm:gap-8 border-b border-zinc-200 mb-4">
                     {tabs.map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
-                            className={`pb-3 text-sm font-medium transition-colors relative whitespace-nowrap ${activeTab === tab ? 'text-white' : 'text-zinc-400 hover:text-white'
+                            className={`pb-3 text-sm font-medium transition-colors relative whitespace-nowrap ${activeTab === tab ? 'text-zinc-900' : 'text-zinc-500 hover:text-zinc-900'
                                 }`}
                         >
                             {tab}
@@ -502,7 +502,7 @@ export default function ChannelContent() {
 
                 {/* Filters */}
                 <div className="flex items-center gap-4 mb-6">
-                    <button className="flex items-center gap-2 p-2 hover:bg-white/5 rounded text-zinc-400 transition-colors">
+                    <button className="flex items-center gap-2 p-2 hover:bg-zinc-200/80 rounded text-zinc-500 transition-colors">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4.5h18m-18 5h18m-18 5h18m-18 5h18" />
                         </svg>
@@ -514,15 +514,15 @@ export default function ChannelContent() {
                 <div className="sm:hidden space-y-3">
                     {isLoadingList ? (
                         <div className="flex flex-col items-center justify-center py-12">
-                            <div className="w-10 h-10 border-4 border-white/10 border-t-white rounded-full animate-spin"></div>
+                            <div className="w-10 h-10 border-4 border-zinc-200 border-t-white rounded-full animate-spin"></div>
                         </div>
                     ) : filteredVideos.length > 0 ? (
                         filteredVideos.map((video) => (
-                            <div key={video.id} className="bg-zinc-900 rounded-lg p-3 border border-white/5 min-w-0">
+                            <div key={video.id} className="bg-zinc-100 rounded-lg p-3 border border-zinc-200 min-w-0">
                                 {video.is_post ? (
                                     // Post preview
                                     <div className="flex gap-3 min-w-0">
-                                        <div className="w-20 h-14 bg-zinc-800 rounded overflow-hidden flex-shrink-0 flex items-center justify-center">
+                                        <div className="w-20 h-14 bg-zinc-200 rounded overflow-hidden flex-shrink-0 flex items-center justify-center">
                                             {video.thumbnail_url ? (
                                                 <img src={video.thumbnail_url || undefined} className="w-full h-full object-cover" alt="" />
                                             ) : (
@@ -536,28 +536,28 @@ export default function ChannelContent() {
                                                 <span className="px-2 py-0.5 bg-purple-500/20 text-purple-400 text-[10px] font-bold rounded uppercase">Post</span>
                                                 <span className="text-xs text-zinc-500">{new Date(video.created_at).toLocaleDateString()}</span>
                                             </div>
-                                            <h3 className="text-sm font-medium text-white truncate mt-1">{video.title}</h3>
+                                            <h3 className="text-sm font-medium text-zinc-900 truncate mt-1">{video.title}</h3>
                                             <p className="text-xs text-zinc-500 mt-0.5 truncate">{getPostPreview(video.description)}</p>
                                         </div>
                                     </div>
                                 ) : (
                                     <Link href={video.is_short ? `/styles/${video.id}` : `/watch/${video.id}`} className="flex gap-3 min-w-0">
-                                        <div className="w-20 h-14 bg-zinc-800 rounded overflow-hidden flex-shrink-0">
+                                        <div className="w-20 h-14 bg-zinc-200 rounded overflow-hidden flex-shrink-0">
                                             <img src={video.thumbnail_url || undefined} className="w-full h-full object-cover" alt="" />
                                         </div>
                                         <div className="flex-1 min-w-0 overflow-hidden">
-                                            <h3 className="text-sm font-medium text-white truncate">{video.title}</h3>
+                                            <h3 className="text-sm font-medium text-zinc-900 truncate">{video.title}</h3>
                                             <p className="text-xs text-zinc-500 mt-0.5">{new Date(video.created_at).toLocaleDateString()} · {video.views || 0} views</p>
                                             <div className="flex items-center gap-1 mt-0.5">
                                                 <svg className="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                                                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                                 </svg>
-                                                <span className="text-xs text-zinc-400">Public</span>
+                                                <span className="text-xs text-zinc-500">Public</span>
                                             </div>
                                         </div>
                                     </Link>
                                 )}
-                                <div className="flex items-center justify-end gap-2 mt-2 pt-2 border-t border-white/5">
+                                <div className="flex items-center justify-end gap-2 mt-2 pt-2 border-t border-zinc-200">
                                     {!video.is_post && (
                                         <button
                                             onClick={() => {
@@ -588,9 +588,9 @@ export default function ChannelContent() {
                 {/* Desktop Table */}
                 <div className="hidden sm:block">
                     {/* Table Header */}
-                    <div className="grid grid-cols-[1fr_repeat(5,120px)_110px] gap-4 px-4 py-2 border-b border-white/5 text-[12px] font-bold text-zinc-400 uppercase tracking-wider">
+                    <div className="grid grid-cols-[1fr_repeat(5,120px)_110px] gap-4 px-4 py-2 border-b border-zinc-200 text-[12px] font-bold text-zinc-500 uppercase tracking-wider">
                         <div className="flex items-center gap-4">
-                            <input type="checkbox" className="rounded border-zinc-600 bg-transparent" />
+                            <input type="checkbox" className="rounded border-zinc-400 bg-transparent" />
                             <span>Video</span>
                         </div>
                         <span>Visibility</span>
@@ -607,36 +607,36 @@ export default function ChannelContent() {
                     {/* Content List */}
                     {isLoadingList ? (
                         <div className="flex flex-col items-center justify-center py-24">
-                            <div className="w-10 h-10 border-4 border-white/10 border-t-white rounded-full animate-spin"></div>
+                            <div className="w-10 h-10 border-4 border-zinc-200 border-t-white rounded-full animate-spin"></div>
                         </div>
                     ) : filteredVideos.length > 0 ? (
                         <div className="space-y-0">
                             {filteredVideos.map((video) => (
-                                <div key={video.id} className="grid grid-cols-[1fr_repeat(5,120px)_110px] gap-4 px-4 py-4 border-b border-white/5 hover:bg-white/5 transition-colors group items-center">
+                                <div key={video.id} className="grid grid-cols-[1fr_repeat(5,120px)_110px] gap-4 px-4 py-4 border-b border-zinc-200 hover:bg-zinc-200/80 transition-colors group items-center">
                                     <div className="flex items-center gap-4 min-w-0">
-                                        <input type="checkbox" className="rounded border-zinc-600 bg-transparent flex-shrink-0" />
+                                        <input type="checkbox" className="rounded border-zinc-400 bg-transparent flex-shrink-0" />
                                         <Link href={video.is_short ? `/styles/${video.id}` : `/watch/${video.id}`} className="flex gap-4 items-center min-w-0 flex-1">
-                                            <div className="w-32 aspect-video bg-zinc-800 rounded overflow-hidden flex-shrink-0 relative">
+                                            <div className="w-32 aspect-video bg-zinc-200 rounded overflow-hidden flex-shrink-0 relative">
                                                 <img src={video.thumbnail_url || undefined} className="w-full h-full object-cover" alt="" />
-                                                <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
+                                                <div className="absolute inset-0 bg-white/20 group-hover:bg-transparent transition-colors" />
                                             </div>
                                             <div className="min-w-0">
-                                                <h3 className="text-sm font-medium text-white truncate group-hover:text-blue-400 transition-colors uppercase tracking-tight">{video.title}</h3>
+                                                <h3 className="text-sm font-medium text-zinc-900 truncate group-hover:text-blue-400 transition-colors uppercase tracking-tight">{video.title}</h3>
                                                 <p className="text-[12px] text-zinc-500 line-clamp-1 mt-1">{video.description || 'Add description'}</p>
                                             </div>
                                         </Link>
                                     </div>
-                                    <div className="flex items-center gap-2 text-sm text-zinc-300">
+                                    <div className="flex items-center gap-2 text-sm text-zinc-700">
                                         <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
                                         Public
                                     </div>
-                                    <div className="text-sm text-zinc-400">None</div>
-                                    <div className="text-sm text-zinc-400">
+                                    <div className="text-sm text-zinc-500">None</div>
+                                    <div className="text-sm text-zinc-500">
                                         {new Date(video.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                         <div className="text-[11px] text-zinc-500 uppercase tracking-tighter">Published</div>
                                     </div>
-                                    <div className="text-sm text-zinc-400">{video.views || 0}</div>
-                                    <div className="text-sm text-zinc-400">0</div>
+                                    <div className="text-sm text-zinc-500">{video.views || 0}</div>
+                                    <div className="text-sm text-zinc-500">0</div>
                                     <div className="flex items-center gap-2">
                                         <button
                                             onClick={() => {
@@ -683,7 +683,7 @@ export default function ChannelContent() {
                                 }}
                                 disabled={activeTab === 'Live'}
                                 className={`px-6 py-2 rounded-full text-sm font-bold transition-colors ${activeTab === 'Live'
-                                    ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
+                                    ? 'bg-zinc-200 text-zinc-500 cursor-not-allowed'
                                     : 'bg-white text-black hover:bg-zinc-200'
                                     }`}
                             >
@@ -696,7 +696,7 @@ export default function ChannelContent() {
 
             {/* Upload Modal */}
             {isUploadModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-white/60 backdrop-blur-sm">
                     <div
                         className="absolute inset-0"
                         onClick={() => setIsUploadModalOpen(false)}
@@ -705,19 +705,19 @@ export default function ChannelContent() {
                     {/* UPDATED COMPACT MODAL DESIGN - MATCHING IMAGE */}
                     <div className={`relative w-full ${uploadStep === 'idle' ? 'max-w-xl' : 'max-w-[800px] aspect-[16/10]'} bg-[#282828] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200 transition-all`}>
                         {/* Modal Header */}
-                        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 select-none">
-                            <h2 className="text-[15px] font-bold text-white uppercase tracking-tight">Upload videos</h2>
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 select-none">
+                            <h2 className="text-[15px] font-bold text-zinc-900 uppercase tracking-tight">Upload videos</h2>
                             <div className="flex items-center gap-2">
-                                <button className="p-2 hover:bg-white/10 rounded-full transition-colors group">
-                                    <svg className="w-5 h-5 text-zinc-400 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <button className="p-2 hover:bg-zinc-200/80 rounded-full transition-colors group">
+                                    <svg className="w-5 h-5 text-zinc-500 group-hover:text-zinc-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                                     </svg>
                                 </button>
                                 <button
                                     onClick={() => resetModal()}
-                                    className="p-2 hover:bg-white/10 rounded-full transition-colors group"
+                                    className="p-2 hover:bg-zinc-200/80 rounded-full transition-colors group"
                                 >
-                                    <svg className="w-5 h-5 text-zinc-400 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-5 h-5 text-zinc-500 group-hover:text-zinc-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                                     </svg>
                                 </button>
@@ -728,7 +728,7 @@ export default function ChannelContent() {
                         <div className="flex-1 flex flex-col overflow-y-auto">
                             {uploadStep === 'idle' ? (
                                 <div
-                                    className={`flex-1 flex flex-col items-center justify-center py-16 px-8 transition-colors ${isDragging ? 'bg-white/5' : ''
+                                    className={`flex-1 flex flex-col items-center justify-center py-16 px-8 transition-colors ${isDragging ? 'bg-zinc-200/80' : ''
                                         }`}
                                     onDragOver={handleDragOver}
                                     onDragLeave={handleDragLeave}
@@ -738,12 +738,12 @@ export default function ChannelContent() {
                                       onClick={() => document.getElementById('studio-upload-input')?.click()}
                                       className="w-32 h-32 bg-[#1f1f1f] hover:bg-[#252525] rounded-full flex items-center justify-center mb-8 cursor-pointer transition-all shadow-inner group"
                                     >
-                                        <svg className="w-12 h-12 text-zinc-500 group-hover:text-white group-hover:-translate-y-1 transition-all" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                                        <svg className="w-12 h-12 text-zinc-500 group-hover:text-zinc-900 group-hover:-translate-y-1 transition-all" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                                         </svg>
                                     </div>
 
-                                    <h3 className="text-[15px] font-bold text-white mb-6 select-none">Drag and drop video files to upload</h3>
+                                    <h3 className="text-[15px] font-bold text-zinc-900 mb-6 select-none">Drag and drop video files to upload</h3>
                                     
                                     <input 
                                       id="studio-upload-input"
@@ -793,8 +793,8 @@ export default function ChannelContent() {
                                                                 (type.id === 'music' && selectedCategory === 'music') ||
                                                                 (type.id === 'styles' && activeTab === 'Styles') ||
                                                                 (type.id === 'post' && activeTab === 'Posts')
-                                                                    ? 'bg-white/10 border-white text-white'
-                                                                    : 'bg-transparent border-white/5 text-zinc-500 hover:border-white/20'
+                                                                    ? 'bg-zinc-200/80 border-white text-zinc-900'
+                                                                    : 'bg-transparent border-zinc-200 text-zinc-500 hover:border-white/20'
                                                             }`}
                                                         >
                                                             {type.icon}
@@ -804,7 +804,7 @@ export default function ChannelContent() {
                                                 </div>
 
                                                 <div className="relative group">
-                                                    <div className="absolute inset-0 border border-zinc-700 group-focus-within:border-blue-500 rounded p-2 pointer-events-none transition-colors" />
+                                                    <div className="absolute inset-0 border border-zinc-300 group-focus-within:border-blue-500 rounded p-2 pointer-events-none transition-colors" />
                                                     <label className="block text-[12px] text-zinc-500 px-2 pt-1 group-focus-within:text-blue-500 transition-colors">Title (required)</label>
                                                     <input
                                                         type="text"
@@ -816,7 +816,7 @@ export default function ChannelContent() {
                                                 </div>
 
                                                 <div className="relative group">
-                                                    <div className="absolute inset-0 border border-zinc-700 group-focus-within:border-blue-500 rounded p-2 pointer-events-none transition-colors" />
+                                                    <div className="absolute inset-0 border border-zinc-300 group-focus-within:border-blue-500 rounded p-2 pointer-events-none transition-colors" />
                                                     <label className="block text-[12px] text-zinc-500 px-2 pt-1 group-focus-within:text-blue-500 transition-colors">Description</label>
                                                     <textarea
                                                         rows={4}
@@ -829,9 +829,9 @@ export default function ChannelContent() {
                                             </div>
 
                                             <div className="space-y-2 pt-4">
-                                                <h3 className="text-sm font-bold text-white">Thumbnail</h3>
-                                                <p className="text-[12px] text-zinc-400">Select or upload a picture that shows what's in your video.</p>
-                                                <label className="w-36 aspect-video bg-zinc-800 border-2 border-dashed border-zinc-700 rounded flex flex-col items-center justify-center cursor-pointer hover:border-zinc-500 transition-colors overflow-hidden">
+                                                <h3 className="text-sm font-bold text-zinc-900">Thumbnail</h3>
+                                                <p className="text-[12px] text-zinc-500">Select or upload a picture that shows what's in your video.</p>
+                                                <label className="w-36 aspect-video bg-zinc-200 border-2 border-dashed border-zinc-300 rounded flex flex-col items-center justify-center cursor-pointer hover:border-zinc-500 transition-colors overflow-hidden">
                                                     {thumbnailData ? (
                                                         <img src={thumbnailData} alt="Preview" className="w-full h-full object-cover" />
                                                     ) : (
@@ -849,7 +849,7 @@ export default function ChannelContent() {
 
                                     {/* Right: Preview & Progress */}
                                     <div className="w-full lg:w-[300px] space-y-4">
-                                        <div className="bg-[#1a1a1a] rounded overflow-hidden aspect-video border border-white/5 relative">
+                                        <div className="bg-[#1a1a1a] rounded overflow-hidden aspect-video border border-zinc-200 relative">
                                             {selectedFile && (
                                                 <video
                                                     src={URL.createObjectURL(selectedFile)}
@@ -859,12 +859,12 @@ export default function ChannelContent() {
                                         </div>
                                         <div className="bg-[#1a1a1a] p-3 rounded space-y-2">
                                             <div className="flex justify-between items-center text-[12px]">
-                                                <span className="text-zinc-400">Filename</span>
-                                                <span className="text-white truncate max-w-[150px]">{selectedFile?.name}</span>
+                                                <span className="text-zinc-500">Filename</span>
+                                                <span className="text-zinc-900 truncate max-w-[150px]">{selectedFile?.name}</span>
                                             </div>
                                             {isSaving && (
                                                 <div className="space-y-1">
-                                                    <div className="h-1 bg-zinc-800 rounded-full overflow-hidden">
+                                                    <div className="h-1 bg-zinc-200 rounded-full overflow-hidden">
                                                         <div className="h-full bg-blue-500 transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
                                                     </div>
                                                     <p className="text-[10px] text-blue-400 text-center uppercase font-bold tracking-widest">Uploading {uploadProgress}%</p>
@@ -875,7 +875,7 @@ export default function ChannelContent() {
                                         <button
                                             disabled={isSaving || !videoTitle}
                                             onClick={handleSave}
-                                            className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-800 disabled:text-zinc-600 rounded-full text-sm font-bold transition-all"
+                                            className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-200 disabled:text-zinc-600 rounded-full text-sm font-bold transition-all"
                                         >
                                             {isSaving ? 'Uploading...' : 'Publish'}
                                         </button>
@@ -888,8 +888,8 @@ export default function ChannelContent() {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                                         </svg>
                                     </div>
-                                    <h3 className="text-xl font-bold text-white mb-2">Video published successfully!</h3>
-                                    <p className="text-zinc-400 mb-8 max-w-[400px]">Your video is now live on Playra. You can manage it from your content dashboard.</p>
+                                    <h3 className="text-xl font-bold text-zinc-900 mb-2">Video published successfully!</h3>
+                                    <p className="text-zinc-500 mb-8 max-w-[400px]">Your video is now live on Playra. You can manage it from your content dashboard.</p>
                                     <button
                                         onClick={resetModal}
                                         className="px-8 py-2 bg-white text-black rounded-full text-sm font-bold hover:bg-zinc-200 transition-colors"

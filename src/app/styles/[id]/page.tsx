@@ -18,6 +18,7 @@ import {
   Share2,
   MoreVertical,
   Play,
+  Pause,
   Volume2,
   VolumeX,
   Music,
@@ -442,7 +443,7 @@ function StylesFeed({ styleId }: { styleId?: string }) {
   // If embedded in another website, show simple player for current video
   if (isEmbedded && activeClip) {
     return (
-      <div className="w-full h-full bg-black relative group">
+      <div className="w-full h-full bg-white relative group">
         <video
           src={activeClip.video_url}
           poster={activeClip.thumbnail_url}
@@ -457,14 +458,14 @@ function StylesFeed({ styleId }: { styleId?: string }) {
             {activeClip.channel_avatar && (
               <img src={activeClip.channel_avatar} alt="" className="w-10 h-10 rounded-full border border-white/20" />
             )}
-            <div className="text-white drop-shadow-lg">
+            <div className="text-zinc-900 drop-shadow-lg">
               <p className="font-bold text-base leading-tight drop-shadow-md">{activeClip.title}</p>
-              {activeClip.channel_name && <p className="text-sm text-white/80 drop-shadow-md">{activeClip.channel_name}</p>}
+              {activeClip.channel_name && <p className="text-sm text-zinc-900/80 drop-shadow-md">{activeClip.channel_name}</p>}
             </div>
           </div>
         )}
         <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-          <a href={`/styles/${activeClip.id}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-black/70 backdrop-blur-sm px-4 py-2 rounded-lg text-sm text-white hover:bg-black/80 transition-colors">
+          <a href={`/styles/${activeClip.id}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-white/70 backdrop-blur-sm px-4 py-2 rounded-lg text-sm text-zinc-900 hover:bg-white/80 transition-colors">
             <span>Watch on</span>
             <img src="/offlinee.png" alt="Playra" className="h-5 w-auto object-contain" />
           </a>
@@ -490,7 +491,7 @@ function StylesFeed({ styleId }: { styleId?: string }) {
                 <div className="yt-slide-inner">
                   <div className="yt-video-col">
                     <div className="yt-video-wrap">
-                      <div className="aspect-[9/16] bg-[#313131] rounded-xl w-full" />
+                      <div className="aspect-[9/16] bg-zinc-200 rounded-xl w-full" />
                     </div>
                   </div>
                 </div>
@@ -500,7 +501,7 @@ function StylesFeed({ styleId }: { styleId?: string }) {
         ) : clips.length === 0 ? (
           <div className="yt-slide">
             <div className="yt-slide-inner">
-              <div className="yt-video-wrap bg-black">
+              <div className="yt-video-wrap bg-white">
                 {/* No videos yet */}
               </div>
             </div>
@@ -513,8 +514,8 @@ function StylesFeed({ styleId }: { styleId?: string }) {
           >
             <div className="yt-slide-inner">
 
-              {/* ── VIDEO COLUMN ── */}
-              <div className="yt-video-col">
+              {/* ── VIDEO AND DETAILS COLUMN ── */}
+              <div className="yt-video-and-details">
                 <div className="yt-video-wrap">
                   <video
                     ref={el => { videoRefs.current[index] = el; }}
@@ -529,6 +530,16 @@ function StylesFeed({ styleId }: { styleId?: string }) {
                     onClick={togglePlay}
                   />
 
+                  {/* Top-left controls (Desktop) */}
+                  <div className="yt-top-left-controls yt-desktop-only">
+                    <button className="yt-control-btn" onClick={togglePlay}>
+                      {isPlaying ? <Pause size={20} className="fill-white" /> : <Play size={20} className="fill-white" />}
+                    </button>
+                    <button className="yt-control-btn" onClick={e => { e.stopPropagation(); setIsMuted(!isMuted); }}>
+                      {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+                    </button>
+                  </div>
+
                   {/* Pause overlay */}
                   {!isPlaying && index === activeIndex && (
                     <div className="yt-play-overlay" onClick={togglePlay}>
@@ -542,13 +553,13 @@ function StylesFeed({ styleId }: { styleId?: string }) {
                     </div>
                   )}
 
-                  {/* Mute button */}
-                  <button className="yt-mute-btn" onClick={e => { e.stopPropagation(); setIsMuted(!isMuted); }}>
+                  {/* Mute button (Mobile) */}
+                  <button className="yt-mute-btn yt-mobile-only" onClick={e => { e.stopPropagation(); setIsMuted(!isMuted); }}>
                     {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
                   </button>
 
                   {/* Mobile-only action buttons (right side overlay) */}
-                  <div className="yt-mobile-actions">
+                  <div className="yt-mobile-actions yt-mobile-only">
                     {/* Channel avatar */}
                     <div className="yt-mob-avatar-wrap">
                       <Link href={`/channel/${clip.channel_id}`} onClick={e => e.stopPropagation()}>
@@ -606,7 +617,7 @@ function StylesFeed({ styleId }: { styleId?: string }) {
                   </div>
 
                   {/* Bottom overlay - info (visible on mobile) */}
-                  <div className="yt-video-info-overlay">
+                  <div className="yt-video-info-overlay yt-mobile-only">
                     <div className="yt-info-channel-row">
                       <Link href={`/channel/${clip.channel_id}`} onClick={e => e.stopPropagation()} className="yt-info-avatar-link">
                         <img src={clip.channel_avatar || '/default-avatar.png'} className="yt-info-avatar" alt="" />
@@ -627,34 +638,44 @@ function StylesFeed({ styleId }: { styleId?: string }) {
                     <div className="yt-progress-fill" style={{ width: `${progress[clip.id] || 0}%` }} />
                   </div>
                 </div>
+
+                {/* Video Details (Desktop Only - Below video) */}
+                <div className="yt-video-details yt-desktop-only">
+                  <div className="yt-details-channel-row">
+                    <Link href={`/channel/${clip.channel_id}`} onClick={e => e.stopPropagation()}>
+                      <img src={clip.channel_avatar || '/default-avatar.png'} className="yt-details-avatar" alt="" />
+                    </Link>
+                    <Link href={`/channel/${clip.channel_id}`} onClick={e => e.stopPropagation()} className="yt-details-channel-name">
+                      @{clip.channel_name.replace(/^@/, '')}
+                    </Link>
+                    <SubscribeButton channelId={clip.channel_id} channelName={clip.channel_name} profileId={activeProfile?.id} showCount={false} size="sm" className="yt-details-sub-btn" />
+                  </div>
+                  <p className="yt-details-title">{clip.title}</p>
+                </div>
               </div>
 
               {/* ── DESKTOP ACTIONS COLUMN ── */}
               <div className="yt-desktop-actions">
-
-                {/* Like */}
                 <div className="yt-action-item">
                   <button
                     className={`yt-action-circle ${reactions[clip.id]?.isLiked ? 'yt-action-circle--active' : ''}`}
                     onClick={() => handleLike(clip.id)}
                   >
-                    <ThumbsUp size={22} className={reactions[clip.id]?.isLiked ? 'fill-white' : ''} />
+                    <ThumbsUp size={22} className={reactions[clip.id]?.isLiked ? 'fill-current' : ''} />
                   </button>
                   <span className="yt-action-label">{(reactions[clip.id]?.likes || 0).toLocaleString()}</span>
                 </div>
 
-                {/* Dislike */}
                 <div className="yt-action-item">
                   <button
                     className={`yt-action-circle ${reactions[clip.id]?.isDisliked ? 'yt-action-circle--active' : ''}`}
                     onClick={() => handleDislike(clip.id)}
                   >
-                    <ThumbsDown size={22} className={reactions[clip.id]?.isDisliked ? 'fill-white' : ''} />
+                    <ThumbsDown size={22} className={reactions[clip.id]?.isDisliked ? 'fill-current' : ''} />
                   </button>
                   <span className="yt-action-label">Dislike</span>
                 </div>
 
-                {/* Comments */}
                 <div className="yt-action-item">
                   <button
                     className="yt-action-circle"
@@ -665,7 +686,6 @@ function StylesFeed({ styleId }: { styleId?: string }) {
                   <span className="yt-action-label">{(commentCounts[clip.id] || 0).toLocaleString()}</span>
                 </div>
 
-                {/* Share */}
                 <div className="yt-action-item">
                   <button className="yt-action-circle" onClick={() => setShowShare(true)}>
                     <Share2 size={22} />
@@ -673,7 +693,6 @@ function StylesFeed({ styleId }: { styleId?: string }) {
                   <span className="yt-action-label">Share</span>
                 </div>
 
-                {/* More */}
                 <div className="yt-action-item yt-desktop-more">
                   <button
                     className="yt-action-circle"
@@ -698,10 +717,9 @@ function StylesFeed({ styleId }: { styleId?: string }) {
                   )}
                 </div>
 
-                {/* Channel avatar */}
-                <Link href={`/channel/${clip.channel_id}`} onClick={e => e.stopPropagation()} className="yt-desktop-avatar-link">
-                  <img src={clip.channel_avatar || '/default-avatar.png'} className="yt-desktop-avatar" alt="" />
-                </Link>
+                <div className="yt-music-icon-wrap">
+                  <img src={clip.channel_avatar || '/default-avatar.png'} className={`yt-music-icon ${isPlaying ? 'yt-music-spin' : ''}`} alt="" />
+                </div>
               </div>
 
             </div>
@@ -843,24 +861,21 @@ function StylesFeed({ styleId }: { styleId?: string }) {
       <style jsx global>{`
         /* ── ROOT ── */
         .yt-shorts-root {
-          position: fixed;
-          top: 56px; /* Navbar height */
-          left: 0;
-          bottom: 0;
-          right: 0;
-          background: #000;
-          z-index: 10;
+          position: relative;
+          height: calc(100vh - 56px); /* Fill remaining height */
+          width: 100%;
+          background: #ffffff;
         }
         .yt-back-btn {
           position: absolute;
           top: 14px;
           left: 14px;
-          color: #fff;
+          color: #0f0f0f;
           background: none;
           border: none;
           cursor: pointer;
           z-index: 60;
-          filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+          filter: drop-shadow(0 2px 4px rgba(255,255,255,0.5));
           display: flex;
           align-items: center;
           justify-content: center;
@@ -883,7 +898,7 @@ function StylesFeed({ styleId }: { styleId?: string }) {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: #0f0f0f;
+          background: #ffffff;
         }
 
         /* Desktop slide inner: video + actions side-by-side */
@@ -896,29 +911,27 @@ function StylesFeed({ styleId }: { styleId?: string }) {
           max-width: 1080px;
           margin: 0 auto;
           padding: 12px 0;
-          gap: 0;
+          gap: 16px;
         }
 
         /* ── VIDEO COLUMN ── */
-        .yt-video-col {
+        .yt-video-and-details {
           display: flex;
-          align-items: center;
-          justify-content: center;
+          flex-direction: column;
           height: 100%;
-          flex-shrink: 0;
+          justify-content: flex-start;
+          padding: 24px 0;
         }
 
         .yt-video-wrap {
           position: relative;
-          /* On desktop: fixed height, 9:16 aspect */
-          height: 100%;
-          max-height: calc(100vh - 80px);
+          height: calc(100% - 90px);
           aspect-ratio: 9/16;
           background: #000;
           border-radius: 12px;
           overflow: hidden;
           flex-shrink: 0;
-          box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+          box-shadow: none;
         }
 
         .yt-video {
@@ -928,6 +941,80 @@ function StylesFeed({ styleId }: { styleId?: string }) {
           cursor: pointer;
           display: block;
         }
+
+        .yt-video-details {
+          margin-top: 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          width: 100%;
+        }
+
+        .yt-details-channel-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .yt-details-avatar {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          object-fit: cover;
+        }
+
+        .yt-details-channel-name {
+          font-size: 14px;
+          font-weight: 600;
+          color: #0f0f0f;
+          text-decoration: none;
+        }
+
+        .yt-details-sub-btn {
+          margin-left: 8px;
+          background: #0f0f0f !important;
+          color: #fff !important;
+          border-radius: 18px !important;
+          padding: 6px 12px !important;
+          font-size: 13px !important;
+          font-weight: 600 !important;
+          border: none !important;
+        }
+
+        .yt-details-title {
+          font-size: 14px;
+          color: #0f0f0f;
+          margin: 0;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          line-height: 1.4;
+        }
+
+        .yt-top-left-controls {
+          position: absolute;
+          top: 16px;
+          left: 16px;
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          z-index: 25;
+        }
+
+        .yt-control-btn {
+          background: none;
+          border: none;
+          color: #fff;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0;
+          filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+          transition: transform 0.15s;
+        }
+        .yt-control-btn:active { transform: scale(0.9); }
 
         /* ── SKELETON ── */
         .skeleton-pulse {
@@ -1110,9 +1197,8 @@ function StylesFeed({ styleId }: { styleId?: string }) {
           flex-direction: column;
           align-items: center;
           justify-content: flex-end;
-          padding-bottom: 16px;
-          padding-left: 12px;
-          gap: 4px;
+          padding-bottom: 24px;
+          gap: 8px;
           flex-shrink: 0;
           height: 100%;
         }
@@ -1133,25 +1219,25 @@ function StylesFeed({ styleId }: { styleId?: string }) {
           width: 48px;
           height: 48px;
           border-radius: 50%;
-          background: #272727;
-          border: none;
-          color: #fff;
+          background: #ffffff;
+          border: 1px solid #e5e7eb;
+          color: #18181b;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
           pointer-events: all;
           transition: background 0.2s, transform 0.15s;
-          box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+          box-shadow: 0 2px 12px rgba(0,0,0,0.1);
         }
-        .yt-float-arrow:hover { background: #3f3f3f; }
+        .yt-float-arrow:hover { background: #f4f4f5; }
         .yt-float-arrow:active { transform: scale(0.92); }
 
         .yt-action-item {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 2px;
+          gap: 4px;
           margin-bottom: 8px;
           position: relative;
         }
@@ -1159,42 +1245,49 @@ function StylesFeed({ styleId }: { styleId?: string }) {
           width: 48px;
           height: 48px;
           border-radius: 50%;
-          background: #272727;
+          background: #f2f2f2;
           border: none;
-          color: #fff;
+          color: #0f0f0f;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
           transition: background 0.2s, transform 0.15s;
         }
-        .yt-action-circle:hover { background: #3f3f3f; }
+        .yt-action-circle:hover { background: #e5e5e5; }
         .yt-action-circle:active { transform: scale(0.92); }
-        .yt-action-circle--active { background: #272727; color: #fff; }
+        .yt-action-circle--active { background: #e5e5e5; color: #0f0f0f; }
         .yt-action-label {
-          font-size: 12px;
-          font-weight: 600;
-          color: #aaa;
+          font-size: 13px;
+          font-weight: 500;
+          color: #0f0f0f;
           text-align: center;
           min-width: 48px;
         }
 
         .yt-desktop-more { position: relative; }
 
-        .yt-desktop-avatar-link {
-          display: block;
+        .yt-music-icon-wrap {
           margin-top: 8px;
+          width: 40px;
+          height: 40px;
+          border-radius: 4px;
+          overflow: hidden;
+          background: #e5e5e5;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
-        .yt-desktop-avatar {
-          width: 48px;
-          height: 48px;
-          border-radius: 50%;
+
+        .yt-music-icon {
+          width: 100%;
+          height: 100%;
           object-fit: cover;
-          border: 2px solid rgba(255,255,255,0.2);
-          transition: border-color 0.2s;
-          display: block;
         }
-        .yt-desktop-avatar:hover { border-color: rgba(255,255,255,0.5); }
+
+        .yt-music-spin {
+          animation: spin 4s linear infinite;
+        }
 
         /* ── OPTIONS MENU ── */
         .yt-mob-more-wrap { position: relative; }
@@ -1534,14 +1627,16 @@ function StylesFeed({ styleId }: { styleId?: string }) {
 
         /* MOBILE: full-screen video, actions overlaid */
         @media (max-width: 767px) {
-          .yt-shorts-root { top: 0; }
+          .yt-shorts-root { position: fixed; top: 0; z-index: 100; height: 100vh; }
           .yt-slide-inner {
             padding: 0;
             max-width: 100%;
           }
-          .yt-video-col {
+          .yt-desktop-only { display: none !important; }
+          .yt-video-and-details {
             width: 100%;
             height: 100%;
+            padding: 0;
           }
           .yt-progress-track { height: 0 !important; }
           .yt-video-wrap {
@@ -1561,11 +1656,9 @@ function StylesFeed({ styleId }: { styleId?: string }) {
 
         /* TABLET / DESKTOP */
         @media (min-width: 768px) {
+          .yt-mobile-only { display: none !important; }
           .yt-mobile-actions { display: none; }
-          .yt-video-info-overlay {
-            /* On desktop show info below but inside the video overlay area */
-            right: 0;
-          }
+          .yt-video-info-overlay { display: none; }
           .yt-desktop-actions { display: flex; }
           .yt-float-nav { display: flex; }
           .yt-slide-inner {
@@ -1577,7 +1670,7 @@ function StylesFeed({ styleId }: { styleId?: string }) {
         /* Large desktop: constrain video height */
         @media (min-width: 1024px) {
           .yt-video-wrap {
-            max-height: calc(100vh - 100px);
+            max-height: 800px;
           }
         }
       `}</style>

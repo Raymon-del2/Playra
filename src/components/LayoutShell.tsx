@@ -162,12 +162,12 @@ export default function LayoutShell({ children, activeProfile: serverProfile }: 
 
   if (!isOnline) {
     return (
-      <div className="min-h-screen bg-gray-950 text-white">
-        <div suppressHydrationWarning className="fixed top-0 left-0 right-0 h-16 bg-gray-900 border-b border-gray-800 flex items-center justify-between px-4 z-50">
-          <button className="p-2 rounded-full hover:bg-gray-800 text-white">
+      <div className="min-h-screen bg-gray-50 text-zinc-900">
+        <div suppressHydrationWarning className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 z-50">
+          <button className="p-2 rounded-full hover:bg-gray-100 text-zinc-900">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
           </button>
-          <img src="/Playra.png" alt="Playra" className="h-6 w-auto brightness-200" />
+          <img src="/Playra.png" alt="Playra" className="h-6 w-auto" />
           <div suppressHydrationWarning className="w-10" />
         </div>
         <div suppressHydrationWarning className="pt-32 flex flex-col items-center justify-center p-6 text-center">
@@ -175,7 +175,7 @@ export default function LayoutShell({ children, activeProfile: serverProfile }: 
             <svg className="w-12 h-12 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-6.364-2.637m4.95-4.95a3 3 0 010-4.243m0 0L2.122 2.122m5.657 5.657L5.657 5.657" /></svg>
           </div>
           <h2 className="text-2xl font-black mb-4">No connection</h2>
-          <p className="text-gray-400 mb-8 max-w-sm">Connect to the internet to continue exploring Playra's next-gen discovery.</p>
+          <p className="text-gray-500 mb-8 max-w-sm">Connect to the internet to continue exploring Playra's next-gen discovery.</p>
           <button onClick={() => window.location.reload()} className="bg-white text-black px-8 py-3 rounded-full font-black text-sm active:scale-95 transition-all">Retry</button>
         </div>
       </div>
@@ -207,7 +207,7 @@ export default function LayoutShell({ children, activeProfile: serverProfile }: 
 
       <div
         suppressHydrationWarning
-        className="flex bg-[#0f0f0f] min-h-screen"
+        className="flex bg-zinc-50 min-h-screen"
       >
         <style jsx global>{`
           :root {

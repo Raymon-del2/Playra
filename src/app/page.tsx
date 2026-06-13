@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getVideos, Video } from '@/lib/supabase';
@@ -159,7 +160,7 @@ function VideoCard({
 
       <div className="relative z-10 block w-full" onClick={() => router.push(video.is_short ? `/styles/${video.id}` : `/watch/${video.id}`)}>
         {/* Thumbnail */}
-        <div className={`relative w-full overflow-hidden rounded-xl bg-zinc-900 ${video.is_short ? 'aspect-[9/16]' : 'aspect-video'} shadow-md transition-all duration-300 cursor-pointer`}>
+        <div className={`relative w-full overflow-hidden rounded-xl bg-zinc-100 ${video.is_short ? 'aspect-[9/16]' : 'aspect-video'} shadow-md transition-all duration-300 cursor-pointer`}>
           <img
             src={video.thumbnail_url || '/default-thumbnail.jpg'}
             alt={video.title}
@@ -188,7 +189,7 @@ function VideoCard({
           {showPreview && durationSeconds > 0 && !video.is_short && (
             <div 
               ref={progressRef}
-              className="absolute bottom-0 left-0 right-0 h-1 bg-white/20 cursor-pointer"
+              className="absolute bottom-0 left-0 right-0 h-1 bg-zinc-300/80 cursor-pointer"
               onMouseMove={handleProgressHover}
               onMouseLeave={(e) => { e.stopPropagation(); setHoverTime(null); }}
               onClick={handleProgressClick}
@@ -212,7 +213,7 @@ function VideoCard({
               )}
               {hoverTime !== null && (
                 <div 
-                  className="absolute -top-8 left-0 transform -translate-x-1/2 bg-black/90 text-white text-[11px] px-2 py-1 rounded pointer-events-none whitespace-nowrap"
+                  className="absolute -top-8 left-0 transform -translate-x-1/2 bg-white/90 text-zinc-900 text-[11px] px-2 py-1 rounded pointer-events-none whitespace-nowrap"
                   style={{ left: `${(hoverTime / durationSeconds) * 100}%` }}
                 >
                   {formatDurationFromSeconds(hoverTime)}
@@ -228,7 +229,7 @@ function VideoCard({
           )}
 
           {!video.is_short && (
-            <div className="absolute bottom-2 right-2 bg-black/80 text-white text-[12px] font-bold px-1.5 py-0.5 rounded-md z-30">
+            <div className="absolute bottom-2 right-2 bg-white/80 text-zinc-900 text-[12px] font-bold px-1.5 py-0.5 rounded-md z-30">
               {computedDuration || video.duration || '0:00'}
             </div>
           )}
@@ -243,7 +244,7 @@ function VideoCard({
               e.stopPropagation(); 
               onToggleMute();
             }}
-            className="bg-black/80 p-2 rounded-md text-white hover:bg-black transition-colors"
+            className="bg-white/80 p-2 rounded-md text-zinc-900 hover:bg-zinc-100 transition-colors"
             title={isMuted ? "Unmute" : "Mute"}
           >
             {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
@@ -254,7 +255,7 @@ function VideoCard({
       {/* Text area - with ambient glow above */}
       <div className="relative z-10 flex gap-3 mt-3">
         <Link href={`/channel/${video.channel_id}`} className="flex-shrink-0">
-          <div className="w-9 h-9 rounded-full bg-zinc-800 overflow-hidden">
+          <div className="w-9 h-9 rounded-full bg-zinc-200 overflow-hidden">
             <img
               src={video.channel_avatar || '/default-avatar.png'}
               alt={video.channel_name}
@@ -265,11 +266,11 @@ function VideoCard({
 
         <div className="flex flex-1 flex-col min-w-0 pr-8">
           <Link href={video.is_short ? `/styles/${video.id}` : `/watch/${video.id}`}>
-            <h3 className="font-semibold text-white text-[14px] leading-tight line-clamp-2 mb-1">
+            <h3 className="font-semibold text-zinc-900 text-[14px] leading-tight line-clamp-2 mb-1">
               {video.title}
             </h3>
           </Link>
-          <Link href={`/channel/${video.channel_id}`} className="text-[13px] text-[#aaaaaa] hover:text-white transition-colors">
+          <Link href={`/channel/${video.channel_id}`} className="text-[13px] text-[#aaaaaa] hover:text-zinc-900 transition-colors">
             {video.channel_name}
           </Link>
           <div className="flex items-center gap-1 text-[12px] text-[#aaaaaa]">
@@ -304,12 +305,12 @@ function StyleCard({
         className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
         style={{ backgroundColor: hoverBgColor }}
       />
-      <div className="relative aspect-[9/16] rounded-2xl overflow-hidden bg-zinc-800 shadow-xl border border-white/5 group-hover:scale-[1.02] transition-transform">
+      <div className="relative aspect-[9/16] rounded-2xl overflow-hidden bg-zinc-200 shadow-xl border border-zinc-200 group-hover:scale-[1.02] transition-transform">
         <img src={style.thumbnail_url || '/default-thumbnail.jpg'} className="w-full h-full object-cover" alt="" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
         <div className="absolute bottom-4 left-4 right-4">
-          <h3 className="text-sm font-bold text-white line-clamp-2 leading-tight uppercase tracking-tighter drop-shadow-md">{style.title}</h3>
-          <p className="text-[11px] text-zinc-300 mt-2 font-bold shadow-black drop-shadow-sm">{style.views.toLocaleString()} views</p>
+          <h3 className="text-sm font-bold text-zinc-900 line-clamp-2 leading-tight uppercase tracking-tighter drop-shadow-md">{style.title}</h3>
+          <p className="text-[11px] text-zinc-700 mt-2 font-bold shadow-zinc-400/50 drop-shadow-sm">{style.views.toLocaleString()} views</p>
         </div>
       </div>
     </Link>
@@ -324,16 +325,16 @@ function StylesShelf({
   isLoading?: boolean;
 }) {
   return (
-    <div className="my-8 border-y border-white/5 py-6">
+    <div className="my-8 border-y border-zinc-200 py-6">
       <div className="flex items-center gap-3 mb-6 px-4 sm:px-6">
         <img src="/styles-icon.svg?v=blue" alt="" className="w-6 h-6" />
-        <h2 className="text-xl font-bold text-white uppercase tracking-tight">Styles</h2>
+        <h2 className="text-xl font-bold text-zinc-900 uppercase tracking-tight">Styles</h2>
       </div>
 
       <div className="flex gap-4 overflow-x-auto px-4 sm:px-6 scrollbar-hide pb-4">
         {isLoading || styles.length === 0 ? (
           Array(6).fill(0).map((_, i) => (
-             <div key={i} className="flex-shrink-0 w-44 sm:w-52 aspect-[9/16] bg-zinc-800 rounded-2xl animate-pulse" />
+             <div key={i} className="flex-shrink-0 w-44 sm:w-52 aspect-[9/16] bg-zinc-200 rounded-2xl animate-pulse" />
           ))
         ) : (
           styles.map((style) => (
@@ -410,6 +411,7 @@ export default function Home() {
   const [isCategoryScrolled, setIsCategoryScrolled] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [emptySearchValue, setEmptySearchValue] = useState('');
   const minSwipeDistance = 50;
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -442,6 +444,13 @@ export default function Home() {
       try {
         const profile = await getActiveProfile();
         setActiveProfile(profile);
+
+        // Non-signed-in users: skip video feed entirely and show the empty state
+        if (!profile) {
+          setVideos([]);
+          setPosts([]);
+          return;
+        }
 
         // Fetch videos and posts in parallel
         const [videoData, postsRes] = await Promise.all([
@@ -581,12 +590,12 @@ export default function Home() {
       <div suppressHydrationWarning className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-6 px-4 md:px-6 pt-10">
         {Array(3).fill(0).map((_, i) => (
           <div suppressHydrationWarning key={i} className="flex flex-col w-full">
-            <div suppressHydrationWarning className="aspect-video bg-[#313131] rounded-xl mb-3" />
+            <div suppressHydrationWarning className="aspect-video bg-zinc-200 rounded-xl mb-3" />
             <div suppressHydrationWarning className="flex gap-3">
-              <div suppressHydrationWarning className="w-9 h-9 bg-[#313131] rounded-full flex-shrink-0" />
+              <div suppressHydrationWarning className="w-9 h-9 bg-zinc-200 rounded-full flex-shrink-0" />
               <div suppressHydrationWarning className="flex-1 space-y-2 pt-1 pr-8">
-                <div suppressHydrationWarning className="h-4 bg-[#313131] rounded w-[90%]" />
-                <div suppressHydrationWarning className="h-3 bg-[#313131] rounded w-[60%]" />
+                <div suppressHydrationWarning className="h-4 bg-zinc-200 rounded w-[90%]" />
+                <div suppressHydrationWarning className="h-3 bg-zinc-200 rounded w-[60%]" />
               </div>
             </div>
           </div>
@@ -601,12 +610,12 @@ export default function Home() {
       <div suppressHydrationWarning className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-6 px-4 md:px-10 pt-10">
         {Array(3).fill(0).map((_, i) => (
           <div suppressHydrationWarning key={i+3} className="flex flex-col w-full">
-            <div suppressHydrationWarning className="aspect-video bg-[#313131] rounded-xl mb-3" />
+            <div suppressHydrationWarning className="aspect-video bg-zinc-200 rounded-xl mb-3" />
             <div suppressHydrationWarning className="flex gap-3">
-              <div suppressHydrationWarning className="w-9 h-9 bg-[#313131] rounded-full flex-shrink-0" />
+              <div suppressHydrationWarning className="w-9 h-9 bg-zinc-200 rounded-full flex-shrink-0" />
               <div suppressHydrationWarning className="flex-1 space-y-2 pt-1 pr-8">
-                <div suppressHydrationWarning className="h-4 bg-[#313131] rounded w-[90%]" />
-                <div suppressHydrationWarning className="h-3 bg-[#313131] rounded w-[60%]" />
+                <div suppressHydrationWarning className="h-4 bg-zinc-200 rounded w-[90%]" />
+                <div suppressHydrationWarning className="h-3 bg-zinc-200 rounded w-[60%]" />
               </div>
             </div>
           </div>
@@ -615,36 +624,121 @@ export default function Home() {
     </div>
   );
 
+  const renderEmptyState = () => {
+    const handleSubmit = (e: React.FormEvent) => {
+      e.preventDefault();
+      if (emptySearchValue.trim()) {
+        router.push(`/results?search_query=${encodeURIComponent(emptySearchValue.trim())}`);
+      }
+    };
+    return (
+      <>
+        {/* Mobile: Logo + Search Bar */}
+        <div className="md:hidden flex flex-col items-center justify-center min-h-[calc(100vh-200px)] px-4 py-12">
+          {/* Logo */}
+          <div className="mb-8">
+            <img
+              src="/play-logo.png"
+              alt="Playra"
+              className="w-24 h-24 object-contain"
+            />
+          </div>
+
+          {/* Search Bar */}
+          <form onSubmit={handleSubmit} className="w-full max-w-xl">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => router.push('/explore')}
+                className="flex-shrink-0 w-10 h-10 rounded-full bg-zinc-100 hover:bg-zinc-200 flex items-center justify-center text-zinc-700 transition-colors"
+                aria-label="Explore"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="9" />
+                  <path strokeLinecap="round" d="M15.5 8.5l-2 5-5 2 2-5 5-2z" />
+                </svg>
+              </button>
+
+              <div className="flex-1 relative">
+                <input
+                  type="text"
+                  value={emptySearchValue}
+                  onChange={(e) => setEmptySearchValue(e.target.value)}
+                  placeholder="Search Playra"
+                  className="w-full h-10 px-4 rounded-full bg-zinc-100 text-zinc-900 placeholder:text-zinc-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={() => router.push('/explore')}
+                className="flex-shrink-0 w-10 h-10 rounded-full bg-zinc-100 hover:bg-zinc-200 flex items-center justify-center text-zinc-700 transition-colors"
+                aria-label="Voice search"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3zM19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8" />
+                </svg>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Desktop: Try searching to get started with SVG */}
+        <div className="hidden md:flex flex-col items-center justify-center text-center px-4 py-20 md:py-28">
+          <Image
+            src="/Share-result.svg"
+            alt="Share results illustration"
+            width={500}
+            height={400}
+            unoptimized
+            className="w-60 md:w-80 h-auto mb-8 opacity-90"
+            priority
+          />
+          <h2 className="text-2xl md:text-3xl font-bold text-zinc-900 mb-3">
+            Try searching to get started
+          </h2>
+          <p className="text-zinc-500 text-sm md:text-base max-w-md">
+            Start watching videos to help us build a feed of videos you&apos;ll love.
+          </p>
+        </div>
+      </>
+    );
+  };
+
   return (
     <>
-      {/* Category Bar Sticky Wrapper */}
-      <div
-        suppressHydrationWarning
-        className={`sticky top-0 z-[60] w-full -mt-px transition-all duration-300 ${
-          isCategoryScrolled 
-            ? 'bg-[#18181b]/90 backdrop-blur-md shadow-lg shadow-black/30' 
-            : 'bg-[#18181b]/80 backdrop-blur-sm'
-        }`}
-      >
+      {/* Category Bar Sticky Wrapper - only show for signed-in users */}
+      {activeProfile && (
         <div
           suppressHydrationWarning
-          className="flex items-center gap-3 overflow-x-auto px-4 md:px-8 py-3 scrollbar-hide"
+          className={`sticky top-0 z-[60] w-full -mt-px transition-all duration-300 ${
+            isCategoryScrolled
+              ? 'bg-white/95 backdrop-blur-md shadow-md shadow-zinc-200/50'
+              : 'bg-white/80 backdrop-blur-sm'
+          }`}
         >
-          {['All', 'Live', 'Music', 'Gaming', 'News', 'Recently uploaded', 'New to you'].map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-3 md:px-4 py-1.5 md:py-1.5 rounded-lg text-[13px] font-bold whitespace-nowrap transition-colors ${selectedCategory === cat ? 'bg-white text-black' : 'bg-white/10 text-white hover:bg-white/20'
-                }`}
-            >
-              {cat}
-            </button>
-          ))}
+          <div
+            suppressHydrationWarning
+            className="flex items-center gap-3 overflow-x-auto px-4 md:px-8 py-3 scrollbar-hide"
+          >
+            {['All', 'Live', 'Music', 'Gaming', 'News', 'Recently uploaded', 'New to you'].map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-3 md:px-4 py-1.5 md:py-1.5 rounded-lg text-[13px] font-bold whitespace-nowrap transition-colors ${selectedCategory === cat ? 'bg-zinc-100 text-zinc-800' : 'bg-zinc-200/80 text-zinc-900 hover:bg-zinc-300/80'
+                  }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {isLoading ? (
         renderSkeleton()
+      ) : !activeProfile ? (
+        renderEmptyState()
       ) : (
         (() => {
           let displayVideos: Video[] = [];
@@ -722,10 +816,10 @@ export default function Home() {
                 {selectedCategory === 'All' && displayVideos.length > 4 && (
                   <div className="px-4 md:px-10 pt-8">
                     <div className="flex items-center gap-2 mb-4">
-                      <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5 text-zinc-900" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                       </svg>
-                      <h2 className="text-lg font-bold text-white">In Case You Missed</h2>
+                      <h2 className="text-lg font-bold text-zinc-900">In Case You Missed</h2>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                       {displayVideos.slice(4, 8).map((video) => (
@@ -749,10 +843,10 @@ export default function Home() {
                 {selectedCategory === 'All' && displayVideos.length > 8 && (
                   <div className="px-4 md:px-10 pt-8">
                     <div className="flex items-center gap-2 mb-4">
-                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                      <svg className="w-5 h-5 text-zinc-900" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                       </svg>
-                      <h2 className="text-lg font-bold text-white">More to Watch</h2>
+                      <h2 className="text-lg font-bold text-zinc-900">More to Watch</h2>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                       {displayVideos.slice(8, 12).map((video) => (
@@ -786,7 +880,7 @@ export default function Home() {
                 {/* Community Posts Section */}
                 {feedPosts.length > 0 && (
                   <div className="px-6 md:px-10 pt-8">
-                    <h2 className="text-xl font-bold text-white mb-4">Community Posts</h2>
+                    <h2 className="text-xl font-bold text-zinc-900 mb-4">Community Posts</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
                       {feedPosts.map((post, index) => (
                         <div key={`post-${post.id}-${index}`} className="max-w-2xl mx-auto w-full">
@@ -821,12 +915,12 @@ export default function Home() {
 
           return (
             <div className="flex flex-col items-center justify-center py-40 text-center">
-              <div className="w-20 h-20 bg-zinc-800 rounded-full flex items-center justify-center mb-4">
+              <div className="w-20 h-20 bg-zinc-200 rounded-full flex items-center justify-center mb-4">
                 <svg className="w-10 h-10 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg>
               </div>
-              <h2 className="text-xl font-bold text-white">
+              <h2 className="text-xl font-bold text-zinc-900">
                 {selectedCategory === 'All' ? 'No videos found' : `No results found in ${selectedCategory}`}
               </h2>
               <p className="text-zinc-500 mt-2">
@@ -837,7 +931,7 @@ export default function Home() {
                     : 'Check back later for content in this category.'}
               </p>
               {selectedCategory === 'All' && (
-                <Link href="/studio/content" className="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-bold transition-colors">
+                <Link href="/studio/content" className="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-zinc-900 rounded-full font-bold transition-colors">
                   Go to Studio
                 </Link>
               )}

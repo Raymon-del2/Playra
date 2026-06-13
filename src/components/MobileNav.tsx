@@ -42,12 +42,12 @@ export default function MobileNav({
                 </svg>
             ),
             you: (
-                <div className={`w-7 h-7 rounded-full overflow-hidden border-2 transition-all ${isActive ? 'border-white' : 'border-white/20'}`}>
+                <div className={`w-7 h-7 rounded-full overflow-hidden border-2 transition-all ${isActive ? 'border-zinc-100' : 'border-zinc-300'}`}>
                     {isSignedIn && userAvatar ? (
                         <img src={userAvatar} alt="" className="w-full h-full object-cover" />
                     ) : (
-                        <div className="w-full h-full bg-zinc-800 flex items-center justify-center">
-                            <svg className="w-4 h-4 text-zinc-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>
+                        <div className="w-full h-full bg-zinc-200 flex items-center justify-center">
+                            <svg className="w-4 h-4 text-zinc-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>
                         </div>
                     )}
                 </div>
@@ -68,7 +68,7 @@ export default function MobileNav({
 
     return (
         <>
-            <nav suppressHydrationWarning className="mobile-nav-fixed lg:hidden bg-[#0f0f0f] border-t border-white/5 pb-safe">
+            <nav suppressHydrationWarning className="mobile-nav-fixed lg:hidden bg-white border-t border-zinc-200 pb-safe">
                 <div suppressHydrationWarning className="flex items-center justify-around h-[50px] w-full">
                     {navItems.map((item) => {
                         const isActive = pathname === item.path;
@@ -81,8 +81,8 @@ export default function MobileNav({
                                     onClick={() => window.location.href = '/results'}
                                     className="flex items-center justify-center"
                                 >
-                                    <div className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 active:scale-90 transition-transform">
-                                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                    <div className="w-10 h-10 flex items-center justify-center rounded-full bg-zinc-200/80 active:scale-90 transition-transform">
+                                        <svg className="w-6 h-6 text-zinc-900" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                         </svg>
                                     </div>
@@ -96,11 +96,11 @@ export default function MobileNav({
                                 href={item.path}
                                 className="flex flex-col items-center justify-center gap-0.5 min-w-[60px] active:scale-95 transition-transform"
                             >
-                                <span className={`${isActive ? 'text-white' : 'text-zinc-400'} transition-colors`}>
+                                <span className={`${isActive ? 'text-zinc-900' : 'text-zinc-500'} transition-colors`}>
                                     {getIcon(item)}
                                 </span>
                                 {item.label && (
-                                    <span className={`text-[10px] ${isActive ? 'font-bold text-white' : 'font-medium text-zinc-400'} transition-colors`}>
+                                    <span className={`text-[10px] ${isActive ? 'font-bold text-zinc-900' : 'font-medium text-zinc-500'} transition-colors`}>
                                         {item.label}
                                     </span>
                                 )}
