@@ -514,7 +514,27 @@ function StylesFeed({ styleId }: { styleId?: string }) {
           >
             <div className="yt-slide-inner">
 
-              {/* ── VIDEO AND DETAILS COLUMN ── */}
+            {/* ── DESKTOP INFO COLUMN (Left) ── */}
+            <div className="yt-desktop-info yt-desktop-only">
+              <div className="yt-info-bottom">
+                <div className="yt-info-channel-row">
+                  <Link href={`/channel/${clip.channel_id}`} onClick={e => e.stopPropagation()} className="yt-info-avatar-link">
+                    <img src={clip.channel_avatar || '/default-avatar.png'} className="yt-desktop-info-avatar" alt="" />
+                  </Link>
+                  <Link href={`/channel/${clip.channel_id}`} onClick={e => e.stopPropagation()} className="yt-desktop-info-name">
+                    @{clip.channel_name.replace(/^@/, '')}
+                  </Link>
+                  <SubscribeButton channelId={clip.channel_id} channelName={clip.channel_name} profileId={activeProfile?.id} showCount={false} size="sm" className="yt-desktop-info-sub" />
+                </div>
+                <p className="yt-desktop-info-title">{clip.title}</p>
+                <div className="yt-info-sound mt-2 text-zinc-600 flex items-center gap-1.5 text-[14px] font-medium">
+                  <Music size={15} />
+                  <span>Original Sound · @{clip.channel_name.replace(/^@/, '')}</span>
+                </div>
+              </div>
+            </div>
+
+              {/* ── VIDEO COLUMN ── */}
               <div className="yt-video-and-details">
                 <div className="yt-video-wrap">
                   <video
@@ -637,20 +657,6 @@ function StylesFeed({ styleId }: { styleId?: string }) {
                   <div className="yt-progress-track">
                     <div className="yt-progress-fill" style={{ width: `${progress[clip.id] || 0}%` }} />
                   </div>
-                </div>
-
-                {/* Video Details (Desktop Only - Below video) */}
-                <div className="yt-video-details yt-desktop-only">
-                  <div className="yt-details-channel-row">
-                    <Link href={`/channel/${clip.channel_id}`} onClick={e => e.stopPropagation()}>
-                      <img src={clip.channel_avatar || '/default-avatar.png'} className="yt-details-avatar" alt="" />
-                    </Link>
-                    <Link href={`/channel/${clip.channel_id}`} onClick={e => e.stopPropagation()} className="yt-details-channel-name">
-                      @{clip.channel_name.replace(/^@/, '')}
-                    </Link>
-                    <SubscribeButton channelId={clip.channel_id} channelName={clip.channel_name} profileId={activeProfile?.id} showCount={false} size="sm" className="yt-details-sub-btn" />
-                  </div>
-                  <p className="yt-details-title">{clip.title}</p>
                 </div>
               </div>
 
@@ -898,7 +904,7 @@ function StylesFeed({ styleId }: { styleId?: string }) {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: #ffffff;
+          background: transparent;
         }
 
         /* Desktop slide inner: video + actions side-by-side */
@@ -919,25 +925,29 @@ function StylesFeed({ styleId }: { styleId?: string }) {
           display: flex;
           flex-direction: column;
           height: 100%;
-          justify-content: flex-start;
+          justify-content: center;
           padding: 24px 0;
         }
 
         .yt-video-wrap {
           position: relative;
-          height: calc(100% - 90px);
-          aspect-ratio: 9/16;
+          height: 100%;
+          width: fit-content;
+          max-width: calc(100vw - 120px);
           background: #000;
           border-radius: 12px;
           overflow: hidden;
           flex-shrink: 0;
           box-shadow: none;
+          display: flex;
+          justify-content: center;
         }
 
         .yt-video {
-          width: 100%;
           height: 100%;
-          object-fit: cover;
+          width: auto;
+          max-width: 100%;
+          object-fit: contain;
           cursor: pointer;
           display: block;
         }
@@ -1194,13 +1204,80 @@ function StylesFeed({ styleId }: { styleId?: string }) {
         /* ── DESKTOP ACTIONS ── */
         .yt-desktop-actions {
           display: none;
+          flex: 0 0 80px;
           flex-direction: column;
-          align-items: center;
+          align-items: flex-start;
           justify-content: flex-end;
           padding-bottom: 24px;
+          padding-left: 20px;
           gap: 8px;
-          flex-shrink: 0;
           height: 100%;
+          box-sizing: border-box;
+        }
+
+        /* ── DESKTOP INFO ── */
+        .yt-desktop-info {
+          display: none;
+          flex: 0 0 320px;
+          flex-direction: column;
+          justify-content: flex-end;
+          align-items: flex-end;
+          padding-bottom: 24px;
+          padding-right: 20px;
+          box-sizing: border-box;
+        }
+
+        .yt-info-bottom {
+          max-width: 320px;
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 8px;
+        }
+
+        .yt-desktop-info-avatar {
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          object-fit: cover;
+          flex-shrink: 0;
+        }
+
+        .yt-info-avatar-link {
+          display: block;
+          flex-shrink: 0;
+        }
+
+        .yt-desktop-info-name {
+          font-size: 16px;
+          font-weight: 700;
+          color: #0f0f0f;
+          text-decoration: none;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          min-width: 0;
+        }
+
+        .yt-desktop-info-name:hover { text-decoration: underline; }
+
+        .yt-desktop-info-title {
+          font-size: 16px;
+          font-weight: 600;
+          color: #0f0f0f;
+          line-height: 1.4;
+          word-break: break-word;
+        }
+
+        .yt-desktop-info-sub {
+          margin-left: 12px;
+          background: #0f0f0f !important;
+          color: #fff !important;
+          border-radius: 20px !important;
+          padding: 8px 16px !important;
+          font-size: 14px !important;
+          font-weight: 700 !important;
         }
 
         /* ── FLOATING NAV ARROWS (desktop only) ── */
@@ -1647,28 +1724,46 @@ function StylesFeed({ styleId }: { styleId?: string }) {
             aspect-ratio: unset;
             box-shadow: none;
             border: none;
+            max-width: none;
           }
           .yt-desktop-actions { display: none !important; }
           .yt-float-nav { display: none !important; }
           .yt-mobile-actions { display: flex; }
           .yt-video-info-overlay { display: block; }
+          .yt-video {
+            width: 100%;
+            object-fit: cover;
+          }
         }
 
         /* TABLET / DESKTOP */
         @media (min-width: 768px) {
+          .yt-slide {
+            height: calc(100% - 48px);
+            scroll-snap-align: center;
+            margin: 24px 0;
+          }
           .yt-mobile-only { display: none !important; }
           .yt-mobile-actions { display: none; }
           .yt-video-info-overlay { display: none; }
           .yt-desktop-actions { display: flex; }
+          .yt-desktop-info { display: flex; }
           .yt-float-nav { display: flex; }
           .yt-slide-inner {
             align-items: flex-end;
             padding: 16px 0;
           }
+          .yt-video-wrap {
+            max-width: calc(100vw - 450px);
+          }
         }
 
         /* Large desktop: constrain video height */
         @media (min-width: 1024px) {
+          .yt-slide {
+            height: calc(100% - 64px);
+            margin: 32px 0;
+          }
           .yt-video-wrap {
             max-height: 800px;
           }

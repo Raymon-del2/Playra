@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
-import { Anton } from "next/font/google";
+import { Roboto } from "next/font/google";
 import "./globals.css";
 import LayoutShell from "@/components/LayoutShell";
 import { getActiveProfile } from "@/app/actions/profile";
 
-const anton = Anton({ weight: "400", subsets: ["latin"], variable: "--font-anton" });
+const roboto = Roboto({ 
+  weight: ["300", "400", "500", "700"], 
+  subsets: ["latin"], 
+  variable: "--font-roboto" 
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
@@ -68,7 +72,7 @@ export default async function RootLayout({
         <link rel="shortcut icon" href="/icon-192x192.png" />
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
       </head>
-      <body className={`bg-white text-zinc-900 selection:bg-blue-500/30 ${anton.variable}`} suppressHydrationWarning>
+      <body className={`bg-white text-zinc-900 selection:bg-blue-500/30 ${roboto.variable} font-sans`} suppressHydrationWarning>
         <LayoutShell activeProfile={activeProfile}>{children}</LayoutShell>
       </body>
     </html>

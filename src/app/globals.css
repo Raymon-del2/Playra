@@ -92,7 +92,7 @@ body {
 
 body {
   color: #18181b;
-  font-family: "Roboto", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-roboto), sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
