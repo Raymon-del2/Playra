@@ -1,57 +1,158 @@
-'use client';
-
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function AboutPage() {
-    return (
-        <div className="min-h-screen bg-white text-zinc-900 p-6 sm:p-20">
-            <div className="max-w-3xl mx-auto">
-                <div className="mb-12">
-                    <img src="/Playra.png" alt="Playra" className="h-8 w-auto brightness-200 mb-8" />
-                    <h1 className="text-4xl font-black mb-4 italic tracking-tight">About Playra</h1>
-                    <p className="text-zinc-500 font-bold uppercase tracking-widest text-sm">The Future of Video Discovery</p>
-                </div>
-
-                <div className="space-y-12 text-zinc-500 font-medium leading-relaxed">
-                    <section className="space-y-4">
-                        <h2 className="text-2xl font-black text-zinc-900 italic">Our Mission</h2>
-                        <p>Playra is reimagining how people discover and engage with video content. We believe in a vertical, immersive experience that puts creators and viewers first. Our platform combines cutting-edge technology with intuitive design to deliver the next generation of video discovery.</p>
-                    </section>
-
-                    <section className="space-y-4">
-                        <h2 className="text-2xl font-black text-zinc-900 italic">What Makes Us Different</h2>
-                        <p>Unlike traditional platforms, Playra focuses on high-fidelity discovery through our unique vertical feed algorithm. We prioritize genuine engagement over vanity metrics, creating an ecosystem where quality content thrives and creators are fairly rewarded for their work.</p>
-                    </section>
-
-                    <section className="space-y-4">
-                        <h2 className="text-2xl font-black text-zinc-900 italic">For Creators</h2>
-                        <p>We provide powerful tools for content creation, analytics, and audience growth. Our Style system lets you define your unique aesthetic, while the Studio dashboard gives you complete control over your channel and content management.</p>
-                    </section>
-
-                    <section className="space-y-4">
-                        <h2 className="text-2xl font-black text-zinc-900 italic">For Viewers</h2>
-                        <p>Discover content that matches your interests through our personalized discovery feed. Subscribe to your favorite creators, build playlists, and engage with a community that shares your passions.</p>
-                    </section>
-
-                    <section className="space-y-4">
-                        <h2 className="text-2xl font-black text-zinc-900 italic">Our Team</h2>
-                        <p>Playra is built by Codedwaves LLC, a team dedicated to pushing the boundaries of digital content platforms. We&apos;re constantly innovating to bring you the best possible experience.</p>
-                    </section>
-
-                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-6">
-                        <p className="text-blue-400 font-semibold">
-                            This page will be updated soon with more information about our team, history, and vision for the future.
-                        </p>
-                    </div>
-
-                    <section className="pt-10 border-t border-zinc-200">
-                        <Link href="/" className="inline-flex items-center gap-2 text-zinc-900 font-black hover:text-blue-400 transition-colors uppercase tracking-widest text-sm">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-                            Back to Home
-                        </Link>
-                    </section>
-                </div>
+  return (
+    <div className="min-h-screen bg-white">
+      {/* Header Navigation */}
+      <header className="sticky top-0 bg-white z-50 border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-0 flex-shrink-0">
+            <div className="flex items-center gap-0 relative">
+              <img src="/playra.svg" alt="Playra" className="h-[28px] w-auto" />
+              <span className="font-[family-name:var(--font-youtube-sans)] font-bold text-zinc-900 text-2xl tracking-wide ml-0">
+                RA
+              </span>
             </div>
+          </Link>
+          <nav className="flex items-center gap-6">
+            <Link href="/how-it-works" className="text-sm text-zinc-700 hover:text-zinc-900 transition-colors">
+              How Playra Works
+            </Link>
+            <Link href="/creators" className="text-sm text-zinc-700 hover:text-zinc-900 transition-colors">
+              Creators
+            </Link>
+            <Link href="/culture" className="text-sm text-zinc-700 hover:text-zinc-900 transition-colors">
+              Culture & Trends
+            </Link>
+            <Link href="/blog" className="text-sm text-zinc-700 hover:text-zinc-900 transition-colors">
+              Blog
+            </Link>
+            <Link href="/earning" className="text-sm font-semibold text-zinc-900 hover:text-blue-600 transition-colors">
+              Earning with Playra
+            </Link>
+          </nav>
         </div>
-    );
+      </header>
+
+      {/* Hero Collage Layout */}
+      <section className="w-full">
+        <div className="grid grid-cols-4 grid-rows-3 gap-2 p-2 h-[600px]">
+          <div className="col-span-2 row-span-2 rounded-lg overflow-hidden">
+            <img src="/Football.png" alt="Football" className="w-full h-full object-cover" />
+          </div>
+          <div className="image-placeholder bg-blue-200 col-span-1 row-span-1 rounded-lg" />
+          <div className="image-placeholder bg-green-200 col-span-1 row-span-2 rounded-lg" />
+          <div className="image-placeholder bg-yellow-200 col-span-1 row-span-1 rounded-lg" />
+          <div className="col-span-1 row-span-1 rounded-lg overflow-hidden">
+            <img src="/Mountains.jpg" alt="Mountains" className="w-full h-full object-cover" />
+          </div>
+          <div className="image-placeholder bg-orange-200 col-span-2 row-span-1 rounded-lg" />
+          <div className="col-span-1 row-span-1 rounded-lg overflow-hidden">
+            <img src="/Leopard.jpg" alt="Leopard" className="w-full h-full object-cover" />
+          </div>
+          <div className="image-placeholder bg-red-200 col-span-1 row-span-1 rounded-lg" />
+        </div>
+      </section>
+
+      {/* Main Mission Statement Area */}
+      <section className="py-20 px-5">
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-6xl font-bold text-zinc-900 mb-8" style={{ letterSpacing: '-1px' }}>
+            About Playra
+          </h1>
+          <p className="text-2xl text-zinc-700 leading-relaxed mb-6">
+            Our mission is to give everyone a voice and show them the world.
+          </p>
+          <p className="text-2xl text-zinc-700 leading-relaxed">
+            We believe that everyone deserves to have a voice, and that the world is a better place when we listen, share and build community through our stories.
+          </p>
+        </div>
+      </section>
+
+      {/* Footer Section */}
+      <footer className="w-full bg-[#f9f9f9] pt-12 pb-6">
+        <div className="max-w-7xl mx-auto px-6">
+          {/* Social Row */}
+          <div className="flex items-center gap-4 mb-8">
+            <span className="text-sm font-semibold text-zinc-900">Connect</span>
+            <div className="flex gap-3">
+              <div className="w-8 h-8 rounded-full bg-gray-300" />
+              <div className="w-8 h-8 rounded-full bg-gray-300" />
+              <div className="w-8 h-8 rounded-full bg-gray-300" />
+            </div>
+          </div>
+
+          {/* Links Grid */}
+          <div className="grid grid-cols-5 gap-8 mb-8">
+            <div>
+              <h3 className="text-sm font-semibold text-zinc-900 mb-4">About Playra</h3>
+              <ul className="space-y-2">
+                <li><Link href="#" className="text-sm text-zinc-600 hover:text-zinc-900">About</Link></li>
+                <li><Link href="#" className="text-sm text-zinc-600 hover:text-zinc-900">Newsroom</Link></li>
+                <li><Link href="#" className="text-sm text-zinc-600 hover:text-zinc-900">Playra Careers</Link></li>
+                <li><Link href="#" className="text-sm text-zinc-600 hover:text-zinc-900">Playra for Press</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-zinc-900 mb-4">Products</h3>
+              <ul className="space-y-2">
+                <li><Link href="#" className="text-sm text-zinc-600 hover:text-zinc-900">Playra Kids</Link></li>
+                <li><Link href="#" className="text-sm text-zinc-600 hover:text-zinc-900">Playra Music</Link></li>
+                <li><Link href="#" className="text-sm text-zinc-600 hover:text-zinc-900">Playra Premium</Link></li>
+                <li><Link href="#" className="text-sm text-zinc-600 hover:text-zinc-900">Playra TV</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-zinc-900 mb-4">For Business</h3>
+              <ul className="space-y-2">
+                <li><Link href="#" className="text-sm text-zinc-600 hover:text-zinc-900">Advertising</Link></li>
+                <li><Link href="#" className="text-sm text-zinc-600 hover:text-zinc-900">Developers</Link></li>
+                <li><Link href="#" className="text-sm text-zinc-600 hover:text-zinc-900">Playra Partners</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-zinc-900 mb-4">For Creators</h3>
+              <ul className="space-y-2">
+                <li><Link href="#" className="text-sm text-zinc-600 hover:text-zinc-900">Playra Studio</Link></li>
+                <li><Link href="#" className="text-sm text-zinc-600 hover:text-zinc-900">Playra Analytics</Link></li>
+                <li><Link href="#" className="text-sm text-zinc-600 hover:text-zinc-900">Creator Academy</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-zinc-900 mb-4">Our Commitments</h3>
+              <ul className="space-y-2">
+                <li><Link href="#" className="text-sm text-zinc-600 hover:text-zinc-900">Playra Impact</Link></li>
+                <li><Link href="#" className="text-sm text-zinc-600 hover:text-zinc-900">Playra Trust</Link></li>
+                <li><Link href="#" className="text-sm text-zinc-600 hover:text-zinc-900">Sustainability</Link></li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Bottom Bar */}
+          <div className="border-t border-gray-300 pt-6 flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-0 flex-shrink-0">
+              <div className="flex items-center gap-0 relative">
+                <img src="/playra.svg" alt="Playra" className="h-[24px] w-auto" />
+                <span className="font-[family-name:var(--font-youtube-sans)] font-bold text-zinc-900 text-xl tracking-wide ml-0">
+                  RA
+                </span>
+              </div>
+            </Link>
+            <div className="flex items-center gap-6">
+              <Link href="/policies" className="text-sm text-zinc-600 hover:text-zinc-900">Policies & Safety</Link>
+              <Link href="/copyright" className="text-sm text-zinc-600 hover:text-zinc-900">Copyright</Link>
+              <Link href="/brand" className="text-sm text-zinc-600 hover:text-zinc-900">Brand Guidelines</Link>
+              <Link href="/privacy" className="text-sm text-zinc-600 hover:text-zinc-900">Privacy</Link>
+              <Link href="/terms" className="text-sm text-zinc-600 hover:text-zinc-900">Terms</Link>
+            </div>
+            <button className="flex items-center gap-2 px-4 py-2 bg-gray-200 rounded-full text-sm text-zinc-700 hover:bg-gray-300 transition-colors">
+              <span className="text-lg">?</span>
+              <span>Help</span>
+            </button>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
 }

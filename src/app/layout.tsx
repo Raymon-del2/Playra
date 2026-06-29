@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
+import localFont from 'next/font/local';
 import "./globals.css";
 import LayoutShell from "@/components/LayoutShell";
 import { getActiveProfile } from "@/app/actions/profile";
@@ -10,20 +11,34 @@ const roboto = Roboto({
   variable: "--font-roboto" 
 });
 
+const youtubeSans = localFont({
+  src: [
+    {
+      path: '../fonts/youtube-sans-medium.ttf',
+      weight: '500',
+      style: 'normal',
+    },
+    {
+      path: '../fonts/youtube-sans-bold.ttf',
+      weight: '700',
+      style: 'normal',
+    },
+  ],
+  variable: '--font-youtube-sans',
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
-  title: "Playra - Next-Gen Video Discovery & Creation Platform",
-  description: "Discover, create, and share amazing videos on Playra. Join a community of creators and viewers exploring the future of video content. Upload videos, engage with polls, quizzes, and more!",
+  title: "Playra",
+  description: "The next era of video sharing for everyone",
   icons: {
-    icon: [
-      { url: "/icon-512x512.png", type: "image/png", sizes: "512x512" },
-      { url: "/icon-192x192.png", type: "image/png", sizes: "192x192" },
-    ],
-    shortcut: "/icon-192x192.png",
-    apple: "/icon-192x192.png",
+    icon: "/playra.svg",
+    shortcut: "/playra.svg",
+    apple: "/playra.svg",
   },
   openGraph: {
-    title: "Playra - Next-Gen Video Discovery & Creation Platform",
+    title: "Playra",
     description: "Discover, create, and share amazing videos on Playra. Join a community of creators and viewers exploring the future of video content with polls, quizzes, and interactive posts!",
     url: "https://playra.vercel.app",
     siteName: "Playra",
@@ -40,8 +55,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Playra - Next-Gen Video Discovery & Creation Platform",
-    description: "Discover, create, and share amazing videos on Playra. Join a community of creators and viewers exploring the future of video content.",
+    title: "Playra",
+    description: "The next era of video sharing for everyone",
     images: ["/og-image.svg"],
   },
 };
@@ -67,12 +82,11 @@ export default async function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Playra" />
         <link rel="manifest" href="/manifest.json" />
-        <link rel="icon" href="/icon-512x512.png" sizes="512x512" />
-        <link rel="icon" type="image/png" href="/icon-192x192.png" sizes="192x192" />
-        <link rel="shortcut icon" href="/icon-192x192.png" />
-        <link rel="apple-touch-icon" href="/icon-192x192.png" />
+        <link rel="icon" href="/playra.svg" type="image/svg+xml" />
+        <link rel="shortcut icon" href="/playra.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/playra.svg" />
       </head>
-      <body className={`bg-white text-zinc-900 selection:bg-blue-500/30 ${roboto.variable} font-sans`} suppressHydrationWarning>
+      <body className={`bg-white text-zinc-900 selection:bg-blue-500/30 ${roboto.variable} ${youtubeSans.variable} font-sans`} suppressHydrationWarning>
         <LayoutShell activeProfile={activeProfile}>{children}</LayoutShell>
       </body>
     </html>

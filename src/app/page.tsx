@@ -7,7 +7,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { getVideos, Video } from '@/lib/supabase';
 import { formatDistanceToNow } from 'date-fns';
 import { getActiveProfile, getBatchProfiles } from '@/app/actions/profile';
-import CommunityPostCard from '@/components/CommunityPostCard';
 import { Clock, MoreVertical, Volume2, VolumeX } from 'lucide-react';
 import { useAmbientColor } from '@/hooks/useAmbientColor';
 
@@ -366,19 +365,7 @@ function FeedItem({ item, hoveredId, previewingId, isMuted, onHoverStart, onHove
                  ('is_post' in item && item.is_post);
   
   if (isPost) {
-    const postData = 'type' in item ? item.data : item;
-    return (
-      <div className="col-span-full sm:col-span-2 lg:col-span-3 2xl:col-span-4 3xl:col-span-5 4xl:col-span-6 max-w-2xl mx-auto w-full">
-        {/* Mobile: Inset card style */}
-        <div className="sm:hidden mx-4">
-          <CommunityPostCard post={postData} />
-        </div>
-        {/* Desktop: Full width within grid cell */}
-        <div className="hidden sm:block">
-          <CommunityPostCard post={postData} />
-        </div>
-      </div>
-    );
+    return null;
   }
 
   // It's a video
@@ -400,7 +387,6 @@ function FeedItem({ item, hoveredId, previewingId, isMuted, onHoverStart, onHove
 export default function Home() {
   const router = useRouter();
   const [videos, setVideos] = useState<Video[]>([]);
-  const [posts, setPosts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [activeProfile, setActiveProfile] = useState<any>(null);
@@ -413,6 +399,7 @@ export default function Home() {
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [emptySearchValue, setEmptySearchValue] = useState('');
+  const [isExploreDrawerOpen, setIsExploreDrawerOpen] = useState(false);
   const minSwipeDistance = 50;
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -449,15 +436,11 @@ export default function Home() {
         // Non-signed-in users: skip video feed entirely and show the empty state
         if (!profile) {
           setVideos([]);
-          setPosts([]);
           return;
         }
 
-        // Fetch videos and posts in parallel
-        const [videoData, postsRes] = await Promise.all([
-          getVideos(50, 0),
-          fetch('/api/posts?limit=20').then(r => r.json()).catch(() => ({ posts: [] }))
-        ]);
+        // Fetch videos
+        const videoData = await getVideos(50, 0);
 
         // Ensure the uploader sees their latest avatar on their own videos
         let hydrated = (videoData || []).map((v) => {
@@ -488,7 +471,6 @@ export default function Home() {
         }
 
         setVideos(hydrated);
-        setPosts(postsRes.posts || []);
       } catch (error) {
         console.error(error);
       } finally {
@@ -637,12 +619,15 @@ export default function Home() {
         {/* Mobile: Logo + Search Bar */}
         <div className="md:hidden flex flex-col items-center justify-center min-h-[calc(100vh-200px)] px-4 py-12">
           {/* Logo */}
-          <div className="mb-8">
+          <div className="mb-8 flex items-center gap-0">
             <img
-              src="/play-logo.png"
+              src="/playra.svg"
               alt="Playra"
-              className="w-24 h-24 object-contain"
+              className="h-[28px] w-auto"
             />
+            <span className="font-[family-name:var(--font-youtube-sans)] font-bold text-zinc-900 text-2xl tracking-wide ml-0 relative">
+              RA
+            </span>
           </div>
 
           {/* Search Bar */}
@@ -650,7 +635,7 @@ export default function Home() {
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => router.push('/explore')}
+                onClick={() => setIsExploreDrawerOpen(true)}
                 className="flex-shrink-0 w-10 h-10 rounded-full bg-zinc-100 hover:bg-zinc-200 flex items-center justify-center text-zinc-700 transition-colors"
                 aria-label="Explore"
               >
@@ -665,21 +650,11 @@ export default function Home() {
                   type="text"
                   value={emptySearchValue}
                   onChange={(e) => setEmptySearchValue(e.target.value)}
+                  onClick={() => window.location.hash = 'searching'}
                   placeholder="Search Playra"
-                  className="w-full h-10 px-4 rounded-full bg-zinc-100 text-zinc-900 placeholder:text-zinc-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                  className="w-full h-10 px-4 rounded-full bg-zinc-100 text-zinc-900 placeholder:text-zinc-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 cursor-pointer"
                 />
               </div>
-
-              <button
-                type="button"
-                onClick={() => router.push('/explore')}
-                className="flex-shrink-0 w-10 h-10 rounded-full bg-zinc-100 hover:bg-zinc-200 flex items-center justify-center text-zinc-700 transition-colors"
-                aria-label="Voice search"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3zM19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8" />
-                </svg>
-              </button>
             </div>
           </form>
         </div>
@@ -743,46 +718,21 @@ export default function Home() {
       ) : (
         (() => {
           let displayVideos: Video[] = [];
-          let feedPosts: any[] = [];
           
           if (selectedCategory === 'All' || selectedCategory === 'New to you') {
             displayVideos = videos.filter(v => !v.is_short && v.video_url && v.video_url.trim() !== '');
-            feedPosts = videos.filter(v => !v.video_url || v.video_url.trim() === '');
           } else if (selectedCategory === 'Music') {
             displayVideos = videos.filter(v => !v.is_short && v.category === 'music' && v.video_url && v.video_url.trim() !== '');
           } else if (selectedCategory === 'Recently uploaded') {
             const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
             displayVideos = videos.filter(v => !v.is_short && v.video_url && v.video_url.trim() !== '' && new Date(v.created_at).getTime() > oneDayAgo);
-            feedPosts = videos.filter(v => (!v.video_url || v.video_url.trim() === '') && new Date(v.created_at).getTime() > oneDayAgo);
           }
 
           const styles = Array.from(
             new Map(videos.filter(v => v.is_short).map((style) => [style.id, style])).values()
           );
 
-          if (displayVideos.length > 0 || styles.length > 0 || feedPosts.length > 0) {
-            // Interleave posts randomly between videos
-            const interleavePosts = (videos: Video[], posts: any[]): (Video | { type: 'post'; data: any })[] => {
-              if (posts.length === 0) return videos;
-              
-              const result: (Video | { type: 'post'; data: any })[] = [];
-              let postIndex = 0;
-              let nextPostAt = Math.floor(Math.random() * 3) + 4;
-              
-              videos.forEach((video, videoIndex) => {
-                result.push(video);
-                if (videoIndex === nextPostAt && postIndex < posts.length) {
-                  result.push({ type: 'post', data: posts[postIndex] });
-                  postIndex++;
-                  nextPostAt = videoIndex + Math.floor(Math.random() * 3) + 4;
-                }
-              });
-              
-              return result;
-            };
-
-            const interleavedContent = interleavePosts(displayVideos, feedPosts);
-
+          if (displayVideos.length > 0 || styles.length > 0) {
             return (
               <div 
                 className="pb-20"
@@ -878,20 +828,6 @@ export default function Home() {
                   )
                 )}
 
-                {/* Community Posts Section */}
-                {feedPosts.length > 0 && (
-                  <div className="px-6 md:px-10 pt-8">
-                    <h2 className="text-xl font-bold text-zinc-900 mb-4">Community Posts</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
-                      {feedPosts.map((post, index) => (
-                        <div key={`post-${post.id}-${index}`} className="max-w-2xl mx-auto w-full">
-                          <CommunityPostCard post={post} />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
                 {/* Remaining Videos */}
                 {displayVideos.length > 12 && (
                   <div className="relative z-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-6 px-4 md:px-10 pt-10">
@@ -941,6 +877,52 @@ export default function Home() {
         })()
       )}
 
+      {/* Explore Drawer */}
+      <>
+        {/* Backdrop overlay */}
+        <div 
+          className={`fixed inset-0 bg-black/50 z-[9999] transition-opacity duration-300 ${isExploreDrawerOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+          onClick={() => setIsExploreDrawerOpen(false)}
+        />
+        
+        {/* Side drawer wrapper with overflow hidden */}
+        <div className="fixed inset-y-0 left-0 overflow-hidden z-[10000] pointer-events-none">
+          {/* Side drawer */}
+          <div 
+            className="fixed inset-y-0 left-0 w-80 bg-white shadow-2xl transition-transform duration-300 ease-in-out pointer-events-auto"
+            style={{ transform: isExploreDrawerOpen ? 'translateX(0)' : 'translateX(-100%)' }}
+          >
+            <div className="flex flex-col h-full px-6 pb-20">
+              {/* Sign-in panel */}
+              <div className="flex flex-col items-center justify-center flex-1">
+                <h2 className="text-sm font-semibold text-zinc-900 mb-4">Sign in to see more</h2>
+                <button
+                  onClick={() => {
+                    setIsExploreDrawerOpen(false);
+                    router.push('/signin');
+                  }}
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-sm font-medium transition-colors"
+                >
+                  Sign in
+                </button>
+              </div>
+
+              {/* Bottom Footer */}
+              <div className="mt-auto pt-6 border-t border-zinc-200">
+                <div className="flex justify-center gap-4 text-xs text-zinc-400">
+                  <button onClick={() => setIsExploreDrawerOpen(false)} className="hover:text-zinc-600 transition-colors">
+                    Privacy Policy
+                  </button>
+                  <span>•</span>
+                  <button onClick={() => setIsExploreDrawerOpen(false)} className="hover:text-zinc-600 transition-colors">
+                    Terms of Service
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </>
     </>
   );
 }

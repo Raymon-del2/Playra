@@ -7,15 +7,15 @@ import { useLocation } from '@/hooks/useLocation';
 import ProfileMenu from './ProfileMenu';
 import NotificationsPopup from './NotificationsPopup';
 import CreateMenu from './CreateMenu';
-import { submitFeedback } from '@/app/actions/feedback';
 
 type NavbarProps = {
   isSidebarCollapsed: boolean;
   onToggleSidebar: () => void;
   isSignedIn?: boolean;
   onToggleSignIn?: () => void;
-  onToggleMobileDrawer?: () => void;
+  onToggleSearchOverlay?: () => void;
   activeProfile?: any;
+  isLoading?: boolean;
 };
 
 export default function Navbar({
@@ -23,8 +23,9 @@ export default function Navbar({
   onToggleSidebar,
   isSignedIn = false,
   onToggleSignIn,
-  onToggleMobileDrawer,
-  activeProfile
+  onToggleSearchOverlay,
+  activeProfile,
+  isLoading = false
 }: NavbarProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -42,26 +43,38 @@ export default function Navbar({
   const [notificationCount, setNotificationCount] = useState(0);
   const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
   const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [isSpeechSupported, setIsSpeechSupported] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
+  const [userCountry, setUserCountry] = useState<string | null>(null);
+  const [headerLoadStage, setHeaderLoadStage] = useState(0);
   const profileContainerRef = useRef<HTMLDivElement>(null);
-  const recognitionRef = useRef<any>(null);
 
   // Check if current page should show searchbar (home, styles, watch, or results pages)
   const shouldShowSearchbar = pathname === '/' || pathname?.startsWith('/styles') || pathname?.startsWith('/watch') || pathname?.startsWith('/results');
 
-  const getSpeechRecognition = () => {
-    if (typeof window === 'undefined') return null;
-    return (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition || null;
-  };
+  // Header loading sequence
+  useEffect(() => {
+    if (isLoading) {
+      setHeaderLoadStage(0);
+      // Stage 1: Region indicator (immediate)
+      setHeaderLoadStage(1);
+      
+      // Stage 2: Logo (after 100ms)
+      const logoTimer = setTimeout(() => setHeaderLoadStage(2), 100);
+      
+      // Stage 3: Search bar and remaining elements (after 200ms)
+      const searchTimer = setTimeout(() => setHeaderLoadStage(3), 200);
+      
+      return () => {
+        clearTimeout(logoTimer);
+        clearTimeout(searchTimer);
+      };
+    } else {
+      setHeaderLoadStage(3);
+    }
+  }, [isLoading]);
 
   useEffect(() => {
-    const SpeechRecognition = getSpeechRecognition();
-    setIsSpeechSupported(Boolean(SpeechRecognition));
-
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
     };
@@ -69,11 +82,20 @@ export default function Navbar({
     window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
 
+    // Fetch user country
+    fetch('https://api.country.is/')
+      .then(res => res.json())
+      .then(data => {
+        if (data.country) {
+          setUserCountry(data.country.toUpperCase());
+        }
+      })
+      .catch(() => {
+        // Silently fail - badge will remain hidden
+      });
+
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
     };
   }, []);
 
@@ -161,60 +183,6 @@ export default function Navbar({
     };
   }, [searchQuery, isDropdownOpen]);
 
-  const startListening = () => {
-    const SpeechRecognition = getSpeechRecognition();
-    if (!SpeechRecognition) {
-      setIsSpeechSupported(false);
-      return;
-    }
-
-    if (!recognitionRef.current) {
-      const recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = true;
-      recognition.lang = navigator?.language || 'en-US';
-
-      recognition.onstart = () => setIsListening(true);
-      recognition.onend = () => setIsListening(false);
-      recognition.onerror = (event: any) => {
-        console.error('Speech recognition error:', event);
-        setIsListening(false);
-      };
-      recognition.onresult = (event: any) => {
-        let transcript = '';
-        for (let i = event.resultIndex; i < event.results.length; i += 1) {
-          transcript += event.results[i][0].transcript;
-        }
-        if (transcript.trim()) {
-          setSearchQuery(transcript.trim());
-        }
-      };
-      recognitionRef.current = recognition;
-    }
-
-    try {
-      recognitionRef.current.start();
-    } catch (error) {
-      console.error('Failed to start speech recognition:', error);
-      setIsListening(false);
-    }
-  };
-
-  const stopListening = () => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-    }
-    setIsListening(false);
-  };
-
-  const handleMicClick = () => {
-    if (isListening) {
-      stopListening();
-      return;
-    }
-    startListening();
-  };
-
   // Highlight matching substring within text by wrapping in <span>
   const highlightMatch = (text: string, query: string) => {
     if (!query.trim() || !text) return text;
@@ -240,8 +208,8 @@ export default function Navbar({
     <>
       <nav suppressHydrationWarning className={`fixed top-0 left-0 right-0 h-14 z-[100] flex items-center transition-all duration-300 ${
         isScrolled 
-          ? 'bg-white/95 backdrop-blur-md shadow-md shadow-zinc-200/50' 
-          : 'bg-white/80 backdrop-blur-sm'
+          ? 'bg-transparent' 
+          : 'bg-transparent'
       }`}>
         {isSearching && (
           <div className="absolute top-0 left-0 right-0 h-0.5 bg-blue-500 animate-pulse" />
@@ -251,43 +219,49 @@ export default function Navbar({
             
             {/* Left: Logo & Sidebar Toggle */}
             <div className={`flex items-center gap-2 transition-all duration-300 ${isSearchExpanded ? 'hidden md:flex' : 'flex'}`}>
-              <button
-                onClick={() => setIsMobileMenuOpen(true)}
-                className="lg:hidden p-2 rounded-full hover:bg-zinc-200 text-zinc-900 transition-all active:scale-90"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
-              </button>
-
+              {/* Desktop hamburger menu only */}
               <button
                 onClick={onToggleSidebar}
-                className="hidden lg:flex p-2 rounded-full hover:bg-zinc-200 text-zinc-900 transition-all active:scale-90"
+                className="hidden lg:flex p-2 rounded-full text-zinc-900 transition-all active:scale-90 hover:bg-[#e5e5e5] active:bg-[rgba(0,0,0,0.2)]"
+                style={{
+                  transition: 'background-color 0.2s ease',
+                  pointerEvents: isLoading ? 'none' : 'auto',
+                  cursor: isLoading ? 'not-allowed' : 'pointer',
+                  opacity: isLoading ? 0.5 : 1
+                }}
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
               </button>
 
-              <Link href="/" className="flex items-center gap-2 flex-shrink-0 group">
-                <div suppressHydrationWarning className="flex items-center gap-2">
-                  <img src="/play-logo.png" alt="Playra" className="h-[22px] w-auto" />
-                  <span className="font-[family-name:var(--font-anton)] text-zinc-900 text-lg tracking-wide uppercase">Playra</span>
-                </div>
-                <span className="hidden xs:inline text-[9px] font-black text-zinc-500 uppercase tracking-widest bg-zinc-100/80 px-1.5 py-0.5 rounded ml-1 border border-zinc-200">
-                  {countryCode || 'KE'}
-                </span>
-              </Link>
+              {!isLoading && (
+                <Link href="/" className="flex items-center gap-0 flex-shrink-0 group relative" title="Playra home" style={{ opacity: headerLoadStage >= 2 ? 1 : 0, transition: 'opacity 0.2s ease' }}>
+                  <div suppressHydrationWarning className="flex items-center gap-0 relative">
+                    <img src="/playra.svg" alt="Playra" className="h-[28px] w-auto" />
+                    <span className="font-[family-name:var(--font-youtube-sans)] font-bold text-zinc-900 text-2xl tracking-wide ml-0 relative">
+                      RA
+                      {userCountry && (
+                        <span className="absolute -top-1.5 -right-2.5 text-[10px] font-normal text-zinc-500" style={{ opacity: headerLoadStage >= 1 ? 1 : 0, transition: 'opacity 0.2s ease' }}>
+                          {userCountry}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                </Link>
+              )}
             </div>
 
             {/* Middle: Expanding Search Bar */}
-            {shouldShowSearchbar && (
+            {shouldShowSearchbar && !isLoading && (
               <div className={`flex items-center transition-all duration-300 ease-in-out ${
                 isSearchExpanded 
                   ? 'flex-1 md:max-w-2xl mx-0 md:mx-4' 
-                  : 'hidden md:flex md:flex-1 md:max-w-2xl md:mx-auto'}`}>
+                  : 'hidden md:flex md:flex-1 md:max-w-2xl md:mx-auto'}`} style={{ opacity: headerLoadStage >= 3 ? 1 : 0, transition: 'opacity 0.2s ease' }}>
 
                 <div className="w-full">
-                  <div className="flex w-full items-center gap-2">
-                    <div className={`relative flex-1 min-w-0 group flex items-center bg-zinc-100 rounded-full border transition-colors duration-200 ${
-                      searchFocused ? 'border-blue-500' : 'border-transparent'
-                    }`}>
+                  <div className="flex w-full items-center gap-0">
+                    <div className={`relative flex-1 min-w-0 flex items-center bg-white border transition-colors duration-200 ${
+                      searchFocused ? 'border-[#1c62b9]' : 'border-[#ccc]'
+                    }`} style={{ borderRadius: '40px 0 0 40px', height: '40px', boxSizing: 'border-box' }}>
                       {searchFocused && (
                         <svg
                           suppressHydrationWarning
@@ -304,17 +278,17 @@ export default function Navbar({
                         autoFocus={isSearchExpanded}
                         placeholder="Search"
                         value={searchQuery}
-                        onFocus={() => { setIsDropdownOpen(true); setIsSearchExpanded(true); setSearchFocused(true); }}
+                        onFocus={() => { setIsSearchExpanded(true); setSearchFocused(true); }}
                         onBlur={() => {
                           setSearchFocused(false);
-                          setTimeout(() => {
-                            setIsDropdownOpen(false);
-                            setSelectedIndex(-1);
-                          }, 200);
                         }}
                         onChange={(event) => {
                           setSearchQuery(event.target.value);
-                          setIsDropdownOpen(true);
+                          if (event.target.value.trim()) {
+                            setIsDropdownOpen(true);
+                          } else {
+                            setIsDropdownOpen(false);
+                          }
                         }}
                         onKeyDown={(event) => {
                           const totalSuggestions = suggestions.videos.length + suggestions.profiles.length;
@@ -343,12 +317,13 @@ export default function Navbar({
                             setIsSearchExpanded(false);
                           }
                         }}
-                        className="flex-1 min-w-0 bg-transparent border-none outline-none px-3 py-2.5 text-zinc-900 text-sm placeholder-zinc-400"
+                        className="flex-1 min-w-0 bg-transparent border-none outline-none text-zinc-900 text-sm placeholder-zinc-400"
+                        style={{ height: '100%', boxSizing: 'border-box', paddingLeft: searchFocused ? '2.5rem' : '1rem', paddingRight: '1rem', paddingTop: '0.625rem', paddingBottom: '0.625rem' }}
                       />
                       {searchQuery && (
                         <button
                           onClick={() => setSearchQuery('')}
-                          className="mr-2 p-1 text-zinc-500 hover:text-zinc-900 flex-shrink-0"
+                          className="mr-3 p-1 text-zinc-500 hover:text-zinc-900 flex-shrink-0"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
@@ -358,7 +333,8 @@ export default function Navbar({
                     <button
                       onClick={() => handleSearch()}
                       suppressHydrationWarning
-                      className="flex-shrink-0 w-10 h-10 rounded-2xl bg-zinc-100 flex items-center justify-center text-gray-700 hover:text-zinc-900 hover:bg-zinc-200 transition-colors"
+                      className="flex-shrink-0 flex items-center justify-center text-gray-700 hover:text-zinc-900 transition-colors border-[#ccc] border-t border-r border-b border-l-0 bg-[#f8f8f8"
+                      style={{ borderRadius: '0 40px 40px 0', height: '40px', width: '40px', boxSizing: 'border-box', margin: 0 }}
                       aria-label="Search"
                     >
                       <svg
@@ -369,26 +345,6 @@ export default function Navbar({
                         viewBox="0 0 24 24"
                       >
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                      </svg>
-                    </button>
-
-                    <button
-                      onClick={handleMicClick}
-                      disabled={!isSpeechSupported}
-                      suppressHydrationWarning
-                      className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
-                        isListening ? 'bg-red-600 text-zinc-900' : 'bg-zinc-100 text-gray-700 hover:text-zinc-900 hover:bg-zinc-200'
-                      } ${!isSpeechSupported ? 'opacity-40' : ''}`}
-                      title="Search with voice"
-                    >
-                      <svg
-                        suppressHydrationWarning
-                        className="w-5 h-5"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
-                        <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
                       </svg>
                     </button>
                   </div>
@@ -487,23 +443,20 @@ export default function Navbar({
 
             {/* Right: Actions */}
             <div className={`flex items-center space-x-1 sm:space-x-2 flex-shrink-0 transition-all ${isSearchExpanded ? 'hidden md:flex' : 'flex'}`}>
-              {activeProfile && (
-                <div suppressHydrationWarning className="relative">
+              {isLoading ? (
+                // Skeleton placeholders during loading
+                <>
+                  <div className="w-10 h-10 rounded-full bg-[#f0f0f0]" style={{ pointerEvents: 'none' }} />
+                  <div className="w-10 h-10 rounded-full bg-[#f0f0f0]" style={{ pointerEvents: 'none' }} />
+                  <div className="w-10 h-10 rounded-full bg-[#f0f0f0]" style={{ pointerEvents: 'none' }} />
+                </>
+              ) : (
+                // Actual icons after loading
+                <>
+                  {/* Mobile: Search icon - always show on mobile */}
                   <button
                     suppressHydrationWarning
-                    onClick={() => setIsCreateMenuOpen(!isCreateMenuOpen)}
-                    className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full text-zinc-900 font-bold text-sm transition-all active:scale-95"
-                  >
-                    <svg suppressHydrationWarning className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                    <span suppressHydrationWarning>Create</span>
-                  </button>
-
-                  {/* Mobile: Search icon instead of + */}
-                  <button
-                    suppressHydrationWarning
-                    onClick={() => setIsSearchExpanded(true)}
+                    onClick={() => onToggleSearchOverlay ? onToggleSearchOverlay() : setIsSearchExpanded(true)}
                     className="sm:hidden p-2 rounded-full hover:bg-zinc-200 text-zinc-900 transition-all active:scale-95"
                   >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -511,120 +464,81 @@ export default function Navbar({
                     </svg>
                   </button>
 
-                  <CreateMenu isOpen={isCreateMenuOpen} onClose={() => setIsCreateMenuOpen(false)} profileId={activeProfile?.id} />
-                </div>
-              )}
+                  {activeProfile && (
+                    <div suppressHydrationWarning className="relative">
+                      <button
+                        suppressHydrationWarning
+                        onClick={() => setIsCreateMenuOpen(!isCreateMenuOpen)}
+                        className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full text-zinc-900 font-bold text-sm transition-all active:scale-95"
+                      >
+                        <svg suppressHydrationWarning className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        <span suppressHydrationWarning>Create</span>
+                      </button>
 
-              {activeProfile && (
-                <div suppressHydrationWarning className="relative">
-                  <button
-                    suppressHydrationWarning
-                    onClick={() => { setIsNotificationsOpen(!isNotificationsOpen); if (!isNotificationsOpen) setHasUnreadNotifications(false); }}
-                    className="flex p-2 rounded-full hover:bg-zinc-200 text-zinc-900 active:scale-90 transition-all relative"
-                  >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
-                    {hasUnreadNotifications && notificationCount > 0 && (
-                      <span className="absolute top-0.5 right-0.5 bg-red-600 text-[9px] font-bold text-zinc-900 px-1 rounded-full min-w-[14px] text-center border border-gray-900">
-                        {notificationCount}
-                      </span>
-                    )}
-                  </button>
+                      <CreateMenu isOpen={isCreateMenuOpen} onClose={() => setIsCreateMenuOpen(false)} profileId={activeProfile?.id} />
+                    </div>
+                  )}
 
-                  <NotificationsPopup
-                    isOpen={isNotificationsOpen}
-                    onClose={() => setIsNotificationsOpen(false)}
-                    onCountChange={(count) => {
-                      setNotificationCount(count);
-                      if (count > 0) setHasUnreadNotifications(true);
-                      else setHasUnreadNotifications(false);
-                    }}
-                    activeProfile={activeProfile}
-                  />
-                </div>
-              )}
+                  {activeProfile && (
+                    <div suppressHydrationWarning className="relative">
+                      <button
+                        suppressHydrationWarning
+                        onClick={() => { setIsNotificationsOpen(!isNotificationsOpen); if (!isNotificationsOpen) setHasUnreadNotifications(false); }}
+                        className="flex p-2 rounded-full hover:bg-zinc-200 text-zinc-900 active:scale-90 transition-all relative"
+                      >
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
+                        {hasUnreadNotifications && notificationCount > 0 && (
+                          <span className="absolute top-0.5 right-0.5 bg-red-600 text-[9px] font-bold text-zinc-900 px-1 rounded-full min-w-[14px] text-center border border-gray-900">
+                            {notificationCount}
+                          </span>
+                        )}
+                      </button>
 
-              {activeProfile ? (
-                <div suppressHydrationWarning className="relative ml-1" ref={profileContainerRef}>
-                  <div
-                    suppressHydrationWarning
-                    onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                    className="w-8 h-8 rounded-full overflow-hidden border border-zinc-200 cursor-pointer active:scale-95 transition-transform"
-                  >
-                    {activeProfile.avatar ? (
-                      <img src={activeProfile.avatar} alt={activeProfile.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full bg-zinc-100 flex items-center justify-center text-xs font-bold text-zinc-500">{activeProfile.name[0]?.toUpperCase()}</div>
-                    )}
-                  </div>
-                  <ProfileMenu isOpen={isProfileMenuOpen} onClose={() => setIsProfileMenuOpen(false)} activeProfile={activeProfile} />
-                </div>
-              ) : (
-                <button
-                  onClick={onToggleSignIn}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-zinc-300 text-blue-600 hover:bg-zinc-200/80 transition-all font-semibold text-sm w-fit"
-                >
-                  <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
-                  <span>Sign in</span>
-                </button>
+                      <NotificationsPopup
+                        isOpen={isNotificationsOpen}
+                        onClose={() => setIsNotificationsOpen(false)}
+                        onCountChange={(count) => {
+                          setNotificationCount(count);
+                          if (count > 0) setHasUnreadNotifications(true);
+                          else setHasUnreadNotifications(false);
+                        }}
+                        activeProfile={activeProfile}
+                      />
+                    </div>
+                  )}
+
+                  {activeProfile ? (
+                    <div suppressHydrationWarning className="relative ml-1 hidden sm:flex" ref={profileContainerRef}>
+                      <div
+                        suppressHydrationWarning
+                        onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                        className="w-8 h-8 rounded-full overflow-hidden border border-zinc-200 cursor-pointer active:scale-95 transition-transform"
+                      >
+                        {activeProfile.avatar ? (
+                          <img src={activeProfile.avatar} alt={activeProfile.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-zinc-100 flex items-center justify-center text-xs font-bold text-zinc-500">{activeProfile.name[0]?.toUpperCase()}</div>
+                        )}
+                      </div>
+                      <ProfileMenu isOpen={isProfileMenuOpen} onClose={() => setIsProfileMenuOpen(false)} activeProfile={activeProfile} />
+                    </div>
+                  ) : (
+                    <button
+                      onClick={onToggleSignIn}
+                      className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-zinc-300 text-blue-600 hover:bg-zinc-200/80 transition-all font-semibold text-sm w-fit"
+                    >
+                      <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
+                      <span>Sign in</span>
+                    </button>
+                  )}
+                </>
               )}
             </div>
           </div>
         </div>
       </nav>
-
-      {/* Mobile Menu */}
-      {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-[200] lg:hidden">
-          <div className="absolute inset-0 bg-white/60" onClick={() => setIsMobileMenuOpen(false)} />
-          <div className="absolute left-0 top-0 bottom-0 w-72 bg-white border-r border-zinc-200 overflow-y-auto">
-            <div className="p-4 border-b border-zinc-200">
-              <div className="flex items-center justify-between">
-                <Link href="/" className="flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
-                  <img src="/play-logo.png" alt="Playra" className="h-[22px] w-auto" />
-                  <span className="font-[family-name:var(--font-anton)] text-zinc-900 text-lg tracking-wide uppercase">Playra</span>
-                </Link>
-                <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 hover:bg-zinc-200 rounded-full">
-                  <svg className="w-5 h-5 text-zinc-900" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-            
-            <div className="p-3 space-y-1">
-              <Link href="/" className="flex items-center gap-4 px-3 py-3 rounded-xl text-gray-700 hover:text-zinc-900 hover:bg-zinc-100/80 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3L4 10V21H9V15H15V21H20V10L12 3Z" /></svg>
-                <span className="font-medium">Home</span>
-              </Link>
-              
-              <Link href="/explore" className="flex items-center gap-4 px-3 py-3 rounded-xl text-gray-700 hover:text-zinc-900 hover:bg-zinc-100/80 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
-                <img src="/explore.svg" alt="Explore" className="w-6 h-6 opacity-70" />
-                <span className="font-medium">Explore</span>
-              </Link>
-              
-              <Link href="/channel" className="flex items-center gap-4 px-3 py-3 rounded-xl text-gray-700 hover:text-zinc-900 hover:bg-zinc-100/80 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                <span className="font-medium">Your channel</span>
-              </Link>
-              
-              <Link href="/studio" className="flex items-center gap-4 px-3 py-3 rounded-xl text-gray-700 hover:text-zinc-900 hover:bg-zinc-100/80 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                <span className="font-medium">Studio</span>
-              </Link>
-              
-              <Link href="/subscriptions" className="flex items-center gap-4 px-3 py-3 rounded-xl text-gray-700 hover:text-zinc-900 hover:bg-zinc-100/80 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
-                <img src="/subscriptions.svg" alt="Subscriptions" className="w-6 h-6 opacity-70" />
-                <span className="font-medium">Subscriptions</span>
-              </Link>
-              
-              <Link href="/styles" className="flex items-center gap-4 px-3 py-3 rounded-xl text-gray-700 hover:text-zinc-900 hover:bg-zinc-100/80 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
-                <img src="/styles-icon.svg" alt="Styles" className="w-6 h-6 opacity-70" />
-                <span className="font-medium">Styles</span>
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

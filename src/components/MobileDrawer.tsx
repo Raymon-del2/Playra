@@ -108,7 +108,6 @@ export default function MobileDrawer({ isOpen, onClose, isSignedIn }: MobileDraw
                     <div className="mt-12 px-8 pb-12 flex flex-wrap gap-x-4 gap-y-2 text-[10px] font-black text-zinc-900/20 uppercase tracking-widest">
                         <Link href="/privacy" onClick={onClose} className="hover:text-zinc-900 transition-colors">Privacy</Link>
                         <Link href="/terms" onClick={onClose} className="hover:text-zinc-900 transition-colors">Terms</Link>
-                        <Link href="/help" onClick={onClose} className="hover:text-zinc-900 transition-colors">Help</Link>
                         <p className="w-full mt-4 text-[9px] font-bold italic tracking-normal">© 2026 Playra Discovery</p>
                     </div>
                 </div>

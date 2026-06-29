@@ -610,6 +610,26 @@ export default function ResultsPage() {
 
   return (
     <div className="px-4 sm:px-6 pt-6 sm:pt-8 pb-24 lg:pb-8 w-full max-w-full overflow-x-hidden">
+      {/* Header with search query and icons */}
+      <div className="flex items-center gap-3 mb-5">
+        <h1 className="text-xl font-bold text-zinc-900 flex-1">{queryLabel}</h1>
+        <button className="p-2 rounded-full hover:bg-zinc-200 text-zinc-700 transition-colors">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+          </svg>
+        </button>
+        <button className="p-2 rounded-full hover:bg-zinc-200 text-zinc-700 transition-colors">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3zM19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8" />
+          </svg>
+        </button>
+        <button className="p-2 rounded-full hover:bg-zinc-200 text-zinc-700 transition-colors">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+          </svg>
+        </button>
+      </div>
+
       <div className="flex items-center gap-3 overflow-x-auto pb-5 scrollbar-hide">
         {filters.map((filter) => (
           <button
@@ -631,12 +651,11 @@ export default function ResultsPage() {
           <h2 className="text-lg font-bold text-zinc-900 mb-4">Profiles</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {profiles.map((profile: any) => (
-              <Link
+              <div
                 key={profile.id}
-                href={`/channel/${profile.id}`}
                 className="group flex flex-col items-center gap-3 p-4 rounded-xl bg-zinc-100/50 hover:bg-zinc-200/50 transition-colors border border-zinc-200"
               >
-                <div className="w-16 h-16 rounded-full overflow-hidden bg-zinc-200 flex-shrink-0">
+                <Link href={`/channel/${profile.id}`} className="w-16 h-16 rounded-full overflow-hidden bg-zinc-200 flex-shrink-0">
                   {profile.avatar ? (
                     <img src={profile.avatar} alt={profile.name} className="w-full h-full object-cover" />
                   ) : (
@@ -644,12 +663,20 @@ export default function ResultsPage() {
                       {profile.name?.[0]?.toUpperCase() || '?'}
                     </div>
                   )}
-                </div>
-                <div className="text-center">
-                  <h3 className="text-sm font-bold text-zinc-900 truncate max-w-[140px]">{profile.name}</h3>
+                </Link>
+                <div className="text-center flex-1">
+                  <Link href={`/channel/${profile.id}`}>
+                    <h3 className="text-sm font-bold text-zinc-900 truncate max-w-[140px]">{profile.name}</h3>
+                  </Link>
                   <p className="text-xs text-zinc-500 truncate max-w-[140px]">@{profile.name?.replace(/^@+/, '').replace(/\s+/g, '').toLowerCase()}</p>
+                  {profile.subscriber_count && (
+                    <p className="text-xs text-zinc-500 mt-1">{profile.subscriber_count} subscribers</p>
+                  )}
                 </div>
-              </Link>
+                <button className="w-full py-2 px-4 bg-zinc-900 text-white rounded-full text-sm font-bold hover:bg-zinc-800 transition-colors">
+                  Subscribe
+                </button>
+              </div>
             ))}
           </div>
         </div>
@@ -660,9 +687,57 @@ export default function ResultsPage() {
         <StylesCarousel items={stylesItems} />
       )}
 
+      {/* Shorts Grid - 2 side by side */}
+      {(activeFilter === 'All' || activeFilter === 'Styles') && stylesItems.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-lg font-bold text-zinc-900 mb-4">Shorts</h2>
+          <div className="grid grid-cols-2 gap-4">
+            {stylesItems.map((item) => (
+              <Link
+                key={item.id}
+                href={`/styles/${item.id}`}
+                className="group relative aspect-[9/16] overflow-hidden rounded-xl bg-zinc-100"
+              >
+                <img
+                  src={item.thumbnail}
+                  alt={item.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-3">
+                  <h3 className="text-sm font-bold text-white line-clamp-2">{item.title}</h3>
+                  <p className="text-xs text-white/80 mt-1">{item.views}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Skeleton Loader */}
+      {isLoading && (
+        <div className="space-y-8">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="flex flex-col lg:flex-row gap-4 p-2 rounded-2xl">
+              <div className="relative flex-shrink-0 w-full lg:w-96 aspect-video bg-zinc-200 rounded-xl animate-pulse" />
+              <div className="flex-1 min-w-0 py-1 space-y-3">
+                <div className="h-6 bg-zinc-200 rounded animate-pulse w-3/4" />
+                <div className="h-4 bg-zinc-200 rounded animate-pulse w-1/2" />
+                <div className="flex items-center gap-2.5 mt-3">
+                  <div className="w-8 h-8 rounded-full bg-zinc-200 animate-pulse" />
+                  <div className="h-4 bg-zinc-200 rounded animate-pulse w-32" />
+                </div>
+                <div className="h-4 bg-zinc-200 rounded animate-pulse w-full" />
+                <div className="h-4 bg-zinc-200 rounded animate-pulse w-2/3" />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="space-y-8">
         {/* Videos list */}
-        {filteredResults.map((item) => <ResultCard key={item.id} item={item} />)}
+        {!isLoading && filteredResults.map((item) => <ResultCard key={item.id} item={item} />)}
 
         {/* No results fallback: only if no profiles and no videos */}
         {profiles.length === 0 && filteredResults.length === 0 && stylesItems.length === 0 && (

@@ -17,7 +17,7 @@ export default function LoadingScreen() {
     <div suppressHydrationWarning className="fixed inset-0 z-[9999] flex items-center justify-center bg-white">
       <img 
         suppressHydrationWarning 
-        src="/play-logo.png" 
+        src="/playra.svg" 
         alt="Playra Logo" 
         className="w-32 md:w-40"
       />

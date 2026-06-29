@@ -7,18 +7,31 @@ export async function GET(req: Request) {
   const limit = Number(searchParams.get('limit') || 5);
   const isDropdown = searchParams.get('dropdown') === 'true';
 
-  if (!q || q.length < 1) {
-    return NextResponse.json({ videos: [], profiles: [] });
-  }
-
   try {
-    const pattern = `%${q}%`;
     let videos: any[] = [];
     let profiles: any[] = [];
 
     if (!supabase) {
       return NextResponse.json({ videos: [], profiles: [] });
     }
+
+    // If no query, return popular/recent videos
+    if (!q || q.length < 1) {
+      const videosRes = await supabase
+        .from('videos')
+        .select('id, title, thumbnail_url, channel_name, channel_avatar, channel_id, views, created_at')
+        .not('channel_id', 'in', '("ch_1769262677206_k5xxdmskb")')
+        .order('views', { ascending: false })
+        .limit(limit);
+
+      if (videosRes.error) console.error('Supabase video fetch error:', videosRes.error);
+      videos = videosRes.data || [];
+
+      console.log(`Initial fetch: ${videos.length} videos`);
+      return NextResponse.json({ videos, profiles });
+    }
+
+    const pattern = `%${q}%`;
 
     // Build queries in parallel
     const queries: any[] = [];

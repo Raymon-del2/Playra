@@ -35,9 +35,6 @@ export default function WhoIsWatchingOverlay({ profiles, userId, onSelect }: { p
             suppressHydrationWarning
             className={`fixed inset-0 z-[9000] bg-white transition-all duration-700 flex flex-col items-center justify-center p-6 sm:p-12 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
         >
-            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full animate-pulse" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/5 blur-[120px] rounded-full animate-pulse delay-1000" />
-
             <div className={`w-full max-w-6xl mx-auto flex flex-col items-center transition-all duration-1000 delay-300 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}>
                 <h1 className="text-4xl sm:text-5xl font-black text-zinc-900 mb-4 tracking-tighter text-center">Who is watching?</h1>
                 <p className="text-zinc-500 font-bold mb-16 uppercase tracking-[0.2em] text-[10px] sm:text-xs text-center opacity-60">Playra Discovery Session</p>

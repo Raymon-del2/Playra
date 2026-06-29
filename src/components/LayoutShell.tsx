@@ -1,14 +1,14 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, Suspense, useRef } from 'react';
 import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
 import MobileNav from '@/components/MobileNav';
-import MobileDrawer from '@/components/MobileDrawer';
 import TopLoader from '@/components/TopLoader';
 import AppInstallBanner from '@/components/AppInstallBanner';
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
 import LoadingScreen from '@/components/LoadingScreen';
+import SkeletonLoading from '@/components/SkeletonLoading';
 import WhoIsWatchingOverlay from '@/components/WhoIsWatchingOverlay';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -21,9 +21,10 @@ const STORAGE_KEY = 'playra_sidebar_collapsed';
 interface LayoutShellProps {
   children: React.ReactNode;
   activeProfile: any; // Using any to avoid complex type imports for now, or define a basic shape
+  excludeAppShell?: boolean;
 }
 
-export default function LayoutShell({ children, activeProfile: serverProfile }: LayoutShellProps) {
+export default function LayoutShell({ children, activeProfile: serverProfile, excludeAppShell = false }: LayoutShellProps) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -32,12 +33,124 @@ export default function LayoutShell({ children, activeProfile: serverProfile }: 
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [mounted, setMounted] = useState(false);
-  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const [showSplash, setShowSplash] = useState(false);
   const [showWhoIsWatching, setShowWhoIsWatching] = useState(false);
   const [userProfiles, setUserProfiles] = useState<any[]>([]);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const [activeProfile, setActiveProfile] = useState(serverProfile);
+  const [isPageLoading, setIsPageLoading] = useState(true);
+  const [loadingStartTime, setLoadingStartTime] = useState<number>(Date.now());
+  const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<{ videos: any[]; profiles: any[] }>({ videos: [], profiles: [] });
+  const [initialResults, setInitialResults] = useState<{ videos: any[]; profiles: any[] }>({ videos: [], profiles: [] });
+  const searchCacheRef = useRef<Map<string, { videos: any[]; profiles: any[]; timestamp: number }>>(new Map());
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Sync search overlay with URL hash
+  useEffect(() => {
+    const handleHashChange = () => {
+      const isOpen = window.location.hash === '#searching';
+      setIsSearchOverlayOpen(isOpen);
+    };
+
+    // Check initial hash
+    handleHashChange();
+
+    // Listen for hash changes
+    window.addEventListener('hashchange', handleHashChange);
+
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
+  }, []);
+
+  // Pre-fetch initial results on mount
+  useEffect(() => {
+    fetchInitialResults();
+  }, []);
+
+  const fetchInitialResults = async () => {
+    // Check cache first
+    const cached = searchCacheRef.current.get('initial');
+    if (cached && (cached.videos.length > 0 || cached.profiles.length > 0) && Date.now() - cached.timestamp < 60000) {
+      setInitialResults(cached);
+      return;
+    }
+
+    try {
+      // Try without query parameter to get any videos
+      const res = await fetch(`/api/search?dropdown=true&limit=5`);
+      const json = await res.json();
+      const next = { videos: json.videos || [], profiles: json.profiles || [] };
+      setInitialResults(next);
+      // Cache for 60 seconds
+      searchCacheRef.current.set('initial', { ...next, timestamp: Date.now() });
+    } catch (error) {
+      console.error('Error fetching initial results:', error);
+      setInitialResults({ videos: [], profiles: [] });
+    }
+  };
+
+  const openSearchOverlay = () => {
+    window.location.hash = 'searching';
+  };
+
+  const closeSearchOverlay = () => {
+    if (window.location.hash === '#searching') {
+      window.history.back();
+    } else {
+      setIsSearchOverlayOpen(false);
+    }
+  };
+
+  // Search function with debouncing
+  const fetchSearchResults = async (query: string) => {
+    const cached = searchCacheRef.current.get(query);
+    // Only serve from cache when we have actual results (not empty), and within 15s
+    if (cached && (cached.videos.length > 0 || cached.profiles.length > 0) && Date.now() - cached.timestamp < 15000) {
+      setSearchResults(cached);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&dropdown=true&limit=12`);
+      const json = await res.json();
+      console.log('Search results:', json);
+      const next = { videos: json.videos || [], profiles: json.profiles || [] };
+      setSearchResults(next);
+      // Only cache when we got something back
+      if (next.videos.length > 0 || next.profiles.length > 0) {
+        searchCacheRef.current.set(query, { ...next, timestamp: Date.now() });
+      } else {
+        searchCacheRef.current.set(query, { ...next, timestamp: Date.now() - 13000 });
+      }
+    } catch (error) {
+      console.error('Error fetching search results:', error);
+      setSearchResults({ videos: [], profiles: [] });
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  useEffect(() => {
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+
+    if (searchQuery.length >= 1) {
+      // Fire with 500ms debounce
+      searchTimeoutRef.current = setTimeout(() => {
+        fetchSearchResults(searchQuery);
+      }, 500);
+    } else {
+      setSearchResults({ videos: [], profiles: [] });
+    }
+
+    return () => {
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    };
+  }, [searchQuery]);
 
   // Fallback: load profile from localStorage if not available from server
   useEffect(() => {
@@ -91,6 +204,14 @@ export default function LayoutShell({ children, activeProfile: serverProfile }: 
         setUser(null);
         setUserProfiles([]);
       }
+      
+      // Calculate remaining delay to ensure minimum 600ms loading time
+      const elapsed = Date.now() - loadingStartTime;
+      const remainingDelay = Math.max(0, 600 - elapsed);
+      
+      setTimeout(() => {
+        setIsPageLoading(false);
+      }, remainingDelay);
     });
 
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -159,6 +280,7 @@ export default function LayoutShell({ children, activeProfile: serverProfile }: 
 
   const isAuthPage = pathname === '/signin' || pathname === '/set-account' || pathname === '/select-profile';
   const isEmbedPage = pathname.startsWith('/embed/');
+  const isAboutPage = pathname === '/about';
 
   if (!isOnline) {
     return (
@@ -182,7 +304,7 @@ export default function LayoutShell({ children, activeProfile: serverProfile }: 
     );
   }
 
-  if (isAuthPage || isEmbedPage) {
+  if (isAuthPage || isEmbedPage || isAboutPage) {
     return <>{children}</>;
   }
 
@@ -200,14 +322,15 @@ export default function LayoutShell({ children, activeProfile: serverProfile }: 
           onToggleSidebar={toggleSidebar}
           isSignedIn={isSignedIn}
           onToggleSignIn={handleToggleSignIn}
-          onToggleMobileDrawer={() => setIsMobileDrawerOpen(true)}
+          onToggleSearchOverlay={openSearchOverlay}
           activeProfile={activeProfile}
+          isLoading={isPageLoading}
         />
       </div>
 
       <div
         suppressHydrationWarning
-        className="flex bg-zinc-50 min-h-screen"
+        className="flex bg-white min-h-screen"
       >
         <style jsx global>{`
           :root {
@@ -219,13 +342,13 @@ export default function LayoutShell({ children, activeProfile: serverProfile }: 
             .main-shell-container { --sidebar-width: 0px; }
           }
         `}</style>
-        <Sidebar isCollapsed={isSidebarCollapsed} isSignedIn={isSignedIn} activeProfile={activeProfile} />
+        {!isPageLoading && <Sidebar isCollapsed={isSidebarCollapsed} isSignedIn={isSignedIn} activeProfile={activeProfile} />}
 
         <main
-          className={`flex-1 min-w-0 z-[50] ${isStylesPage ? 'h-screen overflow-hidden' : 'main-content-area'} ${isSidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-64'
+          className={`flex-1 min-w-0 z-[50] bg-white ${isStylesPage ? 'h-screen overflow-hidden' : 'main-content-area'} ${isPageLoading ? '' : (isSidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-64')
             }`}
         >
-          {children}
+          {isPageLoading ? <SkeletonLoading /> : children}
         </main>
       </div>
 
@@ -247,17 +370,122 @@ export default function LayoutShell({ children, activeProfile: serverProfile }: 
         `}</style>
       )}
 
-      <MobileDrawer
-        isOpen={isMobileDrawerOpen}
-        onClose={() => setIsMobileDrawerOpen(false)}
-        isSignedIn={isSignedIn}
-      />
-
       <AppInstallBanner />
       <ServiceWorkerRegister />
 
-      {showSplash && (
-        <LoadingScreen />
+      {/* Search Overlay */}
+      {isSearchOverlayOpen && (
+        <div className="fixed inset-0 z-[9998] bg-zinc-50">
+          {/* Top Bar */}
+          <div className="fixed top-0 left-0 right-0 h-14 bg-white border-b border-zinc-200 flex items-center gap-3 px-4 z-[9999]">
+            {/* Back Arrow */}
+            <button
+              onClick={closeSearchOverlay}
+              className="p-2 rounded-full hover:bg-zinc-200 text-zinc-900 transition-all active:scale-95"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+
+            {/* Search Input */}
+            <div className="flex-1 flex items-center">
+              <div className="relative w-full flex items-center">
+                <input
+                  type="text"
+                  placeholder="Search Playra"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && searchQuery.trim()) {
+                      window.location.href = `/results?search_query=${encodeURIComponent(searchQuery.trim())}`;
+                    }
+                  }}
+                  autoFocus
+                  className="w-full h-10 bg-zinc-100 rounded-full pl-4 pr-12 text-zinc-900 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+
+                {/* X button when typing */}
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-12 p-1 text-zinc-500 hover:text-zinc-900"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+
+                {/* Search icon inside input (right side, clickable) */}
+                <button
+                  onClick={() => {
+                    if (searchQuery.trim()) {
+                      window.location.href = `/results?search_query=${encodeURIComponent(searchQuery.trim())}`;
+                    }
+                  }}
+                  className="absolute right-4 p-1 text-zinc-500 hover:text-zinc-900"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Content Area */}
+          <div className="pt-14 h-full overflow-y-auto p-4">
+            {isSearching ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="w-8 h-8 border-4 border-zinc-200 border-t-blue-500 rounded-full animate-spin" />
+              </div>
+            ) : searchQuery.trim().length >= 1 && (searchResults.videos.length > 0 || searchResults.profiles.length > 0) ? (
+              // Show search results when user has typed and results exist
+              <div className="space-y-4">
+                  {/* Videos */}
+                  {searchResults.videos.length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-bold text-zinc-500 mb-3 px-1">Videos</h3>
+                      {searchResults.videos.map((video: any, index: number) => (
+                        <Link
+                          key={video.id}
+                          href={`/watch/${video.id}`}
+                          onClick={closeSearchOverlay}
+                          className="block p-3 rounded-xl hover:bg-zinc-100 transition-colors animate-in fade-in slide-in-from-bottom-2"
+                          style={{ animationDelay: `${index * 100}ms` }}
+                        >
+                          <p className="text-sm font-medium text-zinc-900 line-clamp-2">{video.title}</p>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Profiles */}
+                  {searchResults.profiles.length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-bold text-zinc-500 mb-3 px-1">Channels</h3>
+                      {searchResults.profiles.map((profile: any, index: number) => (
+                        <Link
+                          key={profile.id}
+                          href={`/channel/${profile.id}`}
+                          onClick={closeSearchOverlay}
+                          className="block p-3 rounded-xl hover:bg-zinc-100 transition-colors animate-in fade-in slide-in-from-bottom-2"
+                          style={{ animationDelay: `${(searchResults.videos.length + index) * 100}ms` }}
+                        >
+                          <p className="text-sm font-medium text-zinc-900">{profile.name}</p>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+            ) : searchQuery.trim().length >= 1 ? (
+              <div className="flex items-center justify-center py-12">
+                <p className="text-zinc-500">No results found</p>
+              </div>
+            ) : null}
+          </div>
+        </div>
       )}
 
       {showWhoIsWatching && !showSplash && (
